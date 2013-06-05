@@ -4,7 +4,8 @@
 (require 'cl)
 
 (defvar omnisharp-host
-  "http://localhost:2000")
+  "http://localhost:2000/"
+  "Currently expected to end with a / character")
 
 (defvar omnisharp-timeout
   1
