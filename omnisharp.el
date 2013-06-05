@@ -47,3 +47,6 @@ but are likely to work due to plist-get specific behaviour. A better
 implementation is strongly desired."
   (append plist-a plist-b))
 
+(defun omnisharp-get-current-buffer-contents ()
+  (buffer-substring-no-properties 1 (buffer-size)))
+
