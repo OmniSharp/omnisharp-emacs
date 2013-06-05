@@ -47,6 +47,3 @@ but are likely to work due to plist-get specific behaviour. A better
 implementation is strongly desired."
   (append plist-a plist-b))
 
-(plist-get :a (let ((list-a '(:a t))
-      (list-b '(:a nil)))
-  (omnisharp--plist-merge list-a list-b)))
