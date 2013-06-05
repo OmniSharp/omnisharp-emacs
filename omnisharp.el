@@ -2,6 +2,7 @@
 ;; Requires http://edward.oconnor.cx/2006/03/json.el
 (require 'json)
 (require 'cl)
+(require 'http-post-simple)
 
 (defvar omnisharp-host
   "http://localhost:2000/"
@@ -50,3 +51,17 @@ implementation is strongly desired."
 (defun omnisharp-get-current-buffer-contents ()
   (buffer-substring-no-properties 1 (buffer-size)))
 
+(defun omnisharp-autocomplete-test ()
+  (let* ((line-number (number-to-string (line-number-at-pos)))
+         (column-number (number-to-string (+ 1 (current-column))))
+         (buffer-contents (omnisharp-get-current-buffer-contents))
+         (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
+                        buffer-file-name))
+         (timeout-tmp omnisharp-timeout)
+         (params `((line . ,line-number)
+                   (column . ,column-number)
+                   (buffer . ,buffer-contents)
+                   (filename . ,filename-tmp)
+                   (timeout . "1"))))
+    (http-post-simple
+     (concat omnisharp-host "autocomplete") params)))
