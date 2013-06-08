@@ -2,7 +2,7 @@
 ;; Requires http://edward.oconnor.cx/2006/03/json.el
 (require 'json)
 (require 'cl)
-(require 'http-post-simple)
+;; TODO this does not seem to be able to return anything.
 
 (defvar omnisharp-host
   "http://localhost:2000/"
@@ -61,7 +61,72 @@ implementation is strongly desired."
          (params `((line . ,line-number)
                    (column . ,column-number)
                    (buffer . ,buffer-contents)
-                   (filename . ,filename-tmp)
-                   (timeout . "1"))))
-    (http-post-simple
-     (concat omnisharp-host "autocomplete") params)))
+                   (filename . ,filename-tmp))))
+    (request
+     (concat omnisharp-host "autocomplete")
+     :type "POST"
+     :data params
+     :parser 'json-read
+     :sync nil
+
+     ;; Something seems to hang when sending the request. For the
+     ;; request to actually start, we need to kill a buffer called
+     ;; "localhost: something".
+     ;; 'request' will crash after this timeout, causing the request
+     ;; to start.
+     :timeout 5
+     ;; TODO timeout to a var with a sensible value
+     :success (function*
+                (lambda (&key data &allow-other-keys)
+                  (message "I sent: %S" (prin1-to-string data))))))
+  "done")
+
+(defun omnisharp-display-autocomplete-suggestions
+  (data)
+  "TODO describe expected data:
+((DisplayText . \"Gender\")
+ (Description . \"int Gender { get; set; }\")
+ (CompletionText . \"Gender\"))"
+  (when (not (null data))
+    (setq result (popup-menu* data
+                              :width 20
+                              :keymap popup-menu-keymap
+                              :margin-left 1
+                              :margin-right 1
+                              :scroll-bar t
+                              ;; TODO make this into a variable
+                              :isearch t))
+    (let ((end (point)))
+      (backward-kill-word 1)
+      (insert result))))
+
+(defun test () (omnisharp-autocomplete-test))
+
+;;            ;; TODO timeout to a var with a sensible value
+;;            :success (function*
+;;            (lambda (&key data &allow-other-keys)
+;;              (omnisharp-display-autocomplete-suggestions data)
+;;              ;;(message "I sent: %S" (prin1-to-string data))
+;;              ))))))
+;;   result)
+
+;; (defun omnisharp-display-autocomplete-suggestions
+;;   (data)
+;;   "TODO describe expected data:
+;; ((DisplayText . \"Gender\")
+;;  (Description . \"int Gender { get; set; }\")
+;;  (CompletionText . \"Gender\"))"
+;;   (when (not (null data))
+;;     (setq result (popup-menu* data
+;;                               :width 20
+;;                               :keymap popup-menu-keymap
+;;                               :margin-left 1
+;;                               :margin-right 1
+;;                               :scroll-bar t
+;;                               ;; TODO make this into a variable
+;;                               :isearch t))
+;;     (let ((end (point)))
+;;       (backward-kill-word 1)
+;;       (insert result))))
+
+;; (defun test () (omnisharp-autocomplete-test))
