@@ -2,7 +2,9 @@
 ;; Requires http://edward.oconnor.cx/2006/03/json.el
 (require 'json)
 (require 'cl)
-;; TODO this does not seem to be able to return anything.
+(require 'web)
+;;(require 'http-post-simple)
+;;(require 'request)
 
 (defvar omnisharp-host
   "http://localhost:2000/"
@@ -62,31 +64,32 @@ implementation is strongly desired."
                    (column . ,column-number)
                    (buffer . ,buffer-contents)
                    (filename . ,filename-tmp))))
-    (request
-     (concat omnisharp-host "autocomplete")
-     :type "POST"
-     :data params
-     :parser 'json-read
-     :sync nil
 
-     ;; Something seems to hang when sending the request. For the
-     ;; request to actually start, we need to kill a buffer called
-     ;; "localhost: something".
-     ;; 'request' will crash after this timeout, causing the request
-     ;; to start.
-     :timeout 5
-     ;; TODO timeout to a var with a sensible value
-     :success (function*
-                (lambda (&key data &allow-other-keys)
-                  (message "I sent: %S" (prin1-to-string data))))))
-  "done")
+    (web-json-post
+     'omnisharp-display-autocomplete-suggestions
+     :url              (concat omnisharp-host "autocomplete")
+     :json-object-type 'alist
+     :data             params))
+  nil)
 
 (defun omnisharp-display-autocomplete-suggestions
+  (data connection headers)
+    ;; data will be a list, with the first element containing the
+    ;; result
+  (when (not (equal 3 (length data)))
+    (message "omnisharp.el: Failed: %s" data))
+  (omnisharp-display-autocomplete-suggestions-internal
+   (car data)))
+
+(define-key evil-insert-state-map (kbd "<f5>") (lambda () (interactive)
+                                                 (test)))
+
+(defun omnisharp-display-autocomplete-suggestions-internal
   (data)
   "TODO describe expected data:
-((DisplayText . \"Gender\")
- (Description . \"int Gender { get; set; }\")
- (CompletionText . \"Gender\"))"
+ ((DisplayText    . \"Gender\")
+  (Description    . \"int Gender { get; set; }\")
+  (CompletionText . \"Gender\"))"
   (when (not (null data))
     (setq result (popup-menu* data
                               :width 20
