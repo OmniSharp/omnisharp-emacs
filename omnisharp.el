@@ -1,8 +1,7 @@
 ;; Work in progress!
 ;; Requires http://edward.oconnor.cx/2006/03/json.el
 (require 'json)
-(require 'cl)
-(require 'web)
+(require 'url)
 ;;(require 'http-post-simple)
 ;;(require 'request)
 
@@ -53,6 +52,9 @@ implementation is strongly desired."
 (defun omnisharp-get-current-buffer-contents ()
   (buffer-substring-no-properties 1 (buffer-size)))
 
+(defun omnisharp-escape-single-quote (string-to-quote)
+  (replace-regexp-in-string "'" "\\\\'" string-to-quote))
+
 (defun omnisharp-autocomplete-test ()
   (let* ((line-number (number-to-string (line-number-at-pos)))
          (column-number (number-to-string (+ 1 (current-column))))
@@ -65,21 +67,23 @@ implementation is strongly desired."
                    (buffer . ,buffer-contents)
                    (filename . ,filename-tmp))))
 
-    (web-json-post
-     'omnisharp-display-autocomplete-suggestions
-     :url              (concat omnisharp-host "autocomplete")
-     :json-object-type 'alist
-     :data             params))
-  nil)
+    (omnisharp-post-message-curl (concat omnisharp-host "autocomplete")
+                                 params)))
 
-(defun omnisharp-display-autocomplete-suggestions
-  (data connection headers)
-    ;; data will be a list, with the first element containing the
-    ;; result
-  (when (not (equal 3 (length data)))
-    (message "omnisharp.el: Failed: %s" data))
-  (omnisharp-display-autocomplete-suggestions-internal
-   (car data)))
+(defun omnisharp-post-message-curl (url params)
+  "TODO"
+  (with-temp-buffer
+    (call-process
+     "curl"
+     nil ;; infile
+     (buffer-name);; destination
+     nil ;; display (no specialities needed)
+     ;; these are just args
+     "--silent" "-H" "Content-type: application/json"
+     "--data"
+     (json-encode params)
+     url)
+    (buffer-string)))
 
 (define-key evil-insert-state-map (kbd "<f5>") (lambda () (interactive)
                                                  (test)))
@@ -133,3 +137,4 @@ implementation is strongly desired."
 ;;       (insert result))))
 
 ;; (defun test () (omnisharp-autocomplete-test))
+(shell-command-to-string "curl http://localhost:2000")
