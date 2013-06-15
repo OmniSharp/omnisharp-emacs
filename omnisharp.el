@@ -111,5 +111,3 @@ result."
                                 :isearch t
                                 :help-delay 1)))
     (insert result)))
-
-(defun test () (omnisharp-autocomplete-test))
