@@ -14,8 +14,8 @@
   "Timeout, in seconds, after which to abort stalling queries to the
   OmniSharp server.")
 
-(defun omnisharp--get-response
-  (api-path &optional additional-parameters timeout)
+(defun omnisharp-auto-complete
+  (&optional additional-parameters)
   "TODO
 
    api-path : the path to the desired OmniSharp API. Example:
@@ -23,21 +23,28 @@
 
    additional-parameters : TODO currently not used
    timeout               : override global omnisharp-timeout"
-  (let* ((params
-          '(:line (line-number-at-pos)
-            :column (current-column)
-            :buffer (line-number-at-pos)
-            :filename (omnisharp--convert-slashes-to-double-backslashes
-                       buffer-file-name)
-            :timeout (or timeout omnisharp-timeout))))
-    (omnisharp--plist-merge params additional-parameters))
-  (omnisharp--get-response-worker api-path params))
+  (let* ((line-number (number-to-string (line-number-at-pos)))
+         (column-number (number-to-string (+ 1 (current-column))))
+         (buffer-contents (omnisharp--get-current-buffer-contents))
+         (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
+                        buffer-file-name))
+         (params `((line . ,line-number)
+                   (column . ,column-number)
+                   (buffer . ,buffer-contents)
+                   (filename . ,filename-tmp))))
 
-(defun omnisharp--get-response-worker (api-path params)
-  "Takes a plist and makes an API query with them. Targets the given
-api-path. TODO"
+    (omnisharp-auto-complete-worker params)))
+
+(defun omnisharp-auto-complete-worker (params)
+  "Takes a plist and makes an autocomplete query with them. Targets
+the given api-path. TODO"
   ;; json.el URL encodes params automatically.
-  )
+  (let* ((raw-result
+          (omnisharp-post-message-curl
+           (concat omnisharp-host "autocomplete")
+           params))
+         (json-result (json-read-from-string raw-result)))
+    (omnisharp--display-autocomplete-suggestions json-result)))
 
 (defun omnisharp--convert-slashes-to-double-backslashes (str)
   "This might be useful. A direct port from OmniSharp.py."
@@ -49,29 +56,15 @@ but are likely to work due to plist-get specific behaviour. A better
 implementation is strongly desired."
   (append plist-a plist-b))
 
-(defun omnisharp-get-current-buffer-contents ()
+(defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties 1 (buffer-size)))
 
 (defun omnisharp-escape-single-quote (string-to-quote)
   (replace-regexp-in-string "'" "\\\\'" string-to-quote))
 
-(defun omnisharp-autocomplete-test ()
-  (let* ((line-number (number-to-string (line-number-at-pos)))
-         (column-number (number-to-string (+ 1 (current-column))))
-         (buffer-contents (omnisharp-get-current-buffer-contents))
-         (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
-                        buffer-file-name))
-         (timeout-tmp omnisharp-timeout)
-         (params `((line . ,line-number)
-                   (column . ,column-number)
-                   (buffer . ,buffer-contents)
-                   (filename . ,filename-tmp))))
-
-    (omnisharp-post-message-curl (concat omnisharp-host "autocomplete")
-                                 params)))
-
 (defun omnisharp-post-message-curl (url params)
-  "TODO"
+  "Post json stuff to url with --data set to given params. Return
+result."
   (with-temp-buffer
     (call-process
      "curl"
@@ -85,56 +78,38 @@ implementation is strongly desired."
      url)
     (buffer-string)))
 
-(define-key evil-insert-state-map (kbd "<f5>") (lambda () (interactive)
-                                                 (test)))
+(define-key evil-insert-state-map
+  (kbd "<f5>")
+  (lambda () (interactive)
+    (omnisharp-auto-complete)))
 
-(defun omnisharp-display-autocomplete-suggestions-internal
-  (data)
+(defun omnisharp--display-autocomplete-suggestions
+  (json-result-alist)
   "TODO describe expected data:
- ((DisplayText    . \"Gender\")
-  (Description    . \"int Gender { get; set; }\")
-  (CompletionText . \"Gender\"))"
-  (when (not (null data))
-    (setq result (popup-menu* data
-                              :width 20
-                              :keymap popup-menu-keymap
-                              :margin-left 1
-                              :margin-right 1
-                              :scroll-bar t
-                              ;; TODO make this into a variable
-                              :isearch t))
-    (let ((end (point)))
-      (backward-kill-word 1)
-      (insert result))))
+ (((DisplayText    . \"Gender\")
+   (Description    . \"int Gender { get; set; }\")
+   (CompletionText . \"Gender\")))"
+  (when (not (null json-result-alist))
+    (let* ((display-list
+            ;; TODO refactor outside
+            ;; Use a plist. This is ridiculous.
+            (mapcar (lambda (element)
+                      (popup-make-item
+                       ;; TODO get item from json-result-alist
+                       (cdr (assoc 'DisplayText element))
+                       :value (cdr (assoc 'CompletionText element))
+                       :document (cdr (assoc 'Description element))))
+                    json-result-alist)))
+      (setq result (popup-menu* display-list
+                                ;; TODO set width to a sensible value
+                                :width 70
+                                :keymap popup-menu-keymap
+                                :margin-left 1
+                                :margin-right 1
+                                :scroll-bar t
+                                ;; TODO make this into a variable
+                                :isearch t
+                                :help-delay 1)))
+    (insert result)))
 
 (defun test () (omnisharp-autocomplete-test))
-
-;;            ;; TODO timeout to a var with a sensible value
-;;            :success (function*
-;;            (lambda (&key data &allow-other-keys)
-;;              (omnisharp-display-autocomplete-suggestions data)
-;;              ;;(message "I sent: %S" (prin1-to-string data))
-;;              ))))))
-;;   result)
-
-;; (defun omnisharp-display-autocomplete-suggestions
-;;   (data)
-;;   "TODO describe expected data:
-;; ((DisplayText . \"Gender\")
-;;  (Description . \"int Gender { get; set; }\")
-;;  (CompletionText . \"Gender\"))"
-;;   (when (not (null data))
-;;     (setq result (popup-menu* data
-;;                               :width 20
-;;                               :keymap popup-menu-keymap
-;;                               :margin-left 1
-;;                               :margin-right 1
-;;                               :scroll-bar t
-;;                               ;; TODO make this into a variable
-;;                               :isearch t))
-;;     (let ((end (point)))
-;;       (backward-kill-word 1)
-;;       (insert result))))
-
-;; (defun test () (omnisharp-autocomplete-test))
-(shell-command-to-string "curl http://localhost:2000")
