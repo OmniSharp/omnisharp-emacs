@@ -14,13 +14,12 @@
   OmniSharp server.")
 
 (defun omnisharp-auto-complete
-  (&optional additional-parameters)
+  (&optional)
   "TODO
 
    api-path : the path to the desired OmniSharp API. Example:
               /autocomplete
 
-   additional-parameters : TODO currently not used
    timeout               : override global omnisharp-timeout"
   (let* ((line-number (number-to-string (line-number-at-pos)))
          (column-number (number-to-string (+ 1 (current-column))))
