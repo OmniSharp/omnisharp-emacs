@@ -48,17 +48,8 @@ the given api-path. TODO"
   "This might be useful. A direct port from OmniSharp.py."
   (replace-regexp-in-string "/" "\\\\" str))
 
-(defun omnisharp--plist-merge (plist-a plist-b)
-  "This is a very naive implementation. Duplicates will prevail,
-but are likely to work due to plist-get specific behaviour. A better
-implementation is strongly desired."
-  (append plist-a plist-b))
-
 (defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties 1 (buffer-size)))
-
-(defun omnisharp-escape-single-quote (string-to-quote)
-  (replace-regexp-in-string "'" "\\\\'" string-to-quote))
 
 (defun omnisharp-post-message-curl (url params)
   "Post json stuff to url with --data set to given params. Return
