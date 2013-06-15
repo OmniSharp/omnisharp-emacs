@@ -26,9 +26,9 @@
          (buffer-contents (omnisharp--get-current-buffer-contents))
          (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
                         buffer-file-name))
-         (params `((line . ,line-number)
-                   (column . ,column-number)
-                   (buffer . ,buffer-contents)
+         (params `((line     . ,line-number)
+                   (column   . ,column-number)
+                   (buffer   . ,buffer-contents)
                    (filename . ,filename-tmp))))
 
     (omnisharp-auto-complete-worker params)))
