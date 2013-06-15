@@ -77,7 +77,10 @@ result."
 
 Displays a popup.el popup menu, and inserts the chosen element in the
 current buffer."
-  (when (not (null json-result-alist))
+  (if (equalp 0 (length json-result-alist))
+      (progn (message "No completions.")
+             nil)
+
     (let* ((display-list
             (omnisharp--convert-auto-complete-json-to-popup-format
              json-result-alist))
