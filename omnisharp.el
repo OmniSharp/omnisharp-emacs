@@ -69,10 +69,13 @@ result."
 
 (defun omnisharp--display-autocomplete-suggestions
   (json-result-alist)
-  "TODO describe expected data:
+  "Gets an association list such as this:
  (((DisplayText    . \"Gender\")
    (Description    . \"int Gender { get; set; }\")
-   (CompletionText . \"Gender\")))"
+   (CompletionText . \"Gender\")))
+
+Displays a popup.el popup menu, and inserts the chosen element in the
+current buffer."
   (when (not (null json-result-alist))
     (let* ((display-list
             ;; TODO refactor outside
