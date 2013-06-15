@@ -67,11 +67,6 @@ result."
      url)
     (buffer-string)))
 
-(define-key evil-insert-state-map
-  (kbd "<f5>")
-  (lambda () (interactive)
-    (omnisharp-auto-complete)))
-
 (defun omnisharp--display-autocomplete-suggestions
   (json-result-alist)
   "TODO describe expected data:
