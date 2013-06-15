@@ -125,4 +125,6 @@ current buffer."
 
 (defun omnisharp--get-max-item-length (completions)
   "Returns the length of the longest completion in 'completions'."
-    (reduce 'max (mapcar 'length completions)))
+  (if (null completions)
+      0
+    (reduce 'max (mapcar 'length completions))))
