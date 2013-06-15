@@ -1,6 +1,7 @@
 ;; Requires http://edward.oconnor.cx/2006/03/json.el
 ;; Work in progress! Judge gently!
 (require 'json)
+(require 'cl)
 ;;(require 'http-post-simple)
 ;;(require 'request)
 
@@ -78,18 +79,18 @@ Displays a popup.el popup menu, and inserts the chosen element in the
 current buffer."
   (when (not (null json-result-alist))
     (let* ((display-list
-            ;; TODO refactor outside
-            ;; Use a plist. This is ridiculous.
-            (mapcar (lambda (element)
-                      (popup-make-item
-                       ;; TODO get item from json-result-alist
-                       (cdr (assoc 'DisplayText element))
-                       :value (cdr (assoc 'CompletionText element))
-                       :document (cdr (assoc 'Description element))))
-                    json-result-alist)))
+            (omnisharp--convert-auto-complete-json-to-popup-format
+             json-result-alist))
+
+           (completion-texts
+            (mapcar 'omnisharp--completion-result-item-get-display-text
+                    json-result-alist))
+
+           ;; TODO set width to a sensible value
+           (max-width (omnisharp--get-max-item-length
+                       completion-texts)))
       (setq result (popup-menu* display-list
-                                ;; TODO set width to a sensible value
-                                :width 70
+                                :width max-width
                                 :keymap popup-menu-keymap
                                 :margin-left 1
                                 :margin-right 1
@@ -98,3 +99,30 @@ current buffer."
                                 :isearch t
                                 :help-delay 1)))
     (insert result)))
+
+;; TODO Use a plist. This is ridiculous.
+(defun omnisharp--convert-auto-complete-json-to-popup-format
+  (json-result-alist)
+  (mapcar
+   (lambda (element)
+     (popup-make-item
+      ;; TODO get item from json-result-alist
+      ;;
+      ;; TODO these are already calculated in
+      ;; omnisharp--display-autocomplete-suggestions, stored as
+      ;; completion-texts
+      (cdr (assoc 'DisplayText element))
+      :value (omnisharp--completion-result-item-get-completion-text
+              element)
+      :document (cdr (assoc 'Description element))))
+   json-result-alist))
+
+(defun omnisharp--completion-result-item-get-completion-text (item)
+  (cdr (assoc 'CompletionText item)))
+
+(defun omnisharp--completion-result-item-get-display-text (item)
+  (cdr (assoc 'DisplayText item)))
+
+(defun omnisharp--get-max-item-length (completions)
+  "Returns the length of the longest completion in 'completions'."
+    (reduce 'max (mapcar 'length completions)))

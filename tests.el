@@ -15,3 +15,6 @@
   (kbd "<f5>")
   (lambda () (interactive)
     (omnisharp-auto-complete)))
+
+;; Should be 19
+(omnisharp--get-max-item-length '("lontlnitaa" "llinatilnailantonta" "lonta" "lol"))
