@@ -1,5 +1,5 @@
-;; Work in progress!
 ;; Requires http://edward.oconnor.cx/2006/03/json.el
+;; Work in progress! Judge gently!
 (require 'json)
 (require 'url)
 ;;(require 'http-post-simple)
