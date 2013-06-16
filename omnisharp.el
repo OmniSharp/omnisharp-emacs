@@ -85,7 +85,6 @@ current buffer."
             (mapcar 'omnisharp--completion-result-item-get-display-text
                     json-result-alist))
 
-           ;; TODO set width to a sensible value
            (max-width (omnisharp--get-max-item-length
                        completion-texts)))
       (setq result (popup-menu* display-list
