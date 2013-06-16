@@ -132,14 +132,16 @@ current buffer."
 
            (max-width (omnisharp--get-max-item-length
                        completion-texts)))
-      (setq result (popup-menu* display-list
-                                :width max-width
-                                :keymap popup-menu-keymap
-                                :margin-left 1
-                                :margin-right 1
-                                :scroll-bar t
-                                :isearch omnisharp-auto-complete-popup-want-isearch
-                                :help-delay 1)))
+      (setq result
+            (popup-menu* display-list
+                         :width max-width
+                         :keymap popup-menu-keymap
+                         :margin-left 1
+                         :margin-right 1
+                         :scroll-bar t
+                         :isearch
+                         omnisharp-auto-complete-popup-want-isearch
+                         :help-delay 1)))
     (insert result)))
 
 ;; TODO Use a plist. This is ridiculous.
