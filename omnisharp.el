@@ -2,8 +2,6 @@
 ;; Work in progress! Judge gently!
 (require 'json)
 (require 'cl)
-;;(require 'http-post-simple)
-;;(require 'request)
 
 (defvar omnisharp-host
   "http://localhost:2000/"
