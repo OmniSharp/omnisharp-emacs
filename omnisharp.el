@@ -10,6 +10,9 @@
   "Timeout, in seconds, after which to abort stalling queries to the
   OmniSharp server.")
 
+(defvar omnisharp-auto-complete-popup-want-isearch t
+  "Whether to automatically start isearch when auto-completing.")
+
 (defun omnisharp-auto-complete
   (&optional)
   "TODO
@@ -93,8 +96,7 @@ current buffer."
                                 :margin-left 1
                                 :margin-right 1
                                 :scroll-bar t
-                                ;; TODO make this into a variable
-                                :isearch t
+                                :isearch omnisharp-auto-complete-popup-want-isearch
                                 :help-delay 1)))
     (insert result)))
 
