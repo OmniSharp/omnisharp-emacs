@@ -21,6 +21,20 @@
    ;; no params needed
    nil))
 
+;; TODO create omnisharp-add-to-solution that lets user choose which
+;; file to add.
+(defun omnisharp-add-to-solution-current-file ()
+  (interactive)
+  (let ((params (omnisharp--get-common-params)))
+    (omnisharp-add-to-solution-worker params)))
+
+(defun omnisharp-add-to-solution-worker (params)
+  "TODO"
+  ;; TODO report results somehow
+  (omnisharp-post-message-curl
+   (concat omnisharp-host "addtoproject")
+   params))
+
 (defun omnisharp-auto-complete
   (&optional)
   "TODO
