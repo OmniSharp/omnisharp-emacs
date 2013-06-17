@@ -29,15 +29,7 @@
               /autocomplete
 
    timeout               : override global omnisharp-timeout"
-  (let* ((line-number (number-to-string (line-number-at-pos)))
-         (column-number (number-to-string (+ 1 (current-column))))
-         (buffer-contents (omnisharp--get-current-buffer-contents))
-         (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
-                        buffer-file-name))
-         (params `((line     . ,line-number)
-                   (column   . ,column-number)
-                   (buffer   . ,buffer-contents)
-                   (filename . ,filename-tmp))))
+  (let ((params (omnisharp--get-common-params)))
 
     (omnisharp-auto-complete-worker params)))
 
@@ -136,3 +128,16 @@ current buffer."
   (if (null completions)
       0
     (reduce 'max (mapcar 'length completions))))
+
+(defun omnisharp--get-common-params ()
+  "Get common parameters used in the base request class Request."
+  (let* ((line-number (number-to-string (line-number-at-pos)))
+         (column-number (number-to-string (+ 1 (current-column))))
+         (buffer-contents (omnisharp--get-current-buffer-contents))
+         (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
+                        buffer-file-name))
+         (params `((line     . ,line-number)
+                   (column   . ,column-number)
+                   (buffer   . ,buffer-contents)
+                   (filename . ,filename-tmp))))
+    params))
