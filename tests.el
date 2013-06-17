@@ -18,3 +18,5 @@
 
 ;; Should be 19
 (omnisharp--get-max-item-length '("lontlnitaa" "llinatilnailantonta" "lonta" "lol"))
+
+(omnisharp-reload-solution)

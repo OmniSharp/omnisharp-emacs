@@ -13,6 +13,13 @@
 (defvar omnisharp-auto-complete-popup-want-isearch t
   "Whether to automatically start isearch when auto-completing.")
 
+(defun omnisharp-reload-solution ()
+  "Reload the current solution."
+  (omnisharp-post-message-curl
+   (concat omnisharp-host "reloadsolution")
+   ;; no params needed
+   nil))
+
 (defun omnisharp-auto-complete
   (&optional)
   "TODO
