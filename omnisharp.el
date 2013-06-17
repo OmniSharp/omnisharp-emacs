@@ -21,6 +21,16 @@
    ;; no params needed
    nil))
 
+(defun omnisharp-go-to-definition ()
+  "TODO"
+  (interactive)
+  (let ((result (omnisharp-post-message-curl ; TODO create JSON version
+                 (concat omnisharp-host "gotodefinition")
+                 (omnisharp--get-common-params))))
+    ;; TODO open file :FileName at :Line and :Column
+    (find-file (cdr (assoc 'FileName result)))
+    (message result)))
+
 ;; TODO create omnisharp-add-to-solution that lets user choose which
 ;; file to add.
 (defun omnisharp-add-to-solution-current-file ()
