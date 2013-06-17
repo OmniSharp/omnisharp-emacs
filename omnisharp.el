@@ -15,6 +15,7 @@
 
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
+  (interactive)
   (omnisharp-post-message-curl
    (concat omnisharp-host "reloadsolution")
    ;; no params needed
