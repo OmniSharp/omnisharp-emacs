@@ -59,6 +59,11 @@
    (concat omnisharp-host "addtoproject")
    params))
 
+(defvar omnisharp-auto-complete-popup-help-delay nil
+  "The timeout after which the auto-complete popup will show its help
+  popup. Disabled by default because the help is often scrambled and
+  looks bad.")
+
 (defun omnisharp-auto-complete
   (&optional)
   "TODO
@@ -141,7 +146,8 @@ current buffer."
                          :scroll-bar t
                          :isearch
                          omnisharp-auto-complete-popup-want-isearch
-                         :help-delay 1)))
+                         :help-delay
+                         omnisharp-auto-complete-popup-help-delay)))
     (insert result)))
 
 ;; TODO Use a plist. This is ridiculous.
