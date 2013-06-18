@@ -13,6 +13,10 @@
 (defvar omnisharp-auto-complete-popup-want-isearch t
   "Whether to automatically start isearch when auto-completing.")
 
+(defvar omnisharp--find-usages-buffer-name "* OmniSharp : Usages *"
+  "The name of the temporary buffer that is used to display the
+results of a 'find usages' call.")
+
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
   (interactive)
@@ -37,6 +41,38 @@
         (goto-line (cdr (assoc 'Line json-result)))
         (move-to-column (- (cdr (assoc 'Column json-result))
                            1))))))
+
+(defun omnisharp-find-usages ()
+  "Find usages for the symbol under point"
+  (interactive)
+  (omnisharp-find-usages-worker (omnisharp--get-common-params)))
+
+(defun omnisharp-find-usages-worker (params)
+  ;; TODO make this asyncronic like all other compilation processes!
+  (let* ((json-result (omnisharp-post-message-curl-as-json
+                       (concat omnisharp-host "findusages")
+                       params))
+         (output-buffer (get-buffer-create
+                         omnisharp--find-usages-buffer-name))
+         (output-in-compilation-mode-format
+          (mapcar 'omnisharp--find-usages-output-to-compilation-output
+                  json-result)))
+    ;; TODO use with-current-buffer
+    (with-current-buffer output-buffer
+      (insert output-in-compilation-mode-format)
+      (compilation-mode)
+      (switch-to-buffer output-buffer))))
+
+(defun omnisharp--find-usages-output-to-compilation-output
+  (json-result-single-element)
+  "Converts a single element of a /findusages JSON response to a
+format that the compilation major mode understands and lets the user
+follow results to the locations in the actual files."
+  (let ((filename (cdr (assoc 'FileName json-result-single-element)))
+        (line (cdr (assoc 'Line json-result-single-element))))
+    (concat filename
+            ":"
+            line)))
 
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
