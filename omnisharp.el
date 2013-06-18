@@ -31,6 +31,13 @@
     (find-file (cdr (assoc 'FileName result)))
     (message result)))
 
+(defun omnisharp-stop-server ()
+  "Stop the current omnisharp instance."
+  (interactive)
+  (omnisharp-post-message-curl
+   (concat omnisharp-host "stopserver")
+   nil))
+
 ;; TODO create omnisharp-add-to-solution that lets user choose which
 ;; file to add.
 (defun omnisharp-add-to-solution-current-file ()
