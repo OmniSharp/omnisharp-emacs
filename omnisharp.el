@@ -98,6 +98,10 @@ result."
      url)
     (buffer-string)))
 
+(defun omnisharp-post-message-curl-as-json (url params)
+  (json-read-from-string
+   (omnisharp-post-message-curl url params)))
+
 (defun omnisharp--display-autocomplete-suggestions
   (json-result-alist)
   "Gets an association list such as this:
