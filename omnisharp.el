@@ -24,15 +24,19 @@
 (defun omnisharp-go-to-definition ()
   "Jump to the definition of the symbol under point."
   (interactive)
-  (let ((json-result (omnisharp-post-message-curl-as-json
-                      (concat omnisharp-host "gotodefinition")
-                      (omnisharp--get-common-params))))
-
-    ;; open file :FileName at :Line and :Column
-    (find-file (cdr (assoc 'FileName json-result)))
-    (goto-line (cdr (assoc 'Line json-result)))
-    (move-to-column (- (cdr (assoc 'Column json-result))
-                       1))))
+  (let* ((json-result (omnisharp-post-message-curl-as-json
+                       (concat omnisharp-host "gotodefinition")
+                       (omnisharp--get-common-params)))
+         (filename (cdr (assoc 'FileName json-result))))
+    (if (null filename)
+        (message
+         "Cannot go to definition as none was returned by the API.")
+      (progn
+        ;; open file :FileName at :Line and :Column
+        (find-file filename)
+        (goto-line (cdr (assoc 'Line json-result)))
+        (move-to-column (- (cdr (assoc 'Column json-result))
+                           1))))))
 
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
