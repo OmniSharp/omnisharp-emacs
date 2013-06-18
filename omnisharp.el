@@ -22,14 +22,17 @@
    nil))
 
 (defun omnisharp-go-to-definition ()
-  "TODO"
+  "Jump to the definition of the symbol under point."
   (interactive)
-  (let ((result (omnisharp-post-message-curl ; TODO create JSON version
-                 (concat omnisharp-host "gotodefinition")
-                 (omnisharp--get-common-params))))
-    ;; TODO open file :FileName at :Line and :Column
-    (find-file (cdr (assoc 'FileName result)))
-    (message result)))
+  (let ((json-result (omnisharp-post-message-curl-as-json
+                      (concat omnisharp-host "gotodefinition")
+                      (omnisharp--get-common-params))))
+
+    ;; open file :FileName at :Line and :Column
+    (find-file (cdr (assoc 'FileName json-result)))
+    (goto-line (cdr (assoc 'Line json-result)))
+    (move-to-column (- (cdr (assoc 'Column json-result))
+                       1))))
 
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
