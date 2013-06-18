@@ -21,6 +21,19 @@
    ;; no params needed
    nil))
 
+(defun omnisharp-go-to-definition ()
+  "Jump to the definition of the symbol under point."
+  (interactive)
+  (let ((json-result (omnisharp-post-message-curl-as-json
+                      (concat omnisharp-host "gotodefinition")
+                      (omnisharp--get-common-params))))
+
+    ;; open file :FileName at :Line and :Column
+    (find-file (cdr (assoc 'FileName json-result)))
+    (goto-line (cdr (assoc 'Line json-result)))
+    (move-to-column (- (cdr (assoc 'Column json-result))
+                       1))))
+
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
   (interactive)
@@ -87,6 +100,10 @@ result."
      (json-encode params)
      url)
     (buffer-string)))
+
+(defun omnisharp-post-message-curl-as-json (url params)
+  (json-read-from-string
+   (omnisharp-post-message-curl url params)))
 
 (defun omnisharp--display-autocomplete-suggestions
   (json-result-alist)
