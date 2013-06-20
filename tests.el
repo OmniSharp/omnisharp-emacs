@@ -12,7 +12,7 @@
 
 ;; For quick testing
 (define-key evil-insert-state-map
-  (kbd "<f5>")
+  (kbd "M-.")
   (lambda () (interactive)
     (omnisharp-auto-complete)))
 
