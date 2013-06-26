@@ -3,6 +3,7 @@
 (require 'json)
 (require 'cl)
 (require 'files)
+(require 'window)
 
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
@@ -14,6 +15,10 @@
 (defvar omnisharp-auto-complete-popup-want-isearch t
   "Whether to automatically start isearch when auto-completing.")
 
+(defvar omnisharp--find-usages-buffer-name "* OmniSharp : Usages *"
+  "The name of the temporary buffer that is used to display the
+results of a 'find usages' call.")
+
 (defvar omnisharp-auto-complete-popup-help-delay nil
   "The timeout after which the auto-complete popup will show its help
   popup. Disabled by default because the help is often scrambled and
@@ -23,6 +28,12 @@
   "Whether to keep the help window (accessed by pressing f1 while the
 popup window is active) open after any other key is
 pressed. Defaults to true.")
+
+(defvar omnisharp-find-usages-header
+  (concat "Usages in the current solution:"
+          "\n\n")
+  "This is shown at the top of the result buffer when
+omnisharp-find-usages is called.")
 
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
@@ -48,6 +59,72 @@ pressed. Defaults to true.")
         (goto-line (cdr (assoc 'Line json-result)))
         (move-to-column (- (cdr (assoc 'Column json-result))
                            1))))))
+
+(defun omnisharp-find-usages ()
+  "Find usages for the symbol under point"
+  (interactive)
+  (omnisharp-find-usages-worker (omnisharp--get-common-params)))
+
+(defun omnisharp-find-usages-worker (params)
+  ;; TODO make this asyncronic like all other compilation processes!
+  (let* ((json-result (omnisharp-post-message-curl-as-json
+                       (concat omnisharp-host "findusages")
+                       params))
+         (output-buffer (get-buffer-create
+                         omnisharp--find-usages-buffer-name))
+         (output-in-compilation-mode-format
+          ;; Loop over a vector such as:
+          ;; [((Text . "public static AstNode GetDefinition(this
+          ;; AstNode node)") (Column . 25) (Line . 39) (FileName
+          ;; . "/foo")) ((Text ...)]
+          (mapcar
+           'omnisharp--find-usages-output-to-compilation-output
+           (cdr (assoc 'Usages json-result)))))
+
+    (omnisharp--write-lines-to-compilation-buffer
+     output-in-compilation-mode-format
+     output-buffer
+     omnisharp-find-usages-header)))
+
+(defun omnisharp--write-lines-to-compilation-buffer
+  (lines-to-write buffer-to-write-to &optional header)
+  "Writes the given lines to the given buffer, and sets
+compilation-mode on. The contents of the buffer are erased. The
+buffer is marked read-only after inserting all lines.
+
+If HEADER is given, that is written to the top of the buffer.
+
+Expects the lines to be in a format that compilation-mode
+recognizes, so that the user may jump to the results."
+  (with-current-buffer buffer-to-write-to
+    (let ((inhibit-read-only t))
+      (read-only-mode nil)
+      (erase-buffer)
+
+      (when (not (null header))
+        (insert header))
+
+      (mapcar (lambda (element)
+                (insert element)
+                (insert "\n"))
+              lines-to-write)
+      (compilation-mode)
+      (read-only-mode t)
+      (display-buffer buffer-to-write-to))))
+
+(defun omnisharp--find-usages-output-to-compilation-output
+  (json-result-single-element)
+  "Converts a single element of a /findusages JSON response to a
+format that the compilation major mode understands and lets the user
+follow results to the locations in the actual files."
+  (let ((filename (cdr (assoc 'FileName json-result-single-element)))
+        (line (cdr (assoc 'Line json-result-single-element)))
+        (text (cdr (assoc 'Text json-result-single-element))))
+    (concat filename
+            ":"
+            (prin1-to-string line)
+            ": "
+            text)))
 
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
