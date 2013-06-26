@@ -29,6 +29,12 @@ results of a 'find usages' call.")
 popup window is active) open after any other key is
 pressed. Defaults to true.")
 
+(defvar omnisharp-find-usages-header
+  (concat "Usages in the current solution:"
+          "\n\n")
+  "This is shown at the top of the result buffer when
+omnisharp-find-usages is called.")
+
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
   (interactive)
@@ -76,13 +82,17 @@ pressed. Defaults to true.")
            (cdr (assoc 'Usages json-result)))))
 
     (omnisharp--write-lines-to-compilation-buffer
-     output-in-compilation-mode-format output-buffer)))
+     output-in-compilation-mode-format
+     output-buffer
+     omnisharp-find-usages-header)))
 
 (defun omnisharp--write-lines-to-compilation-buffer
-  (lines-to-write buffer-to-write-to)
+  (lines-to-write buffer-to-write-to &optional header)
   "Writes the given lines to the given buffer, and sets
 compilation-mode on. The contents of the buffer are erased. The
 buffer is marked read-only after inserting all lines.
+
+If HEADER is given, that is written to the top of the buffer.
 
 Expects the lines to be in a format that compilation-mode
 recognizes, so that the user may jump to the results."
