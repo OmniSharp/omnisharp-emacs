@@ -66,11 +66,20 @@ pressed. Defaults to true.")
          (output-buffer (get-buffer-create
                          omnisharp--find-usages-buffer-name))
          (output-in-compilation-mode-format
-          (mapcar 'omnisharp--find-usages-output-to-compilation-output
-                  json-result)))
+          ;; Loop over a vector such as:
+          ;; [((Text . "public static AstNode GetDefinition(this
+          ;; AstNode node)") (Column . 25) (Line . 39) (FileName
+          ;; . "/foo")) ((Text ...)]
+          (mapcar
+           'omnisharp--find-usages-output-to-compilation-output
+           (cdr (assoc 'Usages json-result)))))
     ;; TODO use with-current-buffer
     (with-current-buffer output-buffer
-      (insert output-in-compilation-mode-format)
+      (mapcar (lambda (element)
+                (insert element)
+                (insert ":")
+                (insert "\n"))
+              output-in-compilation-mode-format)
       (compilation-mode)
       (switch-to-buffer output-buffer))))
 
@@ -83,7 +92,7 @@ follow results to the locations in the actual files."
         (line (cdr (assoc 'Line json-result-single-element))))
     (concat filename
             ":"
-            line)))
+            (prin1-to-string line))))
 
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
