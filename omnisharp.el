@@ -74,17 +74,28 @@ pressed. Defaults to true.")
            'omnisharp--find-usages-output-to-compilation-output
            (cdr (assoc 'Usages json-result)))))
 
-    (with-current-buffer output-buffer
-      (let ((inhibit-read-only t))
-        (read-only-mode nil)
-        (erase-buffer)
-        (mapcar (lambda (element)
-                  (insert element)
-                  (insert "\n"))
-                output-in-compilation-mode-format)
-        (compilation-mode)
-        (read-only-mode t)
-        (switch-to-buffer output-buffer)))))
+    (omnisharp--write-lines-to-compilation-buffer
+     output-in-compilation-mode-format output-buffer)))
+
+(defun omnisharp--write-lines-to-compilation-buffer
+  (lines-to-write buffer-to-write-to)
+  "Writes the given lines to the given buffer, and sets
+compilation-mode on. The contents of the buffer are erased. The
+buffer is marked read-only after inserting all lines.
+
+Expects the lines to be in a format that compilation-mode
+recognizes, so that the user may jump to the results."
+  (with-current-buffer buffer-to-write-to
+    (let ((inhibit-read-only t))
+      (read-only-mode nil)
+      (erase-buffer)
+      (mapcar (lambda (element)
+                (insert element)
+                (insert "\n"))
+              lines-to-write)
+      (compilation-mode)
+      (read-only-mode t)
+      (switch-to-buffer buffer-to-write-to))))
 
 (defun omnisharp--find-usages-output-to-compilation-output
   (json-result-single-element)
