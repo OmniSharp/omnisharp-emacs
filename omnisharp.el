@@ -77,7 +77,6 @@ pressed. Defaults to true.")
     (with-current-buffer output-buffer
       (mapcar (lambda (element)
                 (insert element)
-                (insert ":")
                 (insert "\n"))
               output-in-compilation-mode-format)
       (compilation-mode)
@@ -89,10 +88,13 @@ pressed. Defaults to true.")
 format that the compilation major mode understands and lets the user
 follow results to the locations in the actual files."
   (let ((filename (cdr (assoc 'FileName json-result-single-element)))
-        (line (cdr (assoc 'Line json-result-single-element))))
+        (line (cdr (assoc 'Line json-result-single-element)))
+        (text (cdr (assoc 'Text json-result-single-element))))
     (concat filename
             ":"
-            (prin1-to-string line))))
+            (prin1-to-string line)
+            ": "
+            text)))
 
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
