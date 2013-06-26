@@ -2,6 +2,7 @@
 ;; Work in progress! Judge gently!
 (require 'json)
 (require 'cl)
+(require 'files)
 
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
@@ -16,6 +17,16 @@
 (defvar omnisharp--find-usages-buffer-name "* OmniSharp : Usages *"
   "The name of the temporary buffer that is used to display the
 results of a 'find usages' call.")
+
+(defvar omnisharp-auto-complete-popup-help-delay nil
+  "The timeout after which the auto-complete popup will show its help
+  popup. Disabled by default because the help is often scrambled and
+  looks bad.")
+
+(defvar omnisharp-auto-complete-popup-persist-help t
+  "Whether to keep the help window (accessed by pressing f1 while the
+popup window is active) open after any other key is
+pressed. Defaults to true.")
 
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
@@ -95,10 +106,26 @@ follow results to the locations in the actual files."
    (concat omnisharp-host "addtoproject")
    params))
 
-(defvar omnisharp-auto-complete-popup-help-delay nil
-  "The timeout after which the auto-complete popup will show its help
-  popup. Disabled by default because the help is often scrambled and
-  looks bad.")
+(defun omnisharp-add-reference ()
+  (interactive)
+  (let* ((path-to-ref-file-to-add
+          (ido-read-file-name "Add reference to (dll / project): "
+                              nil ;; start in current dir
+                              nil ;; no default filename
+                              t ;; only allow existing files
+
+                              ;; TODO use a predicate for filtering
+                              ;; dll and csproj files
+                              ))
+         (tmp-params (omnisharp--get-common-params))
+         (params (add-to-list 'tmp-params
+                              `(Reference . ,path-to-ref-file-to-add))))
+    (omnisharp-add-reference-worker params)))
+
+(defun omnisharp-add-reference-worker (params)
+  (omnisharp-post-message-curl-as-json
+   (concat omnisharp-host "addreference")
+   params))
 
 (defun omnisharp-auto-complete
   (&optional)

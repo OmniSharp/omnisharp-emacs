@@ -12,9 +12,14 @@
 
 ;; For quick testing
 (define-key evil-insert-state-map
-  (kbd "<f5>")
+  (kbd "M-.")
   (lambda () (interactive)
     (omnisharp-auto-complete)))
+
+(define-key evil-normal-state-map
+  (kbd "<f12>")
+  (lambda () (interactive)
+    (omnisharp-go-to-definition)))
 
 ;; Should be 19
 (omnisharp--get-max-item-length '("lontlnitaa" "llinatilnailantonta" "lonta" "lol"))
