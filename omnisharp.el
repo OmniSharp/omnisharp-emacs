@@ -73,7 +73,7 @@ pressed. Defaults to true.")
           (mapcar
            'omnisharp--find-usages-output-to-compilation-output
            (cdr (assoc 'Usages json-result)))))
-    ;; TODO use with-current-buffer
+
     (with-current-buffer output-buffer
       (let ((inhibit-read-only t))
         (read-only-mode nil)
