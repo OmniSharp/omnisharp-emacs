@@ -2,6 +2,7 @@
 ;; Work in progress! Judge gently!
 (require 'json)
 (require 'cl)
+(require 'files)
 
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
@@ -67,6 +68,27 @@ pressed. Defaults to true.")
   ;; TODO report results somehow
   (omnisharp-post-message-curl
    (concat omnisharp-host "addtoproject")
+   params))
+
+(defun omnisharp-add-reference ()
+  (interactive)
+  (let* ((path-to-ref-file-to-add
+          (ido-read-file-name "Add reference to (dll / project): "
+                              nil ;; start in current dir
+                              nil ;; no default filename
+                              t ;; only allow existing files
+
+                              ;; TODO use a predicate for filtering
+                              ;; dll and csproj files
+                              ))
+         (tmp-params (omnisharp--get-common-params))
+         (params (add-to-list 'tmp-params
+                              `(Reference . ,path-to-ref-file-to-add))))
+    (omnisharp-add-reference-worker params)))
+
+(defun omnisharp-add-reference-worker (params)
+  (omnisharp-post-message-curl-as-json
+   (concat omnisharp-host "addreference")
    params))
 
 (defun omnisharp-auto-complete
