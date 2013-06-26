@@ -3,6 +3,7 @@
 (require 'json)
 (require 'cl)
 (require 'files)
+(require 'window)
 
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
@@ -95,7 +96,7 @@ recognizes, so that the user may jump to the results."
               lines-to-write)
       (compilation-mode)
       (read-only-mode t)
-      (switch-to-buffer buffer-to-write-to))))
+      (display-buffer buffer-to-write-to))))
 
 (defun omnisharp--find-usages-output-to-compilation-output
   (json-result-single-element)
