@@ -75,12 +75,16 @@ pressed. Defaults to true.")
            (cdr (assoc 'Usages json-result)))))
     ;; TODO use with-current-buffer
     (with-current-buffer output-buffer
-      (mapcar (lambda (element)
-                (insert element)
-                (insert "\n"))
-              output-in-compilation-mode-format)
-      (compilation-mode)
-      (switch-to-buffer output-buffer))))
+      (let ((inhibit-read-only t))
+        (read-only-mode nil)
+        (erase-buffer)
+        (mapcar (lambda (element)
+                  (insert element)
+                  (insert "\n"))
+                output-in-compilation-mode-format)
+        (compilation-mode)
+        (read-only-mode t)
+        (switch-to-buffer output-buffer)))))
 
 (defun omnisharp--find-usages-output-to-compilation-output
   (json-result-single-element)
