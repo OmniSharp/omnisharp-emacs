@@ -13,6 +13,11 @@
 (defvar omnisharp-auto-complete-popup-want-isearch t
   "Whether to automatically start isearch when auto-completing.")
 
+(defvar omnisharp-auto-complete-popup-persist-help t
+  "Whether to keep the help window (accessed by pressing f1 while the
+popup window is active) open after any other key is
+pressed. Defaults to true.")
+
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
   (interactive)
