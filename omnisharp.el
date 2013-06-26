@@ -90,6 +90,10 @@ recognizes, so that the user may jump to the results."
     (let ((inhibit-read-only t))
       (read-only-mode nil)
       (erase-buffer)
+
+      (when (not (null header))
+        (insert header))
+
       (mapcar (lambda (element)
                 (insert element)
                 (insert "\n"))
