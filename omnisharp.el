@@ -3,7 +3,6 @@
 (require 'json)
 (require 'cl)
 (require 'files)
-(require 'window)
 
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
