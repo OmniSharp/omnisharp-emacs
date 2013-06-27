@@ -18,6 +18,10 @@
   "The name of the temporary buffer that is used to display the
 results of a 'find usages' call.")
 
+(defvar omnisharp--find-implementations-buffer-name "* OmniSharp : Implementations *"
+  "The name of the temporary buffer that is used to display the
+results of a 'find implementations' call.")
+
 (defvar omnisharp-auto-complete-popup-help-delay nil
   "The timeout after which the auto-complete popup will show its help
   popup. Disabled by default because the help is often scrambled and
@@ -33,6 +37,12 @@ pressed. Defaults to true.")
           "\n\n")
   "This is shown at the top of the result buffer when
 omnisharp-find-usages is called.")
+
+(defvar omnisharp-find-implementations-header
+  (concat "Implementations of the current interface / class:"
+          "\n\n")
+  "This is shown at the top of the result buffer when
+omnisharp-find-implementations is called.")
 
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
@@ -84,6 +94,27 @@ omnisharp-find-usages is called.")
      output-in-compilation-mode-format
      output-buffer
      omnisharp-find-usages-header)))
+
+(defun omnisharp-find-implementations ()
+  "Show a buffer containing all implementations of the interface under
+point, or classes derived from the class under point. Allow the user
+to select one (or more) to jump to."
+  (interactive)
+  (omnisharp-find-implementations-worker (omnisharp--get-common-params)))
+
+(defun omnisharp-find-implementations-worker (params)
+  (let* ((json-result (omnisharp-post-message-curl-as-json
+                       (concat omnisharp-host "findimplementations")
+                       params))
+         (output-in-compilation-mode-format
+          (mapcar
+           'omnisharp--find-usages-output-to-compilation-output
+           (cdr (assoc 'Locations json-result)))))
+
+    (omnisharp--write-lines-to-compilation-buffer
+     output-in-compilation-mode-format
+     (get-buffer-create omnisharp--find-implementations-buffer-name)
+     omnisharp-find-implementations-header)))
 
 (defun omnisharp--write-lines-to-compilation-buffer
   (lines-to-write buffer-to-write-to &optional header)
