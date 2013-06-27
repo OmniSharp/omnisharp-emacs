@@ -26,6 +26,11 @@
   (lambda () (interactive)
     (omnisharp-find-usages)))
 
+(define-key evil-normal-state-map
+  (kbd "g o")
+  (lambda () (interactive)
+    (omnisharp-go-to-definition)))
+
 ;; Should be 19
 (omnisharp--get-max-item-length '("lontlnitaa" "llinatilnailantonta" "lonta" "lol"))
 
