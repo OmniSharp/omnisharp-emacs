@@ -177,6 +177,16 @@ follow results to the locations in the actual files."
    (concat omnisharp-host "addtoproject")
    params))
 
+(defun omnisharp-remove-from-project-current-file ()
+  (interactive)
+  (let ((params (omnisharp--get-common-params)))
+    (omnisharp-remove-from-project-current-file-worker params)))
+
+(defun omnisharp-remove-from-project-current-file-worker (params)
+  (omnisharp-post-message-curl
+   (concat omnisharp-host "removefromproject")
+   params))
+
 (defun omnisharp-add-reference ()
   (interactive)
   (let* ((path-to-ref-file-to-add
