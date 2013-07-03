@@ -208,16 +208,8 @@ follow results to the locations in the actual files."
    (concat omnisharp-host "addreference")
    params))
 
-(defun omnisharp-auto-complete
-  (&optional)
-  "TODO
-
-   api-path : the path to the desired OmniSharp API. Example:
-              /autocomplete
-
-   timeout               : override global omnisharp-timeout"
+(defun omnisharp-auto-complete ()
   (let ((params (omnisharp--get-common-params)))
-
     (omnisharp-auto-complete-worker params)))
 
 (defun omnisharp-auto-complete-worker (params)
