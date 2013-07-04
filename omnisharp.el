@@ -3,6 +3,7 @@
 (require 'json)
 (require 'cl)
 (require 'files)
+(require 'ido)
 
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
@@ -62,12 +63,7 @@ omnisharp-find-implementations is called.")
     (if (null filename)
         (message
          "Cannot go to definition as none was returned by the API.")
-      (progn
-        ;; open file :FileName at :Line and :Column
-        (find-file filename)
-        (goto-line (cdr (assoc 'Line json-result)))
-        (move-to-column (- (cdr (assoc 'Column json-result))
-                           1))))))
+      (omnisharp-go-to-file-line-and-column json-result))))
 
 (defun omnisharp-find-usages ()
   "Find usages for the symbol under point"
@@ -223,6 +219,64 @@ the given api-path. TODO"
          (json-result (json-read-from-string raw-result)))
     (omnisharp--display-autocomplete-suggestions json-result)))
 
+(defun omnisharp-run-code-action-refactoring ()
+  "Gets a list of refactoring code actions for the current editor
+position and file from the API. Asks the user what kind of refactoring
+they want to run. Then runs the action.
+
+Saves the current file before doing anything else. This is so that the
+user is less likely to lose data."
+
+  (interactive)
+  (save-buffer)
+  (let* ((actions-vector (omnisharp--get-code-actions-from-api))
+         ;; CodeActions is a vector. Need to convert it to a list.
+         (actions-list
+          (append (cdr (assoc 'CodeActions actions-vector)) nil))
+         (chosen-action (ido-completing-read
+                         "Run code action: "
+                         actions-list
+                         t))
+         (chosen-action-index
+          (position chosen-action actions-list)))
+    (when (not (= 0 (length chosen-action)))
+      (omnisharp-run-code-action-refactoring-worker
+       chosen-action-index))))
+
+(defun omnisharp--get-code-actions-from-api ()
+  "Fetches and returns a GetCodeActionsResponse: the runnable
+refactoring code actions for the current file and position."
+  (omnisharp-post-message-curl-as-json
+   (concat omnisharp-host "getcodeactions")
+   (omnisharp--get-common-params)))
+
+(defun omnisharp-run-code-action-refactoring-worker
+  (chosen-action-index)
+
+  (let* ((run-action-params
+          (cons `(CodeAction . ,chosen-action-index)
+                (omnisharp--get-common-params)))
+         (json-run-action-result ; RunCodeActionsResponse
+          (omnisharp-post-message-curl-as-json
+           (concat omnisharp-host "runcodeaction")
+           run-action-params)))
+
+    (omnisharp-run-code-action-worker run-action-params
+                                      json-run-action-result)))
+
+(defun omnisharp-run-code-action-worker (run-action-params
+                                         json-run-action-result)
+  "Gets new file contents with the chosen refactoring
+applied. Attempts to keep point still.
+
+run-action-params: original parameters sent to /runcodeaction API."
+  (let ((column (current-column))
+        (line (line-number-at-pos)))
+    (erase-buffer)
+    (insert (cdr (assoc 'Text json-run-action-result)))
+    (omnisharp-go-to-file-line-and-column-worker
+     line column)))
+
 (defun omnisharp--convert-slashes-to-double-backslashes (str)
   "This might be useful. A direct port from OmniSharp.py."
   (replace-regexp-in-string "/" "\\\\" str))
@@ -327,3 +381,22 @@ current buffer."
                    (buffer   . ,buffer-contents)
                    (filename . ,filename-tmp))))
     params))
+
+(defun omnisharp-go-to-file-line-and-column (json-result)
+  "Open file :FileName at :Line and :Column. If filename is not given,
+defaults to the current file. This function works for a
+GotoDefinitionResponse line json-result."
+  (omnisharp-go-to-file-line-and-column-worker
+   (cdr (assoc 'Line json-result))
+   (- (cdr (assoc 'Column json-result)) 1)
+   (cdr (assoc 'FileName json-result))))
+
+(defun omnisharp-go-to-file-line-and-column-worker (line
+                                                    column
+                                                    &optional filename)
+  "Open file filename at line and column. If filename is not given,
+defaults to the current file."
+  (when (not (equal filename nil))
+    (find-file filename))
+  (goto-line line)
+  (move-to-column column))
