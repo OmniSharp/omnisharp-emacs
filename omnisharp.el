@@ -223,6 +223,18 @@ the given api-path. TODO"
          (json-result (json-read-from-string raw-result)))
     (omnisharp--display-autocomplete-suggestions json-result)))
 
+(defun omnisharp-auto-complete-overrides ()
+  (interactive)
+  (let ((params (omnisharp--get-common-params)))
+    (omnisharp-auto-complete-overrides-worker params)))
+
+(defun omnisharp-auto-complete-overrides-worker (params)
+  (let ((json-result
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "autocompleteoverrides")
+          params)))
+    (message json-result)))
+
 (defun omnisharp--convert-slashes-to-double-backslashes (str)
   "This might be useful. A direct port from OmniSharp.py."
   (replace-regexp-in-string "/" "\\\\" str))
