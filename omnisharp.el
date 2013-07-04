@@ -62,12 +62,7 @@ omnisharp-find-implementations is called.")
     (if (null filename)
         (message
          "Cannot go to definition as none was returned by the API.")
-      (progn
-        ;; open file :FileName at :Line and :Column
-        (find-file filename)
-        (goto-line (cdr (assoc 'Line json-result)))
-        (move-to-column (- (cdr (assoc 'Column json-result))
-                           1))))))
+      (omnisharp-go-to-file-line-and-column json-result))))
 
 (defun omnisharp-find-usages ()
   "Find usages for the symbol under point"
@@ -327,3 +322,22 @@ current buffer."
                    (buffer   . ,buffer-contents)
                    (filename . ,filename-tmp))))
     params))
+
+(defun omnisharp-go-to-file-line-and-column (json-result)
+  "Open file :FileName at :Line and :Column. If filename is not given,
+defaults to the current file. This function works for a
+GotoDefinitionResponse line json-result."
+  (omnisharp-go-to-file-line-and-column-worker
+   (cdr (assoc 'Line json-result))
+   (- (cdr (assoc 'Column json-result)) 1)
+   (cdr (assoc 'FileName json-result))))
+
+(defun omnisharp-go-to-file-line-and-column-worker (line
+                                                    column
+                                                    &optional filename)
+  "Open file filename at line and column. If filename is not given,
+defaults to the current file."
+  (when (not (equal filename nil))
+    (find-file filename))
+  (goto-line line)
+  (move-to-column column))
