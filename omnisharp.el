@@ -231,7 +231,8 @@ user is less likely to lose data."
   (let* ((actions-vector (omnisharp--get-code-actions-from-api))
          ;; CodeActions is a vector. Need to convert it to a list.
          (actions-list
-          (append (cdr (assoc 'CodeActions actions-vector)) nil))
+          (omnisharp--vector-to-list
+           (cdr (assoc 'CodeActions actions-vector))))
          (chosen-action (ido-completing-read
                          "Run code action: "
                          actions-list
