@@ -395,7 +395,9 @@ GotoDefinitionResponse line json-result."
                                                     column
                                                     &optional filename)
   "Open file filename at line and column. If filename is not given,
-defaults to the current file."
+defaults to the current file. Saves the current location into the tag
+ring so that the user may return with (pop-tag-mark)."
+  (ring-insert find-tag-marker-ring (point-marker))
   (when (not (equal filename nil))
     (find-file filename))
   (goto-line line)
