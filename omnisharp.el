@@ -4,6 +4,7 @@
 (require 'cl)
 (require 'files)
 (require 'ido)
+(require 'thingatpt)
 
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
@@ -111,6 +112,35 @@ to select one (or more) to jump to."
      output-in-compilation-mode-format
      (get-buffer-create omnisharp--find-implementations-buffer-name)
      omnisharp-find-implementations-header)))
+
+(defun omnisharp-rename ()
+  "Rename the current symbol to a new name. Lets the user choose what
+name to rename to, defaulting to the current name of the symbol."
+  (interactive)
+  (let* ((current-word (thing-at-point 'word))
+         (rename-to (read-string "Rename to: " current-word))
+         (rename-request
+          (cons `(RenameTo . ,rename-to)
+                (omnisharp--get-common-params))))
+
+    (omnisharp-rename-worker rename-request)
+    (message "Rename complete")))
+
+(defun omnisharp-rename-worker (rename-request)
+  (let* ((rename-responses
+          (omnisharp-post-message-curl-as-json
+           (concat omnisharp-host "rename")
+           rename-request))
+         (modified-files (omnisharp--vector-to-list
+                          (cdr (assoc 'Changes rename-responses)))))
+    (save-excursion
+      (mapc (lambda (modified-file-response)
+              (omnisharp--set-buffer-contents-to
+               (cdr (assoc 'FileName modified-file-response))
+               (cdr (assoc 'Buffer modified-file-response))
+               1
+               1))
+            modified-files))))
 
 (defun omnisharp--write-lines-to-compilation-buffer
   (lines-to-write buffer-to-write-to &optional header)
