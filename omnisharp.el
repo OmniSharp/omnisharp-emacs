@@ -424,3 +424,6 @@ ring so that the user may return with (pop-tag-mark)."
     (find-file filename))
   (goto-line line)
   (move-to-column column))
+
+(defun omnisharp--vector-to-list (vector)
+  (append vector nil))
