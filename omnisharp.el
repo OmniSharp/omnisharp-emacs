@@ -270,12 +270,39 @@ refactoring code actions for the current file and position."
 applied. Attempts to keep point still.
 
 run-action-params: original parameters sent to /runcodeaction API."
-  (let ((column (current-column))
-        (line (line-number-at-pos)))
-    (erase-buffer)
-    (insert (cdr (assoc 'Text json-run-action-result)))
+  (omnisharp--set-buffer-contents-to
+   (buffer-file-name)
+   (cdr (assoc 'Text json-run-action-result))
+   (line-number-at-pos)
+   (current-column)))
+
+(defun omnisharp--set-buffer-contents-to (filename-for-buffer
+                                          new-buffer-contents
+                                          result-point-line
+                                          result-point-column)
+  "Sets the buffer contents to new-buffer-contents for the buffer
+visiting filename-for-buffer. Afterwards moves point to the
+coordinates result-point-line and result-point-column.
+
+If no buffer exists for filename-for-buffer, does nothing."
+  (when (omnisharp--buffer-exists-for-file-name
+         filename-for-buffer)
+    (save-some-buffers)
     (omnisharp-go-to-file-line-and-column-worker
-     line column)))
+     result-point-line result-point-column)
+
+    (erase-buffer)
+    (insert new-buffer-contents)
+
+    ;; Hack. Puts point where it belongs.
+    (omnisharp-go-to-file-line-and-column-worker
+     result-point-line result-point-column)))
+
+(defun omnisharp--buffer-exists-for-file-name (file-name)
+  (cl-some (lambda (a)
+             (equalp (buffer-file-name)
+                     file-name))
+           (buffer-list)))
 
 (defun omnisharp--convert-slashes-to-double-backslashes (str)
   "This might be useful. A direct port from OmniSharp.py."
