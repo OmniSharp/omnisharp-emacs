@@ -281,21 +281,17 @@ run-action-params: original parameters sent to /runcodeaction API."
                                           result-point-column)
   "Sets the buffer contents to new-buffer-contents for the buffer
 visiting filename-for-buffer. Afterwards moves point to the
-coordinates result-point-line and result-point-column.
+coordinates result-point-line and result-point-column."
+  (omnisharp-go-to-file-line-and-column-worker
+   result-point-line result-point-column filename-for-buffer)
+  (save-buffer)
 
-If no buffer exists for filename-for-buffer, does nothing."
-  (when (omnisharp--buffer-exists-for-file-name
-         filename-for-buffer)
-    (save-some-buffers)
-    (omnisharp-go-to-file-line-and-column-worker
-     result-point-line result-point-column)
+  (erase-buffer)
+  (insert new-buffer-contents)
 
-    (erase-buffer)
-    (insert new-buffer-contents)
-
-    ;; Hack. Puts point where it belongs.
-    (omnisharp-go-to-file-line-and-column-worker
-     result-point-line result-point-column)))
+  ;; Hack. Puts point where it belongs.
+  (omnisharp-go-to-file-line-and-column-worker
+   result-point-line result-point-column filename-for-buffer))
 
 (defun omnisharp--buffer-exists-for-file-name (file-name)
   (cl-some (lambda (a)
