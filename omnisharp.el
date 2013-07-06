@@ -212,11 +212,10 @@ follow results to the locations in the actual files."
   "Takes a plist and makes an autocomplete query with them. Targets
 the given api-path. TODO"
   ;; json.el URL encodes params automatically.
-  (let* ((raw-result
-          (omnisharp-post-message-curl
-           (concat omnisharp-host "autocomplete")
-           params))
-         (json-result (json-read-from-string raw-result)))
+  (let ((json-result
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "autocomplete")
+          params)))
     (omnisharp--display-autocomplete-suggestions json-result)))
 
 (defun omnisharp-run-code-action-refactoring ()
