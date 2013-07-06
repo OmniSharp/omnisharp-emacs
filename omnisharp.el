@@ -4,6 +4,7 @@
 (require 'cl)
 (require 'files)
 (require 'ido)
+(require 'thingatpt)
 
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
@@ -112,6 +113,35 @@ to select one (or more) to jump to."
      (get-buffer-create omnisharp--find-implementations-buffer-name)
      omnisharp-find-implementations-header)))
 
+(defun omnisharp-rename ()
+  "Rename the current symbol to a new name. Lets the user choose what
+name to rename to, defaulting to the current name of the symbol."
+  (interactive)
+  (let* ((current-word (thing-at-point 'word))
+         (rename-to (read-string "Rename to: " current-word))
+         (rename-request
+          (cons `(RenameTo . ,rename-to)
+                (omnisharp--get-common-params))))
+
+    (omnisharp-rename-worker rename-request)
+    (message "Rename complete")))
+
+(defun omnisharp-rename-worker (rename-request)
+  (let* ((rename-responses
+          (omnisharp-post-message-curl-as-json
+           (concat omnisharp-host "rename")
+           rename-request))
+         (modified-files (omnisharp--vector-to-list
+                          (cdr (assoc 'Changes rename-responses)))))
+    (save-excursion
+      (mapc (lambda (modified-file-response)
+              (omnisharp--set-buffer-contents-to
+               (cdr (assoc 'FileName modified-file-response))
+               (cdr (assoc 'Buffer modified-file-response))
+               1
+               1))
+            modified-files))))
+
 (defun omnisharp--write-lines-to-compilation-buffer
   (lines-to-write buffer-to-write-to &optional header)
   "Writes the given lines to the given buffer, and sets
@@ -212,11 +242,10 @@ follow results to the locations in the actual files."
   "Takes a plist and makes an autocomplete query with them. Targets
 the given api-path. TODO"
   ;; json.el URL encodes params automatically.
-  (let* ((raw-result
-          (omnisharp-post-message-curl
-           (concat omnisharp-host "autocomplete")
-           params))
-         (json-result (json-read-from-string raw-result)))
+  (let ((json-result
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "autocomplete")
+          params)))
     (omnisharp--display-autocomplete-suggestions json-result)))
 
 (defun omnisharp-run-code-action-refactoring ()
@@ -232,7 +261,8 @@ user is less likely to lose data."
   (let* ((actions-vector (omnisharp--get-code-actions-from-api))
          ;; CodeActions is a vector. Need to convert it to a list.
          (actions-list
-          (append (cdr (assoc 'CodeActions actions-vector)) nil))
+          (omnisharp--vector-to-list
+           (cdr (assoc 'CodeActions actions-vector))))
          (chosen-action (ido-completing-read
                          "Run code action: "
                          actions-list
@@ -270,12 +300,35 @@ refactoring code actions for the current file and position."
 applied. Attempts to keep point still.
 
 run-action-params: original parameters sent to /runcodeaction API."
-  (let ((column (current-column))
-        (line (line-number-at-pos)))
-    (erase-buffer)
-    (insert (cdr (assoc 'Text json-run-action-result)))
-    (omnisharp-go-to-file-line-and-column-worker
-     line column)))
+  (omnisharp--set-buffer-contents-to
+   (buffer-file-name)
+   (cdr (assoc 'Text json-run-action-result))
+   (line-number-at-pos)
+   (current-column)))
+
+(defun omnisharp--set-buffer-contents-to (filename-for-buffer
+                                          new-buffer-contents
+                                          result-point-line
+                                          result-point-column)
+  "Sets the buffer contents to new-buffer-contents for the buffer
+visiting filename-for-buffer. Afterwards moves point to the
+coordinates result-point-line and result-point-column."
+  (omnisharp-go-to-file-line-and-column-worker
+   result-point-line result-point-column filename-for-buffer)
+  (save-buffer)
+
+  (erase-buffer)
+  (insert new-buffer-contents)
+
+  ;; Hack. Puts point where it belongs.
+  (omnisharp-go-to-file-line-and-column-worker
+   result-point-line result-point-column filename-for-buffer))
+
+(defun omnisharp--buffer-exists-for-file-name (file-name)
+  (cl-some (lambda (a)
+             (equalp (buffer-file-name)
+                     file-name))
+           (buffer-list)))
 
 (defun omnisharp--convert-slashes-to-double-backslashes (str)
   "This might be useful. A direct port from OmniSharp.py."
@@ -402,3 +455,6 @@ ring so that the user may return with (pop-tag-mark)."
     (find-file filename))
   (goto-line line)
   (move-to-column column))
+
+(defun omnisharp--vector-to-list (vector)
+  (append vector nil))
