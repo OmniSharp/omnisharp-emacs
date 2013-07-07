@@ -429,10 +429,10 @@ current buffer."
          (buffer-contents (omnisharp--get-current-buffer-contents))
          (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
                         buffer-file-name))
-         (params `((line     . ,line-number)
-                   (column   . ,column-number)
-                   (buffer   . ,buffer-contents)
-                   (filename . ,filename-tmp))))
+         (params `((Line     . ,line-number)
+                   (Column   . ,column-number)
+                   (Buffer   . ,buffer-contents)
+                   (FileName . ,filename-tmp))))
     params))
 
 (defun omnisharp-go-to-file-line-and-column (json-result)
