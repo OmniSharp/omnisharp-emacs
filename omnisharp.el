@@ -194,7 +194,9 @@ follow results to the locations in the actual files."
 (defun omnisharp-add-to-solution-current-file ()
   (interactive)
   (let ((params (omnisharp--get-common-params)))
-    (omnisharp-add-to-solution-worker params)))
+    (omnisharp-add-to-solution-worker params)
+    (message "Added %s to the solution."
+             (cdr (assoc 'FileName params)))))
 
 (defun omnisharp-add-to-solution-worker (params)
   "TODO"
@@ -206,7 +208,9 @@ follow results to the locations in the actual files."
 (defun omnisharp-remove-from-project-current-file ()
   (interactive)
   (let ((params (omnisharp--get-common-params)))
-    (omnisharp-remove-from-project-current-file-worker params)))
+    (omnisharp-remove-from-project-current-file-worker params)
+    (message "Removed %s from the solution."
+             (cdr (assoc 'FileName params)))))
 
 (defun omnisharp-remove-from-project-current-file-worker (params)
   (omnisharp-post-message-curl
