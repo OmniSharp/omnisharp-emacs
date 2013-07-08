@@ -254,11 +254,20 @@ the given api-path. TODO"
     (omnisharp-auto-complete-overrides-worker params)))
 
 (defun omnisharp-auto-complete-overrides-worker (params)
-  (let ((json-result
-         (omnisharp-post-message-curl-as-json
-          (concat omnisharp-host "autocompleteoverrides")
-          params)))
-    (message json-result)))
+  (let* ((json-result
+          (omnisharp--vector-to-list
+           (omnisharp-post-message-curl-as-json
+            (concat omnisharp-host "getoverridetargets")
+            params)))
+         (target-names
+          (mapcar (lambda (a)
+                    (cdr (assoc 'OverrideTargetName a)))
+                  json-result))
+         (chosen-override (ido-completing-read
+                           "Override: "
+                           target-names
+                           t)))
+    (message (prin1-to-string chosen-override))))
 
 (defun omnisharp-run-code-action-refactoring ()
   "Gets a list of refactoring code actions for the current editor
