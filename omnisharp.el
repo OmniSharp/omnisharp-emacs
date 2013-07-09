@@ -117,7 +117,7 @@ to select one (or more) to jump to."
   "Rename the current symbol to a new name. Lets the user choose what
 name to rename to, defaulting to the current name of the symbol."
   (interactive)
-  (let* ((current-word (thing-at-point 'word))
+  (let* ((current-word (thing-at-point 'symbol))
          (rename-to (read-string "Rename to: " current-word))
          (rename-request
           (cons `(RenameTo . ,rename-to)
