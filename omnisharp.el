@@ -46,6 +46,19 @@ omnisharp-find-usages is called.")
   "This is shown at the top of the result buffer when
 omnisharp-find-implementations is called.")
 
+(defvar omnisharp--auto-complete-display-backend
+  'popup
+  "Defines what auto-complete result displaying backend to use when
+showing autocomplete results to the user. Valid values are found in
+omnisharp--auto-complete-display-backends-alist.")
+
+(defvar omnisharp--auto-complete-display-backends-alist
+  '((popup . omnisharp--auto-complete-display-function-popup)
+    (ido . omnisharp--auto-complete-display-function-ido))
+  "Holds an alist of all available auto-complete display backends.
+See the documentation for the variable
+omnisharp--auto-complete-display-backend for more information.")
+
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
   (interactive)
@@ -236,17 +249,32 @@ follow results to the locations in the actual files."
 
 (defun omnisharp-auto-complete ()
   (let ((params (omnisharp--get-common-params)))
-    (omnisharp-auto-complete-worker params)))
+    (omnisharp-auto-complete-worker
+     params
+     (omnisharp--get-auto-complete-display-function))))
 
-(defun omnisharp-auto-complete-worker (params)
+(defun omnisharp--get-auto-complete-display-function ()
+  "Returns a function that can be fed the output from
+omnisharp-auto-complete-worker - the JSON output from the omnisharp
+/autocomplete API."
+  (cdr (assoc omnisharp--auto-complete-display-backend
+              omnisharp--auto-complete-display-backends-alist)))
+
+(defun omnisharp-auto-complete-worker (params
+                                       display-function)
   "Takes a plist and makes an autocomplete query with them. Targets
-the given api-path. TODO"
+the given api-path.
+
+DISPLAY-FUNCTION defines what 'display' backend to show to the
+user. This is controlled by the variable
+omnisharp-auto-complete-display-function."
+
   ;; json.el URL encodes params automatically.
   (let ((json-result
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "autocomplete")
           params)))
-    (omnisharp--display-autocomplete-suggestions json-result)))
+    (funcall display-function json-result)))
 
 (defun omnisharp-auto-complete-overrides ()
   (interactive)
@@ -369,7 +397,7 @@ result."
   (json-read-from-string
    (omnisharp-post-message-curl url params)))
 
-(defun omnisharp--display-autocomplete-suggestions
+(defun omnisharp--auto-complete-display-function-popup
   (json-result-alist)
   "Gets an association list such as this:
  (((DisplayText    . \"Gender\")
@@ -414,7 +442,7 @@ current buffer."
       ;; TODO get item from json-result-alist
       ;;
       ;; TODO these are already calculated in
-      ;; omnisharp--display-autocomplete-suggestions, stored as
+      ;; omnisharp--auto-complete-display-function-popup, stored as
       ;; completion-texts
       (cdr (assoc 'DisplayText element))
       :value (omnisharp--completion-result-item-get-completion-text
