@@ -397,6 +397,48 @@ current buffer."
                          omnisharp-auto-complete-popup-help-delay)))
     (insert result)))
 
+(defun omnisharp--auto-complete-display-function-ido
+  (json-result-alist)
+  "Use ido style completion matching with autocomplete candidates. Ido
+is a more sophisticated matching framework than what popup.el offers."
+
+  (if (equalp 0 (length json-result-alist))
+      (progn (message "No completions.")
+             nil)
+
+    (let* ((candidates (omnisharp--vector-to-list json-result))
+
+           (display-texts
+            (mapcar 'omnisharp--completion-result-item-get-display-text
+                    candidates))
+
+           ;; This is only the display text. The text to be inserted
+           ;; in the buffer will be fetched with this
+           ;;
+           ;; TODO does ido-completing-read allow a custom format that
+           ;; could store these, as with popup-make-item ?
+           (user-chosen-display-text
+            (ido-completing-read
+             "Complete: "
+             display-texts))
+
+           ;; Get the chosen candidate by getting the index of the
+           ;; chosen DisplayText. The candidate with the same index is
+           ;; the one we want.
+           (json-result-element-index-with-user-chosen-text
+            (position-if (lambda (element)
+                           (equal element
+                                  user-chosen-display-text))
+                         display-texts))
+           (chosen-candidate
+            (nth json-result-element-index-with-user-chosen-text
+                 candidates))
+
+           (completion-text-to-insert
+            (cdr (assoc 'CompletionText
+                        chosen-candidate))))
+    (insert completion-text-to-insert))))
+
 ;; TODO Use a plist. This is ridiculous.
 (defun omnisharp--convert-auto-complete-json-to-popup-format
   (json-result-alist)
