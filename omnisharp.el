@@ -34,6 +34,11 @@ results of a 'find implementations' call.")
 popup window is active) open after any other key is
 pressed. Defaults to true.")
 
+(defvar-local
+  omnisharp--last-buffer-specific-auto-complete-result
+  nil
+  "Contains the last result of an autocomplete query.")
+
 (defvar omnisharp-find-usages-header
   (concat "Usages in the current solution:"
           "\n\n")
@@ -278,6 +283,9 @@ omnisharp-auto-complete-display-function."
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "autocomplete")
           params)))
+    ;; Cache result so it may be juggled in different contexts easily
+    (setq omnisharp--last-buffer-specific-auto-complete-result
+          json-result)
     (funcall display-function json-result)))
 
 (defun omnisharp-auto-complete-overrides ()
