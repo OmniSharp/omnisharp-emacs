@@ -34,6 +34,20 @@ results of a 'find implementations' call.")
 popup window is active) open after any other key is
 pressed. Defaults to true.")
 
+(defvar-local
+  omnisharp--last-buffer-specific-auto-complete-result
+  nil
+  "Contains the last result of an autocomplete query.")
+
+(defvar omnisharp-auto-complete-popup-keymap
+  (let ((keymap (make-sparse-keymap)))
+    (set-keymap-parent keymap popup-menu-keymap)
+
+    (define-key keymap (kbd "<f2>") 'omnisharp--popup-to-ido)
+    keymap)
+  "The keymap used when displaying an autocomplete result in a popup
+menu.")
+
 (defvar omnisharp-find-usages-header
   (concat "Usages in the current solution:"
           "\n\n")
@@ -278,6 +292,9 @@ omnisharp-auto-complete-display-function."
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "autocomplete")
           params)))
+    ;; Cache result so it may be juggled in different contexts easily
+    (setq omnisharp--last-buffer-specific-auto-complete-result
+          json-result)
     (funcall display-function json-result)))
 
 (defun omnisharp-auto-complete-overrides ()
@@ -436,7 +453,7 @@ current buffer."
       (setq result
             (popup-menu* display-list
                          :width max-width
-                         :keymap popup-menu-keymap
+                         :keymap omnisharp-auto-complete-popup-keymap
                          :margin-left 1
                          :margin-right 1
                          :scroll-bar t
@@ -553,3 +570,16 @@ ring so that the user may return with (pop-tag-mark)."
 
 (defun omnisharp--vector-to-list (vector)
   (append vector nil))
+
+(defun omnisharp--popup-to-ido ()
+  "When in a popup menu with autocomplete suggestions, calling this
+function will close the popup and open an ido prompt instead.
+
+Note that currently this will leave the popup menu active even when
+the user selects a completion and the completion is inserted."
+
+  (interactive) ; required. Otherwise call to this is silently ignored
+
+  ;; TODO how to check if popup is active?
+  (omnisharp--auto-complete-display-function-ido
+   omnisharp--last-buffer-specific-auto-complete-result))
