@@ -130,7 +130,7 @@ to select one (or more) to jump to."
   "Rename the current symbol to a new name. Lets the user choose what
 name to rename to, defaulting to the current name of the symbol."
   (interactive)
-  (let* ((current-word (thing-at-point 'word))
+  (let* ((current-word (thing-at-point 'symbol))
          (rename-to (read-string "Rename to: " current-word))
          (rename-request
           (cons `(RenameTo . ,rename-to)
@@ -207,7 +207,9 @@ follow results to the locations in the actual files."
 (defun omnisharp-add-to-solution-current-file ()
   (interactive)
   (let ((params (omnisharp--get-common-params)))
-    (omnisharp-add-to-solution-worker params)))
+    (omnisharp-add-to-solution-worker params)
+    (message "Added %s to the solution."
+             (cdr (assoc 'FileName params)))))
 
 (defun omnisharp-add-to-solution-worker (params)
   "TODO"
@@ -219,7 +221,9 @@ follow results to the locations in the actual files."
 (defun omnisharp-remove-from-project-current-file ()
   (interactive)
   (let ((params (omnisharp--get-common-params)))
-    (omnisharp-remove-from-project-current-file-worker params)))
+    (omnisharp-remove-from-project-current-file-worker params)
+    (message "Removed %s from the solution."
+             (cdr (assoc 'FileName params)))))
 
 (defun omnisharp-remove-from-project-current-file-worker (params)
   (omnisharp-post-message-curl
@@ -282,11 +286,20 @@ omnisharp-auto-complete-display-function."
     (omnisharp-auto-complete-overrides-worker params)))
 
 (defun omnisharp-auto-complete-overrides-worker (params)
-  (let ((json-result
-         (omnisharp-post-message-curl-as-json
-          (concat omnisharp-host "autocompleteoverrides")
-          params)))
-    (message json-result)))
+  (let* ((json-result
+          (omnisharp--vector-to-list
+           (omnisharp-post-message-curl-as-json
+            (concat omnisharp-host "getoverridetargets")
+            params)))
+         (target-names
+          (mapcar (lambda (a)
+                    (cdr (assoc 'OverrideTargetName a)))
+                  json-result))
+         (chosen-override (ido-completing-read
+                           "Override: "
+                           target-names
+                           t)))
+    (message (prin1-to-string chosen-override))))
 
 (defun omnisharp-run-code-action-refactoring ()
   "Gets a list of refactoring code actions for the current editor
@@ -469,10 +482,10 @@ current buffer."
          (buffer-contents (omnisharp--get-current-buffer-contents))
          (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
                         buffer-file-name))
-         (params `((line     . ,line-number)
-                   (column   . ,column-number)
-                   (buffer   . ,buffer-contents)
-                   (filename . ,filename-tmp))))
+         (params `((Line     . ,line-number)
+                   (Column   . ,column-number)
+                   (Buffer   . ,buffer-contents)
+                   (FileName . ,filename-tmp))))
     params))
 
 (defun omnisharp-go-to-file-line-and-column (json-result)
