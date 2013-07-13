@@ -34,6 +34,20 @@ results of a 'find implementations' call.")
 popup window is active) open after any other key is
 pressed. Defaults to true.")
 
+(defvar-local
+  omnisharp--last-buffer-specific-auto-complete-result
+  nil
+  "Contains the last result of an autocomplete query.")
+
+(defvar omnisharp-auto-complete-popup-keymap
+  (let ((keymap (make-sparse-keymap)))
+    (set-keymap-parent keymap popup-menu-keymap)
+
+    (define-key keymap (kbd "<f2>") 'omnisharp--popup-to-ido)
+    keymap)
+  "The keymap used when displaying an autocomplete result in a popup
+menu.")
+
 (defvar omnisharp-find-usages-header
   (concat "Usages in the current solution:"
           "\n\n")
@@ -45,6 +59,19 @@ omnisharp-find-usages is called.")
           "\n\n")
   "This is shown at the top of the result buffer when
 omnisharp-find-implementations is called.")
+
+(defvar omnisharp--auto-complete-display-backend
+  'popup
+  "Defines what auto-complete result displaying backend to use when
+showing autocomplete results to the user. Valid values are found in
+omnisharp--auto-complete-display-backends-alist.")
+
+(defvar omnisharp--auto-complete-display-backends-alist
+  '((popup . omnisharp--auto-complete-display-function-popup)
+    (ido . omnisharp--auto-complete-display-function-ido))
+  "Holds an alist of all available auto-complete display backends.
+See the documentation for the variable
+omnisharp--auto-complete-display-backend for more information.")
 
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
@@ -240,17 +267,35 @@ follow results to the locations in the actual files."
 
 (defun omnisharp-auto-complete ()
   (let ((params (omnisharp--get-common-params)))
-    (omnisharp-auto-complete-worker params)))
+    (omnisharp-auto-complete-worker
+     params
+     (omnisharp--get-auto-complete-display-function))))
 
-(defun omnisharp-auto-complete-worker (params)
+(defun omnisharp--get-auto-complete-display-function ()
+  "Returns a function that can be fed the output from
+omnisharp-auto-complete-worker - the JSON output from the omnisharp
+/autocomplete API."
+  (cdr (assoc omnisharp--auto-complete-display-backend
+              omnisharp--auto-complete-display-backends-alist)))
+
+(defun omnisharp-auto-complete-worker (params
+                                       display-function)
   "Takes a plist and makes an autocomplete query with them. Targets
-the given api-path. TODO"
+the given api-path.
+
+DISPLAY-FUNCTION defines what 'display' backend to show to the
+user. This is controlled by the variable
+omnisharp-auto-complete-display-function."
+
   ;; json.el URL encodes params automatically.
   (let ((json-result
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "autocomplete")
           params)))
-    (omnisharp--display-autocomplete-suggestions json-result)))
+    ;; Cache result so it may be juggled in different contexts easily
+    (setq omnisharp--last-buffer-specific-auto-complete-result
+          json-result)
+    (funcall display-function json-result)))
 
 (defun omnisharp-auto-complete-overrides ()
   (interactive)
@@ -398,7 +443,7 @@ result."
   (json-read-from-string
    (omnisharp-post-message-curl url params)))
 
-(defun omnisharp--display-autocomplete-suggestions
+(defun omnisharp--auto-complete-display-function-popup
   (json-result-alist)
   "Gets an association list such as this:
  (((DisplayText    . \"Gender\")
@@ -424,7 +469,7 @@ current buffer."
       (setq result
             (popup-menu* display-list
                          :width max-width
-                         :keymap popup-menu-keymap
+                         :keymap omnisharp-auto-complete-popup-keymap
                          :margin-left 1
                          :margin-right 1
                          :scroll-bar t
@@ -433,6 +478,48 @@ current buffer."
                          :help-delay
                          omnisharp-auto-complete-popup-help-delay)))
     (insert result)))
+
+(defun omnisharp--auto-complete-display-function-ido
+  (json-result-alist)
+  "Use ido style completion matching with autocomplete candidates. Ido
+is a more sophisticated matching framework than what popup.el offers."
+
+  (if (equalp 0 (length json-result-alist))
+      (progn (message "No completions.")
+             nil)
+
+    (let* ((candidates (omnisharp--vector-to-list json-result))
+
+           (display-texts
+            (mapcar 'omnisharp--completion-result-item-get-display-text
+                    candidates))
+
+           ;; This is only the display text. The text to be inserted
+           ;; in the buffer will be fetched with this
+           ;;
+           ;; TODO does ido-completing-read allow a custom format that
+           ;; could store these, as with popup-make-item ?
+           (user-chosen-display-text
+            (ido-completing-read
+             "Complete: "
+             display-texts))
+
+           ;; Get the chosen candidate by getting the index of the
+           ;; chosen DisplayText. The candidate with the same index is
+           ;; the one we want.
+           (json-result-element-index-with-user-chosen-text
+            (position-if (lambda (element)
+                           (equal element
+                                  user-chosen-display-text))
+                         display-texts))
+           (chosen-candidate
+            (nth json-result-element-index-with-user-chosen-text
+                 candidates))
+
+           (completion-text-to-insert
+            (cdr (assoc 'CompletionText
+                        chosen-candidate))))
+    (insert completion-text-to-insert))))
 
 ;; TODO Use a plist. This is ridiculous.
 (defun omnisharp--convert-auto-complete-json-to-popup-format
@@ -443,7 +530,7 @@ current buffer."
       ;; TODO get item from json-result-alist
       ;;
       ;; TODO these are already calculated in
-      ;; omnisharp--display-autocomplete-suggestions, stored as
+      ;; omnisharp--auto-complete-display-function-popup, stored as
       ;; completion-texts
       (cdr (assoc 'DisplayText element))
       :value (omnisharp--completion-result-item-get-completion-text
@@ -499,3 +586,16 @@ ring so that the user may return with (pop-tag-mark)."
 
 (defun omnisharp--vector-to-list (vector)
   (append vector nil))
+
+(defun omnisharp--popup-to-ido ()
+  "When in a popup menu with autocomplete suggestions, calling this
+function will close the popup and open an ido prompt instead.
+
+Note that currently this will leave the popup menu active even when
+the user selects a completion and the completion is inserted."
+
+  (interactive) ; required. Otherwise call to this is silently ignored
+
+  ;; TODO how to check if popup is active?
+  (omnisharp--auto-complete-display-function-ido
+   omnisharp--last-buffer-specific-auto-complete-result))
