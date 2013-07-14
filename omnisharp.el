@@ -5,6 +5,7 @@
 (require 'files)
 (require 'ido)
 (require 'thingatpt)
+(require 'flycheck)
 
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
@@ -606,3 +607,59 @@ the user selects a completion and the completion is inserted."
   ;; TODO how to check if popup is active?
   (omnisharp--auto-complete-display-function-ido
    omnisharp--last-buffer-specific-auto-complete-result))
+(defun omnisharp-syntax-check ()
+  "Perform a manual syntax check for the current buffer."
+  (interactive)
+  (let ((params (omnisharp--get-common-params)))
+    (omnisharp-syntax-check-worker params)))
+
+(defun omnisharp-syntax-check-worker (params)
+  (let* ((string-result
+          (omnisharp-post-message-curl-as-json
+           (concat omnisharp-host "syntaxerrors")
+           params)))
+    (message (prin1-to-string string-result))))
+
+(flycheck-define-checker csharp-omnisharp-curl
+  "A csharp source syntax checker using curl to call an OmniSharp
+server process running in the background. Only checks the syntax - not
+type errors."
+  :command ((eval
+             (let ((command-plist
+                    (omnisharp--get-curl-command
+                     (concat omnisharp-host "syntaxerrors")
+                     (omnisharp--get-common-params))))
+               (cons
+                (plist-get command-plist :command)
+                (plist-get command-plist :arguments)))))
+
+  :error-patterns ((error line-start
+                          (file-name) ":"
+                          line ":"
+                          column
+                          " "
+                          (message (one-or-more not-newline))))
+  :error-parser omnisharp--syntax-check-error-parser
+  ;; TODO use only is csharp files - but there are a few different
+  ;; extensions available for these!
+  :predicate (lambda () t))
+
+(defun omnisharp--syntax-check-error-parser (output checker buffer)
+  "Returns a list of flycheck-error objects: one for each
+OmniSharp.SyntaxErrors.Error structure in OUTPUT."
+  (let* ((json-result
+          (json-read-from-string output))
+         (errors (omnisharp--vector-to-list
+                  (cdr (assoc 'Errors json-result)))))
+    (when (not (equal (length errors) 0))
+      (mapcar (lambda (it)
+                (flycheck-error-new
+                 :buffer buffer
+                 :checker checker
+                 :filename (cdr (assoc 'FileName it))
+                 :line (cdr (assoc 'Line it))
+                 :column (cdr (assoc 'Column it))
+                 :message (cdr (assoc 'Message it))
+                 :level 'error))
+              errors))))
+
