@@ -426,18 +426,25 @@ coordinates result-point-line and result-point-column."
 (defun omnisharp-post-message-curl (url params)
   "Post json stuff to url with --data set to given params. Return
 result."
-  (with-temp-buffer
-    (call-process
-     "curl"
-     nil ;; infile
-     (buffer-name);; destination
-     nil ;; display (no specialities needed)
-     ;; these are just args
-     "--silent" "-H" "Content-type: application/json"
+  (let ((curl-command-plist
+         (omnisharp--get-curl-command url params)))
+    (with-temp-buffer
+      (apply 'call-process
+             (plist-get curl-command-plist :command)
+             nil ;; infile
+             (buffer-name);; destination
+             nil ;; display (no specialities needed)
+             ;; these are just args
+             (plist-get curl-command-plist :arguments))
+      (buffer-string))))
+
+(defun omnisharp--get-curl-command (url params)
+  `(:command "curl"
+    :arguments
+    ("--silent" "-H" "Content-type: application/json"
      "--data"
-     (json-encode params)
-     url)
-    (buffer-string)))
+     ,(json-encode params)
+     ,url)))
 
 (defun omnisharp-post-message-curl-as-json (url params)
   (json-read-from-string
