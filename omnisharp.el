@@ -498,7 +498,7 @@ is a more sophisticated matching framework than what popup.el offers."
       (progn (message "No completions.")
              nil)
 
-    (let* ((candidates (omnisharp--vector-to-list json-result))
+    (let* ((candidates (omnisharp--vector-to-list json-result-alist))
 
            (display-texts
             (mapcar 'omnisharp--completion-result-item-get-display-text
