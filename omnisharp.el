@@ -476,19 +476,18 @@ current buffer."
                     json-result-alist))
 
            (max-width (omnisharp--get-max-item-length
-                       completion-texts)))
-      (setq result
-            (popup-menu* display-list
-                         :width max-width
-                         :keymap omnisharp-auto-complete-popup-keymap
-                         :margin-left 1
-                         :margin-right 1
-                         :scroll-bar t
-                         :isearch
-                         omnisharp-auto-complete-popup-want-isearch
-                         :help-delay
-                         omnisharp-auto-complete-popup-help-delay)))
-    (insert result)))
+                       completion-texts))
+           (result (popup-menu* display-list
+                                :width max-width
+                                :keymap omnisharp-auto-complete-popup-keymap
+                                :margin-left 1
+                                :margin-right 1
+                                :scroll-bar t
+                                :isearch
+                                omnisharp-auto-complete-popup-want-isearch
+                                :help-delay
+                                omnisharp-auto-complete-popup-help-delay)))
+      (insert result))))
 
 (defun omnisharp--auto-complete-display-function-ido
   (json-result-alist)
