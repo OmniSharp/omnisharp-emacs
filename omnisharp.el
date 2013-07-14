@@ -6,6 +6,8 @@
 (require 'ido)
 (require 'thingatpt)
 (require 'flycheck)
+(require 'etags)
+(require 'popup)
 
 ;;; Code:
 (defvar omnisharp-host "http://localhost:2000/"
