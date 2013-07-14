@@ -646,29 +646,27 @@ type errors."
                           column
                           " "
                           (message (one-or-more not-newline))))
-  :error-parser omnisharp--syntax-check-error-parser
+  ;; TODO this should be moved out, but I can't get it to compile that
+  ;; way.
+  :error-parser (lambda (output checker buffer)
+                  (let* ((json-result
+                          (json-read-from-string output))
+                         (errors (omnisharp--vector-to-list
+                                  (cdr (assoc 'Errors json-result)))))
+                    (when (not (equal (length errors) 0))
+                      (mapcar (lambda (it)
+                                (flycheck-error-new
+                                 :buffer buffer
+                                 :checker checker
+                                 :filename (cdr (assoc 'FileName it))
+                                 :line (cdr (assoc 'Line it))
+                                 :column (cdr (assoc 'Column it))
+                                 :message (cdr (assoc 'Message it))
+                                 :level 'error))
+                              errors))))
   ;; TODO use only is csharp files - but there are a few different
   ;; extensions available for these!
   :predicate (lambda () t))
-
-(defun omnisharp--syntax-check-error-parser (output checker buffer)
-  "Returns a list of flycheck-error objects: one for each
-OmniSharp.SyntaxErrors.Error structure in OUTPUT."
-  (let* ((json-result
-          (json-read-from-string output))
-         (errors (omnisharp--vector-to-list
-                  (cdr (assoc 'Errors json-result)))))
-    (when (not (equal (length errors) 0))
-      (mapcar (lambda (it)
-                (flycheck-error-new
-                 :buffer buffer
-                 :checker checker
-                 :filename (cdr (assoc 'FileName it))
-                 :line (cdr (assoc 'Line it))
-                 :column (cdr (assoc 'Column it))
-                 :message (cdr (assoc 'Message it))
-                 :level 'error))
-              errors))))
 
 (provide 'omnisharp)
 ;;; omnisharp.el ends here
