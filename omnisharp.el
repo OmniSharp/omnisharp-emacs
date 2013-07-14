@@ -613,6 +613,7 @@ the user selects a completion and the completion is inserted."
   ;; TODO how to check if popup is active?
   (omnisharp--auto-complete-display-function-ido
    omnisharp--last-buffer-specific-auto-complete-result))
+
 (defun omnisharp-syntax-check ()
   "Perform a manual syntax check for the current buffer."
   (interactive)
