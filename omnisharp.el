@@ -7,6 +7,7 @@
 (require 'thingatpt)
 (require 'flycheck)
 
+;;; Code:
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
 
@@ -188,7 +189,7 @@ recognizes, so that the user may jump to the results."
       (when (not (null header))
         (insert header))
 
-      (mapcar (lambda (element)
+      (mapc (lambda (element)
                 (insert element)
                 (insert "\n"))
               lines-to-write)
@@ -589,7 +590,11 @@ ring so that the user may return with (pop-tag-mark)."
   (ring-insert find-tag-marker-ring (point-marker))
   (when (not (equal filename nil))
     (find-file filename))
-  (goto-line line)
+
+  ;; calling goto-line directly results in a compiler warning.
+  (let ((current-prefix-arg line))
+    (call-interactively 'goto-line line))
+
   (move-to-column column))
 
 (defun omnisharp--vector-to-list (vector)
@@ -663,3 +668,5 @@ OmniSharp.SyntaxErrors.Error structure in OUTPUT."
                  :level 'error))
               errors))))
 
+(provide 'omnisharp)
+;;; omnisharp.el ends here
