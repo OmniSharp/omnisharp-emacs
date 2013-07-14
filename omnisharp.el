@@ -1,7 +1,8 @@
 ;; Requires http://edward.oconnor.cx/2006/03/json.el
 ;; Work in progress! Judge gently!
 (require 'json)
-(require 'cl)
+(with-no-warnings
+  (require 'cl))
 (require 'files)
 (require 'ido)
 (require 'thingatpt)
