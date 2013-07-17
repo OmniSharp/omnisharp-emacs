@@ -540,12 +540,14 @@ is a more sophisticated matching framework than what popup.el offers."
          (column-number (number-to-string (+ 1 (current-column))))
          (buffer-contents (omnisharp--get-current-buffer-contents))
          (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
-                        buffer-file-name))
+                        (or buffer-file-name "")))
          (params `((Line     . ,line-number)
                    (Column   . ,column-number)
-                   (Buffer   . ,buffer-contents)
-                   (FileName . ,filename-tmp))))
-    params))
+                   (Buffer   . ,buffer-contents))))
+    (if (/= 0 (length filename-tmp))
+        (cons `(FileName . ,filename-tmp)
+              params)
+      params)))
 
 (defun omnisharp-go-to-file-line-and-column (json-result)
   "Open file :FileName at :Line and :Column. If filename is not given,
