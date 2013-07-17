@@ -5,6 +5,7 @@
 (require 'files)
 (require 'ido)
 (require 'thingatpt)
+(require 'dash)
 
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
@@ -224,6 +225,18 @@ follow results to the locations in the actual files."
     (omnisharp-add-to-solution-worker params)
     (message "Added %s to the solution."
              (cdr (assoc 'FileName params)))))
+
+(defun omnisharp-add-to-solution-dired-selected-files ()
+  "Add the files currently selected in dired to the current solution."
+  (interactive)
+  (let ((selected-files (dired-get-marked-files)))
+    (--each selected-files
+      (let ((params
+             (cons `(FileName . ,it)
+                   (omnisharp--get-common-params))))
+        (omnisharp-add-to-solution-worker params))
+      (message "Added %s files to the solution."
+               (prin1-to-string (length selected-files))))))
 
 (defun omnisharp-add-to-solution-worker (params)
   "TODO"
