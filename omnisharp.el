@@ -252,6 +252,19 @@ follow results to the locations in the actual files."
     (message "Removed %s from the solution."
              (cdr (assoc 'FileName params)))))
 
+(defun omnisharp-remove-from-project-dired-selected-files ()
+  "Remove the files currently selected in dired from the current
+solution."
+  (interactive)
+  (let ((selected-files (dired-get-marked-files)))
+    (--each selected-files
+      (let ((params
+             (cons `(FileName . ,it)
+                   (omnisharp--get-common-params))))
+        (omnisharp-remove-from-project-current-file-worker params))
+      (message "Removed %s files from the project."
+               (prin1-to-string (length selected-files))))))
+
 (defun omnisharp-remove-from-project-current-file-worker (params)
   (omnisharp-post-message-curl
    (concat omnisharp-host "removefromproject")
