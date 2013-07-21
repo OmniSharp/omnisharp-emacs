@@ -9,6 +9,7 @@
 (require 'compile)
 (require 'dired)
 (require 'popup)
+(require 'etags)
 
 (defvar omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character")
