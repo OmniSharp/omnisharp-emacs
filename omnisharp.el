@@ -627,5 +627,18 @@ the user selects a completion and the completion is inserted."
           params)))
     (message (cdr (assoc 'Type json-result)))))
 
+(defun omnisharp-get-build-command ()
+  "Retrieve the shell command to build the current solution."
+  (omnisharp-post-message-curl
+   (concat omnisharp-host "buildcommand")
+   nil))
+
+(defun omnisharp-build-in-emacs ()
+  "Build the current solution in a non-blocking fashion inside emacs.
+Uses the standard compilation interface (compile)."
+  (interactive)
+  (let ((build-command (omnisharp-get-build-command)))
+    (compile build-command)))
+
 (provide 'omnisharp)
 ;;; omnisharp.el ends here
