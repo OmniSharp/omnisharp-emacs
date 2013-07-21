@@ -623,3 +623,6 @@ the user selects a completion and the completion is inserted."
           (concat omnisharp-host "typelookup")
           params)))
     (message (cdr (assoc 'Type json-result)))))
+
+(provide 'omnisharp)
+;;; omnisharp.el ends here
