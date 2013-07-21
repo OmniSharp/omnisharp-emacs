@@ -611,3 +611,15 @@ the user selects a completion and the completion is inserted."
   ;; TODO how to check if popup is active?
   (omnisharp--auto-complete-display-function-ido
    omnisharp--last-buffer-specific-auto-complete-result))
+
+(defun omnisharp-current-type-information ()
+  (interactive)
+  (omnisharp-current-type-information-worker
+   (omnisharp--get-common-params)))
+
+(defun omnisharp-current-type-information-worker (params)
+  (let ((json-result
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "typelookup")
+          params)))
+    (message (cdr (assoc 'Type json-result)))))
