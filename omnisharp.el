@@ -78,6 +78,9 @@ omnisharp--auto-complete-display-backends-alist.")
 See the documentation for the variable
 omnisharp--auto-complete-display-backend for more information.")
 
+(defvar omnisharp-code-format-expand-tab t
+  "Whether to expand tabs to spaces in code format requests.")
+
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
   (interactive)
@@ -640,6 +643,33 @@ Uses the standard compilation interface (compile)."
   (interactive)
   (let ((build-command (omnisharp-get-build-command)))
     (compile build-command)))
+
+(defun omnisharp-code-format ()
+  "Format the code in the current file. Replaces the file contents
+with the formatted result. Saves the file before starting."
+  (interactive)
+  (save-buffer)
+  (omnisharp-code-format-worker
+   ;; Add omnisharp-code-format-expand-tab to params
+   (cons `(ExpandTab . ,omnisharp-code-format-expand-tab)
+         (omnisharp--get-common-params))
+   (buffer-file-name)
+   (line-number-at-pos)
+   (current-column)))
+
+(defun omnisharp-code-format-worker (code-format-request
+                                     filename
+                                     current-line
+                                     current-column)
+  (let ((json-result
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "codeformat")
+          code-format-request)))
+    (omnisharp--set-buffer-contents-to
+     filename
+     (cdr (assoc 'Buffer json-result))
+     current-line
+     current-column)))
 
 (provide 'omnisharp)
 ;;; omnisharp.el ends here
