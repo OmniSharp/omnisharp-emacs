@@ -671,5 +671,27 @@ with the formatted result. Saves the file before starting."
      current-line
      current-column)))
 
+(defun omnisharp-browse-type ()
+  (interactive)
+  (omnisharp-browse-type-worker
+   (omnisharp--get-common-params)
+   ;; TODO: create a variable for this
+   (get-buffer-create "omnisharp-temp-buffer")))
+
+(defun omnisharp-browse-type-worker (request
+                                     result-buffer)
+  (let ((json-result
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "browsetype")
+          request)))
+
+    ;; Record current position in find-tag-marker-ring
+    (ring-insert find-tag-marker-ring (point-marker))
+    (omnisharp--set-buffer-contents-to
+     (buffer-name result-buffer)
+     (cdr (assoc 'FakeBuffer json-result))
+     1 ; first line and column
+     1)))
+
 (provide 'omnisharp)
 ;;; omnisharp.el ends here
