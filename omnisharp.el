@@ -359,7 +359,7 @@ omnisharp-auto-complete-display-function."
 
 (defun omnisharp-auto-complete-overrides-run-override (override-name)
   (omnisharp-auto-complete-overrides-run-override-worker
-   (cons `(WordToComplete . ,override-name)
+   (cons `(OverrideTargetName . ,override-name)
          (omnisharp--get-common-params))))
 
 (defun omnisharp-auto-complete-overrides-run-override-worker (params)
