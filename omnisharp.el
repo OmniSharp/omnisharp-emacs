@@ -756,5 +756,44 @@ type errors."
   ;; extensions available for these!
   :predicate (lambda () t))
 
+(defun omnisharp-navigate-to-current-type-member ()
+  (interactive)
+  (omnisharp-navigate-to-current-type-member-worker
+   (omnisharp--get-common-params)))
+
+(defun omnisharp-navigate-to-current-type-member-worker (request)
+  (let ((quickfixes (omnisharp-post-message-curl-as-json
+                     (concat omnisharp-host "currentfilemembers")
+                     request)))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     quickfixes)))
+
+(defun omnisharp--choose-and-go-to-quickfix-ido (quickfixes)
+  "Given a list of QuickFixes in list format (not JSON), displays them
+in an ido-completing-read prompt and jumps to the chosen one's
+Location."
+  (let ((chosen-quickfix
+         (omnisharp--choose-quickfix-ido
+          (omnisharp--vector-to-list quickfixes))))
+    (omnisharp-go-to-file-line-and-column chosen-quickfix)))
+
+(defun omnisharp--choose-quickfix-ido (quickfixes)
+  "Given a list of QuickFixes, lets the user choose one using
+ido-completing-read. Returns the chosen element."
+  (let* ((quickfix-choices (--map
+                            (cdr (assoc 'Text it))
+                            quickfixes))
+         (chosen-quickfix-text
+          (ido-completing-read
+           "Go to: "
+           ;; TODO use a hashmap if too slow.
+           ;; This algorithm is two iterations in the worst case
+           ;; scenario.
+           quickfix-choices))
+         (chosen-quickfix-index
+          (position-if (lambda (quickfix-text)
+                         (equal quickfix-text chosen-quickfix-text))
+                       quickfix-choices)))
+    (nth chosen-quickfix-index quickfixes)))
 (provide 'omnisharp)
 ;;; omnisharp.el ends here
