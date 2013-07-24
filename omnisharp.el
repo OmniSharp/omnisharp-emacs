@@ -795,5 +795,18 @@ ido-completing-read. Returns the chosen element."
                          (equal quickfix-text chosen-quickfix-text))
                        quickfix-choices)))
     (nth chosen-quickfix-index quickfixes)))
+
+(defun omnisharp-navigate-to-type-in-current-file ()
+  (interactive)
+  (omnisharp-navigate-to-type-in-current-file-worker
+   (omnisharp--get-common-params)))
+
+(defun omnisharp-navigate-to-type-in-current-file-worker (request)
+  (let ((quickfixes
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "currentfiletopleveltypes")
+          request)))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     quickfixes)))
 (provide 'omnisharp)
 ;;; omnisharp.el ends here
