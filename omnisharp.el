@@ -762,7 +762,7 @@ type errors."
 
 (defun omnisharp-navigate-to-current-type-member-worker (request)
   (let ((quickfixes (omnisharp-post-message-curl-as-json
-                     (concat omnisharp-host "currentfilemembers")
+                     (concat omnisharp-host "currentfilemembersasflat")
                      request)))
     (omnisharp--choose-and-go-to-quickfix-ido
      quickfixes)))
