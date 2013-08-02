@@ -42,6 +42,8 @@
 (define-key evil-normal-state-map
   (kbd ", b") 'omnisharp-browse-type)
 
+(setq omnisharp-auto-complete-want-documentation nil)
+
 ;; Should be 19
 ;; (omnisharp--get-max-item-length '("lontlnitaa" "llinatilnailantonta" "lonta" "lol"))
 
