@@ -308,7 +308,19 @@ solution."
    params))
 
 (defun omnisharp-auto-complete ()
-  (let ((params (omnisharp--get-common-params)))
+  (let* ((json-false :json-false)
+         ;; json-false helps distinguish between null and false in
+         ;; json. This is an emacs limitation.
+         (want-doc (if (equal
+                        omnisharp-auto-complete-want-documentation
+                        nil)
+                       :json-false
+                     omnisharp-auto-complete-want-documentation))
+         (params
+          (cons
+           `(WantDocumentationForEveryCompletionResult
+             . ,want-doc)
+           (omnisharp--get-common-params))))
     (omnisharp-auto-complete-worker
      params
      (omnisharp--get-auto-complete-display-function))))
