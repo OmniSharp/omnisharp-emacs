@@ -5,7 +5,11 @@ Emacs text editor. It provides IDE-like features for editing files in
 C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
-##Features
+## Project maturity
+Experimental. Lacks easy setup, a better UI and a good default
+configuration.
+
+## Features
 
 * Contextual code completion (i.e. auto-complete / IntelliSense) using
   [popup.el][] or [ido-mode][].
@@ -31,8 +35,8 @@ works in the background.
       used by the MonoDevelop and SharpDevelop IDEs
 * Solution building
     * The user may choose whether they want to build in the emacs
-      `*compilation*` buffer or at OmniSharp's end (non-asynchronous:
-      blocking)
+      `*compilation*` buffer or at OmniSharp's end (non-asynchronous,
+      that is, blocking)
     * Jump to errors like in normal `*compilation*` output
 * Format the current buffer
     * Currently only one formatting style supported, easy to add more.
