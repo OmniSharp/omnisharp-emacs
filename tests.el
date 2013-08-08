@@ -1,16 +1,5 @@
+;; Example evil-mode config
 
-
-;; (omnisharp--display-autocomplete-suggestions
-;;  (list (json-read-from-string
-;;  "{\"CompletionText\":\"ToString()\",\"Description\":\"string
-;;  ToString();\\nMethodSystem.String\\nReturns a System.String
-;;  representation of the value of the current instance. \\nReturns: \\nA
-;;  System.String representation of the current
-;;  instance.\\nRemarks:\\n\\n This method overrides
-;;  System.Object.ToString.01.0.5000.02.0.0.04.0.0.0\",\"DisplayText\":\"string
-;;  ToString()\"}")))
-
-;; For quick testing
 (define-key evil-insert-state-map
   (kbd "M-.")
   (lambda () (interactive)
@@ -42,9 +31,6 @@
 (define-key evil-normal-state-map
   (kbd ", b") 'omnisharp-browse-type)
 
+;; Speed up auto-complete on mono drastically. This comes with the
+;; downside that documentation is impossible to fetch.
 (setq omnisharp-auto-complete-want-documentation nil)
-
-;; Should be 19
-;; (omnisharp--get-max-item-length '("lontlnitaa" "llinatilnailantonta" "lonta" "lol"))
-
-;; (omnisharp-reload-solution)
