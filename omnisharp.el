@@ -48,6 +48,11 @@ pressed. Defaults to true.")
   nil
   "Contains the last result of an autocomplete query.")
 
+(defvar omnisharp-auto-complete-want-documentation t
+  "Whether to include auto-complete documentation for each and every
+response. This may be set to nil to get a speed boost for
+completions.")
+
 (defvar omnisharp-auto-complete-popup-keymap
   (let ((keymap (make-sparse-keymap)))
     (set-keymap-parent keymap popup-menu-keymap)
@@ -762,7 +767,7 @@ type errors."
 
 (defun omnisharp-navigate-to-current-type-member-worker (request)
   (let ((quickfixes (omnisharp-post-message-curl-as-json
-                     (concat omnisharp-host "currentfilemembers")
+                     (concat omnisharp-host "currentfilemembersasflat")
                      request)))
     (omnisharp--choose-and-go-to-quickfix-ido
      quickfixes)))

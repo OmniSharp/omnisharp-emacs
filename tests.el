@@ -39,6 +39,9 @@
 (define-key evil-normal-state-map
   (kbd ", i") 'omnisharp-current-type-information)
 
+(define-key evil-normal-state-map
+  (kbd ", b") 'omnisharp-browse-type)
+
 ;; Should be 19
 ;; (omnisharp--get-max-item-length '("lontlnitaa" "llinatilnailantonta" "lonta" "lol"))
 
