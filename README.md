@@ -43,9 +43,29 @@ works in the background.
     * Reload solution
     * Stop server
 
+## Installation
+Installation is currently laborous at best.
+
+This supports Emacs 24.3 and above at least. It has been tested on
+Ubuntu 12.04 (Precise) only.
+
+omnisharp-emacs depends on the external program `curl` for accessing
+the background OmniSharp server process. You need to ensure this is
+installed and can be found by Emacs.
+
+Start an OmniSharp server process on a solution, and load-file
+omnisharp.el. Then you should have access to all of this program's
+functions. You probably need to create a custom configuration for
+accessing them in your normal coding sessions.
+
+You can package-install all dependencies in the source file.
+
+* * * * *
+
+Pull requests welcome!
+
 [OmniSharp]: https://github.com/nosami/OmniSharpServer
 [popup.el]: https://github.com/auto-complete/popup-el
 [ido-mode]: http://www.emacswiki.org/emacs/InteractivelyDoThings
 [Flycheck]: https://github.com/lunaryorn/flycheck
 
-Pull requests welcome!
