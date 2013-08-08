@@ -824,5 +824,7 @@ ido-completing-read. Returns the chosen element."
           request)))
     (omnisharp--choose-and-go-to-quickfix-ido
      quickfixes)))
+
+
 (provide 'omnisharp)
 ;;; omnisharp.el ends here
