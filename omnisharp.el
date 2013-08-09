@@ -444,7 +444,7 @@ run-action-params: original parameters sent to /runcodeaction API."
    (buffer-file-name)
    (cdr (assoc 'Text json-run-action-result))
    (line-number-at-pos)
-   (current-column)))
+   (omnisharp--current-column)))
 
 (defun omnisharp--set-buffer-contents-to (filename-for-buffer
                                           new-buffer-contents
@@ -463,6 +463,12 @@ coordinates result-point-line and result-point-column."
   ;; Hack. Puts point where it belongs.
   (omnisharp-go-to-file-line-and-column-worker
    result-point-line result-point-column filename-for-buffer))
+
+(defun omnisharp--current-column ()
+  "Returns the current column, converting tab characters in a way that
+the OmniSharp server understands."
+  (let ((tab-width 1))
+    (current-column)))
 
 (defun omnisharp--buffer-exists-for-file-name (file-name)
   (cl-some (lambda (a)
@@ -613,7 +619,7 @@ is a more sophisticated matching framework than what popup.el offers."
 (defun omnisharp--get-common-params ()
   "Get common parameters used in the base request class Request."
   (let* ((line-number (number-to-string (line-number-at-pos)))
-         (column-number (number-to-string (+ 1 (current-column))))
+         (column-number (number-to-string (+ 1 (omnisharp--current-column))))
          (buffer-contents (omnisharp--get-current-buffer-contents))
          (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
                         (or buffer-file-name "")))
@@ -702,12 +708,12 @@ with the formatted result. Saves the file before starting."
          (omnisharp--get-common-params))
    (buffer-file-name)
    (line-number-at-pos)
-   (current-column)))
+   (omnisharp--current-column)))
 
 (defun omnisharp-code-format-worker (code-format-request
                                      filename
                                      current-line
-                                     current-column)
+                                     omnisharp--current-column)
   (let ((json-result
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "codeformat")
@@ -716,7 +722,7 @@ with the formatted result. Saves the file before starting."
      filename
      (cdr (assoc 'Buffer json-result))
      current-line
-     current-column)))
+     omnisharp--current-column)))
 
 (defun omnisharp-syntax-check ()
   "Perform a manual syntax check for the current buffer."
