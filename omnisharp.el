@@ -12,7 +12,6 @@
 (require 'popup)
 (require 'etags)
 (require 'flycheck)
-(require 'etags)
 
 ;;; Code:
 (defvar omnisharp-host "http://localhost:2000/"
