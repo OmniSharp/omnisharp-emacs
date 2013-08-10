@@ -12,7 +12,6 @@
 (require 'popup)
 (require 'etags)
 (require 'flycheck)
-(require 'etags)
 
 ;;; Code:
 (defvar omnisharp-host "http://localhost:2000/"
@@ -841,6 +840,15 @@ ido-completing-read. Returns the chosen element."
     (omnisharp--choose-and-go-to-quickfix-ido
      (omnisharp--vector-to-list
       (cdr (assoc 'QuickFixes quickfix-response))))))
+
+(defun omnisharp-start-flycheck ()
+  "Selects and starts the csharp-omnisharp-curl syntax checker for the
+current buffer. Use this in your csharp-mode hook."
+  (interactive)
+  (flycheck-mode)
+  (flycheck-select-checker 'csharp-omnisharp-curl)
+  (flycheck-start-checker  'csharp-omnisharp-curl))
+
 
 (provide 'omnisharp)
 ;;; omnisharp.el ends here
