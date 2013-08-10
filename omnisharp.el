@@ -831,6 +831,16 @@ ido-completing-read. Returns the chosen element."
     (omnisharp--choose-and-go-to-quickfix-ido
      quickfixes)))
 
+;; No need for a worker pattern since findsymbols takes no arguments
+(defun omnisharp-nagivate-to-solution-member ()
+  (interactive)
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "findsymbols")
+          nil)))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     (omnisharp--vector-to-list
+      (cdr (assoc 'QuickFixes quickfix-response))))))
 
 (provide 'omnisharp)
 ;;; omnisharp.el ends here
