@@ -343,6 +343,13 @@ solution."
 
 ;; Use this source in your csharp editing mode hook like so:
 ;; (add-to-list 'ac-sources 'ac-source-omnisharp)
+;;
+;; Unfortunately there seems to be a limit in the auto-complete
+;; library that disallows camel case completions and such fancy
+;; completions useless.
+
+;; The library only seems to accept completions that have the same
+;; leading characters as results. Oh well.
 (ac-define-source omnisharp
   '((candidates . omnisharp--get-auto-complete-result-in-popup-format)))
 
