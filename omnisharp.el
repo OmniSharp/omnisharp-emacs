@@ -319,12 +319,19 @@ solution."
           (cons
            `(WantDocumentationForEveryCompletionResult
              . ,want-doc)
-           (omnisharp--get-common-params))))
-    (omnisharp-auto-complete-worker
-     ;; Add WordToComplete to params
-     (cons `(WordToComplete . ,(thing-at-point 'symbol))
-           params)
-     (omnisharp--get-auto-complete-display-function))))
+           (omnisharp--get-common-params)))
+
+         (display-function
+          (omnisharp--get-auto-complete-display-function))
+
+         (json-result-auto-complete-response
+          (omnisharp-auto-complete-worker
+           ;; Add WordToComplete to params
+           (cons `(WordToComplete . ,(thing-at-point 'symbol))
+                 params))))
+
+    (funcall display-function json-result-auto-complete-response)))
+
 
 (defun omnisharp--get-auto-complete-display-function ()
   "Returns a function that can be fed the output from
@@ -333,14 +340,13 @@ omnisharp-auto-complete-worker - the JSON output from the omnisharp
   (cdr (assoc omnisharp--auto-complete-display-backend
               omnisharp--auto-complete-display-backends-alist)))
 
-(defun omnisharp-auto-complete-worker (params
-                                       display-function)
+(defun omnisharp-auto-complete-worker (params)
   "Takes a plist and makes an autocomplete query with them. Targets
 the given api-path.
 
-DISPLAY-FUNCTION defines what 'display' backend to show to the
-user. This is controlled by the variable
-omnisharp-auto-complete-display-function."
+Returns the raw JSON result. Also caches that result as
+omnisharp--last-buffer-specific-auto-complete-result."
+
 
   ;; json.el URL encodes params automatically.
   (let ((json-result
@@ -350,7 +356,7 @@ omnisharp-auto-complete-display-function."
     ;; Cache result so it may be juggled in different contexts easily
     (setq omnisharp--last-buffer-specific-auto-complete-result
           json-result)
-    (funcall display-function json-result)))
+    ))
 
 (defun omnisharp-auto-complete-overrides ()
   (interactive)
