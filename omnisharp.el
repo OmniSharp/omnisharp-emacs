@@ -591,6 +591,9 @@ is a more sophisticated matching framework than what popup.el offers."
             (cdr (assoc 'CompletionText
                         chosen-candidate))))
     (insert completion-text-to-insert))))
+(defun omnisharp--current-word-or-empty-string ()
+  (or (thing-at-point 'symbol)
+      ""))
 
 ;; TODO Use a plist. This is ridiculous.
 (defun omnisharp--convert-auto-complete-json-to-popup-format
