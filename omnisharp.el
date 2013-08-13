@@ -543,6 +543,12 @@ current buffer."
                                 :help-delay
                                 omnisharp-auto-complete-popup-help-delay)))
       (insert result))))
+(defun omnisharp--replace-symbol-in-buffer-with (symbol-to-replace
+                                                 replacement-string)
+  "In the current buffer, replaces the given SYMBOL-TO-REPLACE
+\(a string\) with REPLACEMENT-STRING."
+  (search-backward symbol-to-replace)
+  (replace-match replacement-string t t))
 
 (defun omnisharp--auto-complete-display-function-ido
   (json-result-alist)
