@@ -321,7 +321,9 @@ solution."
              . ,want-doc)
            (omnisharp--get-common-params))))
     (omnisharp-auto-complete-worker
-     params
+     ;; Add WordToComplete to params
+     (cons `(WordToComplete . ,(thing-at-point 'symbol))
+           params)
      (omnisharp--get-auto-complete-display-function))))
 
 (defun omnisharp--get-auto-complete-display-function ()
@@ -542,7 +544,10 @@ current buffer."
                                 omnisharp-auto-complete-popup-want-isearch
                                 :help-delay
                                 omnisharp-auto-complete-popup-help-delay)))
-      (insert result))))
+      (omnisharp--replace-symbol-in-buffer-with
+       (omnisharp--current-word-or-empty-string)
+       result))))
+
 (defun omnisharp--replace-symbol-in-buffer-with (symbol-to-replace
                                                  replacement-string)
   "In the current buffer, replaces the given SYMBOL-TO-REPLACE
@@ -590,7 +595,10 @@ is a more sophisticated matching framework than what popup.el offers."
            (completion-text-to-insert
             (cdr (assoc 'CompletionText
                         chosen-candidate))))
-    (insert completion-text-to-insert))))
+      (omnisharp--replace-symbol-in-buffer-with
+       (omnisharp--current-word-or-empty-string)
+       completion-text-to-insert))))
+
 (defun omnisharp--current-word-or-empty-string ()
   (or (thing-at-point 'symbol)
       ""))
