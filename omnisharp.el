@@ -310,37 +310,72 @@ solution."
   (let* ((json-false :json-false)
          ;; json-false helps distinguish between null and false in
          ;; json. This is an emacs limitation.
+
+         (params
+          (omnisharp--get-auto-complete-params))
+
+         (display-function
+          (omnisharp--get-auto-complete-display-function))
+
+         (json-result-auto-complete-response
+          (omnisharp-auto-complete-worker params)))
+
+    (funcall display-function json-result-auto-complete-response)))
+
+(defun omnisharp--get-auto-complete-params ()
+  "Return an AutoCompleteRequest for the current buffer state."
+  (let* ((request (omnisharp--get-common-params))
          (want-doc (if (equal
                         omnisharp-auto-complete-want-documentation
                         nil)
                        :json-false
                      omnisharp-auto-complete-want-documentation))
-         (params
+         (request-with-doc-option
           (cons
            `(WantDocumentationForEveryCompletionResult
              . ,want-doc)
-           (omnisharp--get-common-params))))
-    (omnisharp-auto-complete-worker
-     ;; Add WordToComplete to params
-     (cons `(WordToComplete . ,(thing-at-point 'symbol))
-           params)
-     (omnisharp--get-auto-complete-display-function))))
+           (omnisharp--get-common-params)))
+         (final-request
+          ;; Add WordToComplete to params
+          (cons `(WordToComplete . ,(thing-at-point 'symbol))
+                request-with-doc-option)))
+    final-request))
+
+;; Use this source in your csharp editing mode hook like so:
+;; (add-to-list 'ac-sources 'ac-source-omnisharp)
+(ac-define-source omnisharp
+  '((candidates . omnisharp--get-auto-complete-result-in-popup-format)))
+
+(defun omnisharp--get-auto-complete-result-in-popup-format ()
+  "Returns /autocomplete API results \(autocompletions\) as popup
+items."
+  (let* ((json-result-auto-complete-response
+          (omnisharp-auto-complete-worker
+           (omnisharp--get-auto-complete-params)))
+         (completions-in-popup-format
+          (omnisharp--convert-auto-complete-json-to-popup-format
+           json-result-auto-complete-response)))
+    completions-in-popup-format))
 
 (defun omnisharp--get-auto-complete-display-function ()
   "Returns a function that can be fed the output from
-omnisharp-auto-complete-worker - the JSON output from the omnisharp
-/autocomplete API."
+omnisharp-auto-complete-worker - the AutoCompleteResponse JSON output
+from the omnisharp /autocomplete API.
+
+This function must know how to convert the raw JSON into a format that
+the user can choose one completion out of.  Then that function must
+handle inserting that result in the way it sees fit (e.g. in the
+current buffer)."
   (cdr (assoc omnisharp--auto-complete-display-backend
               omnisharp--auto-complete-display-backends-alist)))
 
-(defun omnisharp-auto-complete-worker (params
-                                       display-function)
+(defun omnisharp-auto-complete-worker (params)
   "Takes a plist and makes an autocomplete query with them. Targets
 the given api-path.
 
-DISPLAY-FUNCTION defines what 'display' backend to show to the
-user. This is controlled by the variable
-omnisharp-auto-complete-display-function."
+Returns the raw JSON result. Also caches that result as
+omnisharp--last-buffer-specific-auto-complete-result."
+
 
   ;; json.el URL encodes params automatically.
   (let ((json-result
@@ -350,7 +385,7 @@ omnisharp-auto-complete-display-function."
     ;; Cache result so it may be juggled in different contexts easily
     (setq omnisharp--last-buffer-specific-auto-complete-result
           json-result)
-    (funcall display-function json-result)))
+    ))
 
 (defun omnisharp-auto-complete-overrides ()
   (interactive)
@@ -865,7 +900,6 @@ current buffer. Use this in your csharp-mode hook."
   (flycheck-mode)
   (flycheck-select-checker 'csharp-omnisharp-curl)
   (flycheck-start-checker  'csharp-omnisharp-curl))
-
 
 (provide 'omnisharp)
 ;;; omnisharp.el ends here
