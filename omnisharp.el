@@ -322,6 +322,14 @@ solution."
 
     (funcall display-function json-result-auto-complete-response)))
 
+(defun omnisharp-add-dot-and-auto-complete ()
+  "Adds a . character and calls omnisharp-auto-complete. Meant to be
+bound to the dot key so pressing dot will automatically insert a dot
+and complete members."
+  (interactive)
+  (insert ".")
+  (omnisharp-auto-complete))
+
 (defun omnisharp--get-auto-complete-params ()
   "Return an AutoCompleteRequest for the current buffer state."
   (let* ((request (omnisharp--get-common-params))
@@ -343,6 +351,13 @@ solution."
 
 ;; Use this source in your csharp editing mode hook like so:
 ;; (add-to-list 'ac-sources 'ac-source-omnisharp)
+;;
+;; Unfortunately there seems to be a limit in the auto-complete
+;; library that disallows camel case completions and such fancy
+;; completions useless.
+
+;; The library only seems to accept completions that have the same
+;; leading characters as results. Oh well.
 (ac-define-source omnisharp
   '((candidates . omnisharp--get-auto-complete-result-in-popup-format)))
 
