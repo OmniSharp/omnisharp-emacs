@@ -322,6 +322,14 @@ solution."
 
     (funcall display-function json-result-auto-complete-response)))
 
+(defun omnisharp-add-dot-and-auto-complete ()
+  "Adds a . character and calls omnisharp-auto-complete. Meant to be
+bound to the dot key so pressing dot will automatically insert a dot
+and complete members."
+  (interactive)
+  (insert ".")
+  (omnisharp-auto-complete))
+
 (defun omnisharp--get-auto-complete-params ()
   "Return an AutoCompleteRequest for the current buffer state."
   (let* ((request (omnisharp--get-common-params))
