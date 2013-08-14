@@ -31,6 +31,9 @@
 (define-key evil-normal-state-map
   (kbd ", b") 'omnisharp-browse-type)
 
+(evil-define-key 'insert csharp-mode-map
+  (kbd ".") 'omnisharp-add-dot-and-auto-complete)
+
 ;; Speed up auto-complete on mono drastically. This comes with the
 ;; downside that documentation is impossible to fetch.
 (setq omnisharp-auto-complete-want-documentation nil)
