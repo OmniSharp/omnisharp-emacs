@@ -805,7 +805,7 @@ slashes."
   (replace-regexp-in-string "\\\\" "/" string-to-convert))
 
 (defun omnisharp--convert-slashes-to-double-slashes (command)
-  (replace-regexp-in-string "/" "//" string-to-convert))
+  (replace-regexp-in-string "/" "//" command))
 
 (defun omnisharp-code-format ()
   "Format the code in the current file. Replaces the file contents
