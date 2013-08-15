@@ -977,4 +977,5 @@ current buffer. Use this in your csharp-mode hook."
   (flycheck-start-checker  'csharp-omnisharp-curl))
 
 (provide 'omnisharp)
+
 ;;; omnisharp.el ends here
