@@ -1,7 +1,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 2013.08.15
+;; Version: 0.1
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "20130712.2307") (popup "20130117.1954") (auto-complete "20130122.1551") (flycheck "20130707.1121"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
