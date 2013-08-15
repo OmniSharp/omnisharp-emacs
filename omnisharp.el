@@ -761,7 +761,51 @@ the user selects a completion and the completion is inserted."
 Uses the standard compilation interface (compile)."
   (interactive)
   (let ((build-command (omnisharp-get-build-command)))
-    (compile build-command)))
+    (compile
+     ;; Build command contains backslashes on Windows systems. Work
+     ;; around this by using double backslashes. Other systems are not
+     ;; affected.
+     (omnisharp--fix-build-command-if-on-windows
+      build-command))))
+
+(defun omnisharp--fix-build-command-if-on-windows (command)
+  "Fixes the build command gotten via omnisharp-get-build-command.
+See function definition for an example.
+
+If not on windows, returns COMMAND unchanged."
+
+  ;; Example input without fix:
+  ;; C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Msbuild.exe /m /nologo
+  ;;     /v:q /property:GenerateFullPaths=true
+  ;;     \"c:/Projects/foo/foo.sln\"
+
+  ;; This changes that to this:
+  ;; C:/Windows/Microsoft.NET/Framework64/v4.0.30319/Msbuild.exe
+  ;;     //m //nologo //v:q //property:GenerateFullPaths=true
+  ;;     \"c://Projects//bowsville_freelancer//src//Bowsville.Freelancer.sln\"
+  ;;
+  ;; ^ this works :)
+
+
+  (if (equal system-type 'windows-nt)
+      ;; Compiler path fix. C:\Path is interpreted as C:Path
+      (omnisharp--convert-backslashes-to-forward-slashes
+       ;; Compiler parameter fix. Emacs thinks "/m" refers to the path
+       ;; /m - that is, (root)/m
+       (omnisharp--convert-slashes-to-double-slashes
+        command))
+
+    ;; Not on windows. Do not change.
+    command))
+
+(defun omnisharp--convert-backslashes-to-forward-slashes
+  (string-to-convert)
+  "Converts the given STRING-TO-CONVERT's backslashes to forward
+slashes."
+  (replace-regexp-in-string "\\\\" "/" string-to-convert))
+
+(defun omnisharp--convert-slashes-to-double-slashes (command)
+  (replace-regexp-in-string "/" "//" string-to-convert))
 
 (defun omnisharp-code-format ()
   "Format the code in the current file. Replaces the file contents
