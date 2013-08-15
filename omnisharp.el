@@ -1,4 +1,19 @@
-;; Requires http://edward.oconnor.cx/2006/03/json.el
+;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
+;; Copyright (C) 2013 Mika Vilpas (GPLv3)
+;; Author: Mika Vilpas
+;; Version: 0.1
+;; Url: https://github.com/sp3ctum/omnisharp-emacs
+;; Package-Requires: ((json "1.2") (dash "20130712.2307") (popup "20130117.1954") (auto-complete "20130122.1551") (flycheck "20130707.1121"))
+;; Keywords: csharp c# IDE auto-complete intellisense
+
+;;; Commentary:
+;; omnisharp-emacs is a port of the awesome OmniSharp server to the
+;; Emacs text editor. It provides IDE-like features for editing files
+;; in C# solutions in Emacs, provided by an OmniSharp server instance
+;; that works in the background.
+;;
+;; See the project home page for more information.
+
 ;; Work in progress! Judge gently!
 (require 'json)
 (with-no-warnings
@@ -12,14 +27,15 @@
 (require 'popup)
 (require 'etags)
 (require 'flycheck)
+(require 'auto-complete)
 
 ;;; Code:
 (defvar omnisharp-host "http://localhost:2000/"
-  "Currently expected to end with a / character")
+  "Currently expected to end with a / character.")
 
 (defvar omnisharp-timeout 1
   "Timeout, in seconds, after which to abort stalling queries to the
-  OmniSharp server.")
+OmniSharp server.")
 
 (defvar omnisharp-auto-complete-popup-want-isearch t
   "Whether to automatically start isearch when auto-completing.")
@@ -961,4 +977,5 @@ current buffer. Use this in your csharp-mode hook."
   (flycheck-start-checker  'csharp-omnisharp-curl))
 
 (provide 'omnisharp)
+
 ;;; omnisharp.el ends here
