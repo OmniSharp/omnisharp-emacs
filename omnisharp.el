@@ -323,6 +323,7 @@ solution."
    params))
 
 (defun omnisharp-auto-complete ()
+  (interactive)
   (let* ((json-false :json-false)
          ;; json-false helps distinguish between null and false in
          ;; json. This is an emacs limitation.
