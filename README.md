@@ -6,8 +6,7 @@ C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
 ## Project maturity
-Experimental. Lacks easy setup, a better UI and a good default
-configuration.
+Lacks a better UI and a good default configuration.
 
 ## Features
 
@@ -48,21 +47,27 @@ configuration.
     * Stop server
 
 ## Installation
-Installation is currently laborous at best.
 
 This supports Emacs 24.3 and above at least. It has been tested on
-Ubuntu 12.04 (Precise) only.
+Ubuntu 12.04 (Precise) and on Windows 7.
+
+To install, use [MELPA][].
+After MELPA is installed, use
+
+```
+M-x package-install omnisharp RET
+```
+to install.
 
 omnisharp-emacs depends on the external program `curl` for accessing
 the background OmniSharp server process. You need to ensure this is
 installed and can be found by Emacs.
 
-Start an OmniSharp server process on a solution, and load-file
-omnisharp.el. Then you should have access to all of this program's
-functions. You probably need to create a custom configuration for
-accessing them in your normal coding sessions.
+Start an OmniSharp server process on a solution, and you should have
+access to all of this program's functions. You probably need to
+create a custom configuration for accessing them in your normal
+coding sessions.
 
-You can package-install all dependencies in the source file.
 
 * * * * *
 
@@ -72,4 +77,5 @@ Pull requests welcome!
 [popup.el]: https://github.com/auto-complete/popup-el
 [ido-mode]: http://www.emacswiki.org/emacs/InteractivelyDoThings
 [Flycheck]: https://github.com/lunaryorn/flycheck
+[MELPA]: http://melpa.milkbox.net/#installing
 
