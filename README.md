@@ -46,6 +46,70 @@ Lacks a better UI and a good default configuration.
     * Reload solution
     * Stop server
 
+## Screenshots
+
+### auto-complete
+popup.el interface
+
+![](pics/auto-complete-popup.png)
+
+popup.el with documentation. The documentation may be disabled if you
+need the screen space. There is an option to show documentation in a
+help buffer.
+
+![](pics/auto-complete-popup-documentation.png)
+
+Ido interface
+
+![](pics/auto-complete-ido.png)
+
+### Go to type in current file
+This is a standard functionality in e.g. Visual Studio.
+
+![](pics/navigate-to-type-in-current-file.png)
+
+### Go to member in current type
+This too is standard in various IDEs. Using ido makes navigating fast
+and intuitive.
+
+![](pics/navigate-to-current-type-member.png)
+
+### Rename
+Renaming suggests the current type as a basis.
+
+![](pics/rename.png)
+
+### Overriding members
+When invoked, displays a list of possible override targets.
+
+![](pics/override-suggestions.png)
+
+When a target is chosen, a stub member is inserted.
+
+![](pics/override-result.png)
+
+### Refactoring suggestions
+For now, this must be manually invoked. It can do different things
+depending on the symbol under point. In this picture it has been
+invoked on a method parameter.
+
+![](pics/refactoring-suggestions.png)
+
+### Solution building
+Here is an example of an asynchronous build within Emacs. It works by
+getting the build command from the backend and executing that in the
+compilation buffer.
+
+![](pics/build-solution-in-compilation-buffer.png)
+
+### Syntax errors checking
+It is possible to check the current buffer for syntax errors using the
+flycheck library. This is done asynchronously, and errors are shown
+when found. Note that this is not a type checker, only syntax is
+currently checked.
+
+![](pics/syntax-error-flycheck.png)
+
 ## Installation
 
 This supports Emacs 24.3 and above at least. It has been tested on
@@ -78,4 +142,3 @@ Pull requests welcome!
 [ido-mode]: http://www.emacswiki.org/emacs/InteractivelyDoThings
 [Flycheck]: https://github.com/lunaryorn/flycheck
 [MELPA]: http://melpa.milkbox.net/#installing
-
