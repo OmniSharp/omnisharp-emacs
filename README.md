@@ -6,8 +6,7 @@ C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
 ## Project maturity
-Experimental. Lacks easy setup, a better UI and a good default
-configuration.
+Lacks a better UI and a good default configuration.
 
 ## Features
 
