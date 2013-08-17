@@ -882,6 +882,8 @@ with the formatted result. Saves the file before starting."
   "A csharp source syntax checker using curl to call an OmniSharp
 server process running in the background. Only checks the syntax - not
 type errors."
+  ;; This must be an external process. Currently flycheck does not
+  ;; support using elisp functions as checkers.
   :command ((eval
              (let ((command-plist
                     (omnisharp--get-curl-command
