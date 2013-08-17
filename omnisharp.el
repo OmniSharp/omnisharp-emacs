@@ -869,12 +869,6 @@ with the formatted result. Saves the file before starting."
      current-line
      current-column)))
 
-;;;###autoload
-(defun omnisharp-syntax-check ()
-  "Perform a manual syntax check for the current buffer."
-  (interactive)
-  (let ((params (omnisharp--get-common-params)))
-    (omnisharp-syntax-check-worker params)))
 
 (defun omnisharp-syntax-check-worker (params)
   (let* ((string-result
