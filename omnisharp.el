@@ -795,12 +795,19 @@ the user selects a completion and the completion is inserted."
 Uses the standard compilation interface (compile)."
   (interactive)
   (let ((build-command (omnisharp-get-build-command)))
+    (omnisharp--recognize-mono-compilation-error-format)
     (compile
      ;; Build command contains backslashes on Windows systems. Work
      ;; around this by using double backslashes. Other systems are not
      ;; affected.
      (omnisharp--fix-build-command-if-on-windows
       build-command))))
+
+(defun omnisharp--recognize-mono-compilation-error-format ()
+  "Makes Emacs recognize the mono compiler errors as clickable
+compilation buffer elements."
+  (add-to-list 'compilation-error-regexp-alist
+               '(" in \\(.+\\):\\([0-9]+\\)" 1 2)))
 
 (defun omnisharp--fix-build-command-if-on-windows (command)
   "Fixes the build command gotten via omnisharp-get-build-command.
