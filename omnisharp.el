@@ -876,7 +876,7 @@ with the formatted result. Saves the file before starting."
   "Takes a Request and returns a SyntaxErrorsResponse."
   (omnisharp-post-message-curl-as-json
    (concat omnisharp-host "syntaxerrors")
-   params)
+   params))
 
 (flycheck-define-checker csharp-omnisharp-curl
   "A csharp source syntax checker using curl to call an OmniSharp
