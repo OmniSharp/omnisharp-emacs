@@ -11,9 +11,10 @@ Lacks a better UI and a good default configuration.
 ## Features
 
 * Contextual code completion (i.e. auto-complete / IntelliSense) using
-  [popup.el][] or [ido-mode][].
-    * Popup.el provides a more sophisticated interface, with a possibility
-      to fall back on all of ido's flexible matching power.
+  [popup.el][] or [ido-mode][] or [company-mode][] if it is installed.
+    * Popup.el and company-mode provide a more sophisticated
+      interface, with the possibility to fall back on all of ido's
+      flexible matching power.
     * Also shows documentation like other IDEs
 * Show type of the current symbol in the minibuffer
 * Navigation helpers
@@ -46,10 +47,30 @@ Lacks a better UI and a good default configuration.
     * Reload solution
     * Stop server
 
-## Screenshots
+## Details
 
-### auto-complete
-popup.el interface
+### Autocompletion
+
+#### company-mode interface
+
+To enable company-mode autocompletion, install company-mode and add
+the following to your dotemacs:
+
+`
+(eval-after-load 'company
+  '(add-to-list 'company-backends 'company-omnisharp))
+`
+
+![](pics/company-mode-popup.png)
+
+company-mode showing parameters and function descriptions in the
+minibuffer.
+
+![](pics/company-mode-parameters.png)
+
+company-mode also allows for yasnippet-like template completion of method parameters.
+
+#### popup.el interface
 
 ![](pics/auto-complete-popup.png)
 
@@ -59,7 +80,7 @@ help buffer.
 
 ![](pics/auto-complete-popup-documentation.png)
 
-Ido interface
+#### Ido interface
 
 ![](pics/auto-complete-ido.png)
 
@@ -139,6 +160,7 @@ Pull requests welcome!
 
 [OmniSharp]: https://github.com/nosami/OmniSharpServer
 [popup.el]: https://github.com/auto-complete/popup-el
+[company-mode]: http://company-mode.github.io
 [ido-mode]: http://www.emacswiki.org/emacs/InteractivelyDoThings
 [Flycheck]: https://github.com/lunaryorn/flycheck
 [MELPA]: http://melpa.milkbox.net/#installing
