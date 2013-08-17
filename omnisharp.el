@@ -881,12 +881,19 @@ the user selects a completion and the completion is inserted."
 Uses the standard compilation interface (compile)."
   (interactive)
   (let ((build-command (omnisharp-get-build-command)))
+    (omnisharp--recognize-mono-compilation-error-format)
     (compile
      ;; Build command contains backslashes on Windows systems. Work
      ;; around this by using double backslashes. Other systems are not
      ;; affected.
      (omnisharp--fix-build-command-if-on-windows
       build-command))))
+
+(defun omnisharp--recognize-mono-compilation-error-format ()
+  "Makes Emacs recognize the mono compiler errors as clickable
+compilation buffer elements."
+  (add-to-list 'compilation-error-regexp-alist
+               '(" in \\(.+\\):\\([0-9]+\\)" 1 2)))
 
 (defun omnisharp--fix-build-command-if-on-windows (command)
   "Fixes the build command gotten via omnisharp-get-build-command.
@@ -944,7 +951,7 @@ with the formatted result. Saves the file before starting."
 (defun omnisharp-code-format-worker (code-format-request
                                      filename
                                      current-line
-                                     omnisharp--current-column)
+                                     current-column)
   (let ((json-result
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "codeformat")
@@ -953,26 +960,23 @@ with the formatted result. Saves the file before starting."
      filename
      (cdr (assoc 'Buffer json-result))
      current-line
-     omnisharp--current-column)))
+     current-column)))
 
-;;;###autoload
-(defun omnisharp-syntax-check ()
-  "Perform a manual syntax check for the current buffer."
-  (interactive)
-  (let ((params (omnisharp--get-common-params)))
-    (omnisharp-syntax-check-worker params)))
-
+;; This currently has no UI, so there only exists the
+;; worker. Originally the plan was to be able to run manual syntax
+;; checks but I couldn't figure out how to call them with flycheck.
 (defun omnisharp-syntax-check-worker (params)
-  (let* ((string-result
-          (omnisharp-post-message-curl-as-json
-           (concat omnisharp-host "syntaxerrors")
-           params)))
-    (message (prin1-to-string string-result))))
+  "Takes a Request and returns a SyntaxErrorsResponse."
+  (omnisharp-post-message-curl-as-json
+   (concat omnisharp-host "syntaxerrors")
+   params))
 
 (flycheck-define-checker csharp-omnisharp-curl
   "A csharp source syntax checker using curl to call an OmniSharp
 server process running in the background. Only checks the syntax - not
 type errors."
+  ;; This must be an external process. Currently flycheck does not
+  ;; support using elisp functions as checkers.
   :command ((eval
              (let ((command-plist
                     (omnisharp--get-curl-command
