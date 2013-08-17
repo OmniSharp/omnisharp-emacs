@@ -482,7 +482,8 @@ As a result, since we want to see parameters and things, we need to munge 'Displ
 
 
 ;;Add this completion backend to company-mode
-(add-to-list 'company-backends 'company-omnisharp)
+(when (boundp 'company-backends)
+  (add-to-list 'company-backends 'company-omnisharp))
 
 
 
