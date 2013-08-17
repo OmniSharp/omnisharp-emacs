@@ -869,13 +869,14 @@ with the formatted result. Saves the file before starting."
      current-line
      current-column)))
 
-
+;; This currently has no UI, so there only exists the
+;; worker. Originally the plan was to be able to run manual syntax
+;; checks but I couldn't figure out how to call them with flycheck.
 (defun omnisharp-syntax-check-worker (params)
-  (let* ((string-result
-          (omnisharp-post-message-curl-as-json
-           (concat omnisharp-host "syntaxerrors")
-           params)))
-    (message (prin1-to-string string-result))))
+  "Takes a Request and returns a SyntaxErrorsResponse."
+  (omnisharp-post-message-curl-as-json
+   (concat omnisharp-host "syntaxerrors")
+   params)
 
 (flycheck-define-checker csharp-omnisharp-curl
   "A csharp source syntax checker using curl to call an OmniSharp
