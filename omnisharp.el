@@ -401,6 +401,91 @@ items."
            json-result-auto-complete-response)))
     completions-in-popup-format))
 
+;; company-mode integration
+(defun company-omnisharp (command &optional arg &rest ignored)
+  "Company-mode integration"
+  ;;TODO - add in proper documentation support
+  (let ((omnisharp-auto-complete-want-documentation nil))
+    (case command
+      (prefix (and (equal major-mode 'csharp-mode) 
+				   (not (company-in-string-or-comment))
+				   (or (company-grab-symbol) 'stop)))
+
+      (candidates (omnisharp--get-company-candidates arg))
+
+	  ;; because "" doesn't return everything
+	  (no-cache (equal arg ""))
+
+	  (crop (when (string-match "(" arg)
+			  (substring arg 0 (match-beginning 0))))
+
+      (meta (omnisharp--get-company-candidate-meta arg))
+	  
+	  (post-completion (when (string-match "([^)]" arg)
+                       (company-template-c-like-templatify arg))))))
+
+
+(defun omnisharp--string-starts-with (s arg)
+  "Returns non-nil if string S starts with ARG, else nil."
+  (cond ((>= (length s) (length arg))
+		 (string-equal (substring s 0 (length arg)) arg))
+		(t nil)))
+
+(defun omnisharp--filter-company-candidate (candidate-string prefix)
+"Since company-mode doesn't handle fuzzy matching very well, 
+filter items that don't begin with the completion prefix"
+  (if (omnisharp--string-starts-with candidate-string prefix)
+	  candidate-string
+	nil))
+  
+
+(defun omnisharp--make-company-completion-text (item)
+  "company-mode expects the beginning of the candidate to be the same as the characters being completed.
+This method converts a function description of 'void SomeMethod(int parameter)' to 'SomeMethod(int parameter)'.
+Working with company-mode to eventually allow 'SomeMethod(int parameter) : void'"
+  (let* ((case-fold-search nil)
+		 (completion (omnisharp--completion-result-item-get-completion-text item))
+		 (display (omnisharp--completion-result-item-get-display-text item))
+		 (func-start-pos (string-match completion display)))
+	(if (and func-start-pos (> func-start-pos 0))
+		(let ((func-return (substring display 0 func-start-pos))
+			  (func-body (substring display func-start-pos)))
+		  func-body)
+	  ;; (concat func-body ": " func-return))
+	  display)))
+
+(defun omnisharp--get-company-candidates (pre)
+  "Returns completion results in company format.
+Company-mode doesn't make any distinction between the text to be inserted and the text to be displayed.
+As a result, since we want to see parameters and things, we need to munge 'DisplayText so it's company-mode-friendly"
+  (let* ((json-false :json-false)
+         ;; json-false helps distinguish between null and false in
+         ;; json. This is an emacs limitation.
+         (params
+          (omnisharp--get-auto-complete-params))
+
+         (json-result-auto-complete-response
+          (omnisharp-auto-complete-worker params))
+		 (company-output (delq nil 
+		 					   (mapcar
+		 						(lambda (element)
+								  (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) pre))
+		 						json-result-auto-complete-response))))
+	company-output))
+
+(defun omnisharp--get-company-candidate-meta (pre)
+  "Given one of our completion candidate strings, find the element it matches and return the 'DisplayText"
+  (interactive)
+  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
+		   (when (string-equal (omnisharp--make-company-completion-text element) pre)
+			 (cl-return (cdr (assoc 'DisplayText element))))))
+
+
+;;Add this completion backend to company-mode
+(add-to-list 'company-backends 'company-omnisharp)
+
+
+
 (defun omnisharp--get-auto-complete-display-function ()
   "Returns a function that can be fed the output from
 omnisharp-auto-complete-worker - the AutoCompleteResponse JSON output
