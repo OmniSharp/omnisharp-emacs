@@ -858,7 +858,7 @@ with the formatted result. Saves the file before starting."
 (defun omnisharp-code-format-worker (code-format-request
                                      filename
                                      current-line
-                                     omnisharp--current-column)
+                                     current-column)
   (let ((json-result
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "codeformat")
@@ -867,7 +867,7 @@ with the formatted result. Saves the file before starting."
      filename
      (cdr (assoc 'Buffer json-result))
      current-line
-     omnisharp--current-column)))
+     current-column)))
 
 ;;;###autoload
 (defun omnisharp-syntax-check ()
