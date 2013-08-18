@@ -235,9 +235,9 @@ recognizes, so that the user may jump to the results."
         (insert header))
 
       (mapc (lambda (element)
-			  (insert element)
-			  (insert "\n"))
-			lines-to-write)
+              (insert element)
+              (insert "\n"))
+            lines-to-write)
       (compilation-mode)
       (read-only-mode t)
       (display-buffer buffer-to-write-to))))
@@ -436,57 +436,57 @@ triggers a completion immediately"
 (defun company-omnisharp (command &optional arg &rest ignored)
   "Company-mode integration"
   (case command
-	(prefix (and (memq major-mode omnisharp-company-modes)
+    (prefix (and (memq major-mode omnisharp-company-modes)
                  (not (company-in-string-or-comment))
                  (omnisharp-company--prefix)))
 
-	(candidates (omnisharp--get-company-candidates arg))
+    (candidates (omnisharp--get-company-candidates arg))
 
-	;; because "" doesn't return everything
-	(no-cache (equal arg ""))
+    ;; because "" doesn't return everything
+    (no-cache (equal arg ""))
 
-	(crop (when (string-match "(" arg)
-			(substring arg 0 (match-beginning 0))))
+    (crop (when (string-match "(" arg)
+            (substring arg 0 (match-beginning 0))))
 
-	(meta (omnisharp--get-company-candidate-meta arg))
-	
-	(doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg)))
-	
-	(post-completion (let* ((end (point-marker))
-							(beg (- (point) (length arg))))
-					   (if omnisharp-company-do-template-completion
-						   ;;If this was a function match, do templating
-						   (if (string-match "([^)]" arg)
-							   (company-template-c-like-templatify arg)
-							 ;;Otherwise, look for the type seperator and strip that off the end
-							 (if (string-match omnisharp-company-type-separator arg)
-								 (when (re-search-backward omnisharp-company-type-separator beg t)
-								   (delete-region (match-beginning 0) end))))
-						 ;;If we aren't doing templating, string away anything after the (
-						 ;; or anything after the type separator, if we don't find that.
-						 (if (string-match "(" arg)
-							 (when (re-search-backward "(" beg t)
-							   (delete-region (match-end 0) end)
-							   (forward-char))
-						   (if (string-match omnisharp-company-type-separator arg)
-							   (when (re-search-backward omnisharp-company-type-separator beg t)
-								 (delete-region (match-beginning 0) end)))))))))
+    (meta (omnisharp--get-company-candidate-meta arg))
+    
+    (doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg)))
+    
+    (post-completion (let* ((end (point-marker))
+                            (beg (- (point) (length arg))))
+                       (if omnisharp-company-do-template-completion
+                           ;;If this was a function match, do templating
+                           (if (string-match "([^)]" arg)
+                               (company-template-c-like-templatify arg)
+                             ;;Otherwise, look for the type seperator and strip that off the end
+                             (if (string-match omnisharp-company-type-separator arg)
+                                 (when (re-search-backward omnisharp-company-type-separator beg t)
+                                   (delete-region (match-beginning 0) end))))
+                         ;;If we aren't doing templating, string away anything after the (
+                         ;; or anything after the type separator, if we don't find that.
+                         (if (string-match "(" arg)
+                             (when (re-search-backward "(" beg t)
+                               (delete-region (match-end 0) end)
+                               (forward-char))
+                           (if (string-match omnisharp-company-type-separator arg)
+                               (when (re-search-backward omnisharp-company-type-separator beg t)
+                                 (delete-region (match-beginning 0) end)))))))))
 
 
 
 (defun omnisharp--string-starts-with (s arg)
   "Returns non-nil if string S starts with ARG, else nil."
   (cond ((>= (length s) (length arg))
-		 (string-equal (substring s 0 (length arg)) arg))
-		(t nil)))
+         (string-equal (substring s 0 (length arg)) arg))
+        (t nil)))
 
 (defun omnisharp--filter-company-candidate (candidate-string prefix)
   "Since company-mode expects the candidates to begin with the
 completion prefix, filter items that don't begin with the
 completion prefix"
   (if (omnisharp--string-starts-with candidate-string prefix)
-	  candidate-string
-	nil))
+      candidate-string
+    nil))
 
 
 (defun omnisharp--make-company-completion-text (item)
@@ -495,14 +495,14 @@ same as the characters being completed.  This method converts a
 function description of 'void SomeMethod(int parameter)' to
 'SomeMethod(int parameter) : void'."
   (let* ((case-fold-search nil)
-		 (completion (omnisharp--completion-result-item-get-completion-text item))
-		 (display (omnisharp--completion-result-item-get-display-text item))
-		 (func-start-pos (string-match completion display)))
-	(if (and func-start-pos (> func-start-pos 0))
-		(let ((func-return (substring display 0 func-start-pos))
-			  (func-body (substring display func-start-pos)))
-		  (concat func-body omnisharp-company-type-separator func-return))
-	  display)))
+         (completion (omnisharp--completion-result-item-get-completion-text item))
+         (display (omnisharp--completion-result-item-get-display-text item))
+         (func-start-pos (string-match completion display)))
+    (if (and func-start-pos (> func-start-pos 0))
+        (let ((func-return (substring display 0 func-start-pos))
+              (func-body (substring display func-start-pos)))
+          (concat func-body omnisharp-company-type-separator func-return))
+      display)))
 
 (defun omnisharp--get-company-candidates (pre)
   "Returns completion results in company format.  Company-mode
@@ -518,28 +518,28 @@ company-mode-friendly"
 
          (json-result-auto-complete-response
           (omnisharp-auto-complete-worker params))
-		 (company-output (delq nil 
-		 					   (mapcar
-		 						(lambda (element)
-								  (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) pre))
-		 						json-result-auto-complete-response))))
-	company-output))
+         (company-output (delq nil 
+                               (mapcar
+                                (lambda (element)
+                                  (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) pre))
+                                json-result-auto-complete-response))))
+    company-output))
 
 (defun omnisharp--get-company-candidate-meta (pre)
   "Given one of our completion candidate strings, find the
 element it matches and return the 'DisplayText"
   (interactive)
   (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
-		   (when (string-equal (omnisharp--make-company-completion-text element) pre)
-			 (cl-return (cdr (assoc 'DisplayText element))))))
+           (when (string-equal (omnisharp--make-company-completion-text element) pre)
+             (cl-return (cdr (assoc 'DisplayText element))))))
 
 (defun omnisharp--get-company-candidate-description (pre)
   "Given one of our completion candidate strings, find the
 element it matches and return the 'Description"
   (interactive)
   (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
-		   (when (string-equal (omnisharp--make-company-completion-text element) pre)
-			 (cl-return (cdr (assoc 'Description element))))))
+           (when (string-equal (omnisharp--make-company-completion-text element) pre)
+             (cl-return (cdr (assoc 'Description element))))))
 
 
 ;;Add this completion backend to company-mode
@@ -727,11 +727,11 @@ result."
 
 (defun omnisharp--get-curl-command (url params)
   `(:command "curl"
-			 :arguments
-			 ("--silent" "-H" "Content-type: application/json"
-			  "--data"
-			  ,(json-encode params)
-			  ,url)))
+             :arguments
+             ("--silent" "-H" "Content-type: application/json"
+              "--data"
+              ,(json-encode params)
+              ,url)))
 
 (defun omnisharp-post-message-curl-as-json (url params)
   (json-read-from-string
