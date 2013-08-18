@@ -414,11 +414,9 @@ items."
   "The string used to visually seperate functions/variables from
   their types")
 
-(defvar omnisharp-company-modes (list 'csharp-mode)
-  "List of modes that support this completion backend. csharp-mode is the default.")
-
 (defvar omnisharp-company-begin-after-member-access t
-  "If t, begin completion when pressing '.' after a class, object or namespace")
+  "If t, begin completion when pressing '.' after a class, object
+  or namespace")
 
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
@@ -436,7 +434,7 @@ triggers a completion immediately"
 (defun company-omnisharp (command &optional arg &rest ignored)
   "Company-mode integration"
   (case command
-    (prefix (and (memq major-mode omnisharp-company-modes)
+    (prefix (and omnisharp-mode 
                  (not (company-in-string-or-comment))
                  (omnisharp-company--prefix)))
 
@@ -450,7 +448,11 @@ triggers a completion immediately"
 
     (meta (omnisharp--get-company-candidate-meta arg))
     
-    (doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg)))
+    (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg))))
+                  (with-current-buffer doc-buffer
+                    (visual-line-mode))
+                  doc-buffer))
+                  
     
     (post-completion (let* ((end (point-marker))
                             (beg (- (point) (length arg))))
