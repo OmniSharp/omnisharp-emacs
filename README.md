@@ -53,22 +53,22 @@ Lacks a better UI and a good default configuration.
 
 #### company-mode interface
 
-To enable company-mode autocompletion, install company-mode and add
-the following to your dotemacs:
+company-mode showing parameters and return values, and the selected
+function description in the minibuffer. As you can see, the completion
+works with non-trivial code.
 
-`
-(eval-after-load 'company
-  '(add-to-list 'company-backends 'company-omnisharp))
-`
+![](pics/company-mode-popup-complex.png)
 
-company-mode showing parameters and function descriptions in the
-minibuffer.
-
-![](pics/company-mode-popup.png)
-
-company-mode also allows for yasnippet-like template completion of method parameters.
+company-mode also allows for yasnippet-like template completion of
+method parameters.
 
 ![](pics/company-mode-parameters.png)
+
+Pressing F1 with a candidate selected in the the company-mode popup
+shows a buffer with documentation.
+
+![](pics/company-mode-doc-buffer.png)
+
 
 #### popup.el interface
 
@@ -168,6 +168,15 @@ access to all of this program's functions. You probably need to
 create a custom configuration for accessing them in your normal
 coding sessions.
 
+To enable company-mode autocompletion, install company-mode and add
+the following to your dotemacs:
+
+```
+(eval-after-load 'company
+  '(add-to-list 'company-backends 'company-omnisharp))
+```
+
+company-mode completion will only trigger when omnisharp-mode is active.
 
 * * * * *
 
