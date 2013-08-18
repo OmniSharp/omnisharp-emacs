@@ -105,6 +105,20 @@ omnisharp--auto-complete-display-backend for more information.")
 (defvar omnisharp-code-format-expand-tab t
   "Whether to expand tabs to spaces in code format requests.")
 
+(defvar omnisharp-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; TODO add good default keys here
+    ;;(define-key map (kbd "C-c f") 'insert-foo)
+    map)
+  "Keymap for omnisharp-mode.")
+
+(define-minor-mode omnisharp-mode
+  "Omnicompletion (intellisense) and more for C# using an OmniSharp
+server backend."
+  :lighter " omnisharp"
+  :global nil
+  :keymap omnisharp-mode-map)
+
 ;;;###autoload
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
