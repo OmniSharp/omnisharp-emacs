@@ -414,12 +414,31 @@ items."
   "The string used to visually seperate functions/variables from
   their types")
 
+(defvar omnisharp-company-modes (list 'csharp-mode)
+  "List of modes that support this completion backend. csharp-mode is the default.")
+
+(defvar omnisharp-company-begin-after-member-access t
+  "If t, begin completion when pressing '.' after a class, object or namespace")
+
+(defun omnisharp-company--prefix ()
+  "Returns the symbol to complete. Also, if point is on a dot,
+triggers a completion immediately"
+  (let ((symbol (company-grab-symbol)))
+    (if symbol
+        (if (and omnisharp-company-begin-after-member-access
+                 (save-excursion
+                   (forward-char (- (length symbol)))
+                   (looking-back "\\." (- (point) 2))))
+            (cons symbol t)
+          symbol)
+      'stop)))
+
 (defun company-omnisharp (command &optional arg &rest ignored)
   "Company-mode integration"
   (case command
-	(prefix (and (equal major-mode 'csharp-mode) 
-				 (not (company-in-string-or-comment))
-				 (or (company-grab-symbol) 'stop)))
+	(prefix (and (memq major-mode omnisharp-company-modes)
+                 (not (company-in-string-or-comment))
+                 (omnisharp-company--prefix)))
 
 	(candidates (omnisharp--get-company-candidates arg))
 
