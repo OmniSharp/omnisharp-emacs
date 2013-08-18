@@ -142,7 +142,7 @@ currently checked.
 ## Installation
 
 This supports Emacs 24.3 and above at least. It has been tested on
-Ubuntu 12.04 (Precise) and on Windows 7.
+Ubuntu 12.04 (Precise), on Windows 7 and on OSX.
 
 To install, use [MELPA][].
 After MELPA is installed, use
