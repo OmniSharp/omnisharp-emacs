@@ -448,7 +448,11 @@ triggers a completion immediately"
 
     (meta (omnisharp--get-company-candidate-meta arg))
     
-    (doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg)))
+    (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg))))
+                  (with-current-buffer doc-buffer
+                    (visual-line-mode))
+                  doc-buffer))
+                  
     
     (post-completion (let* ((end (point-marker))
                             (beg (- (point) (length arg))))
