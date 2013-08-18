@@ -61,14 +61,14 @@ the following to your dotemacs:
   '(add-to-list 'company-backends 'company-omnisharp))
 `
 
-![](pics/company-mode-popup.png)
-
 company-mode showing parameters and function descriptions in the
 minibuffer.
 
-![](pics/company-mode-parameters.png)
+![](pics/company-mode-popup.png)
 
 company-mode also allows for yasnippet-like template completion of method parameters.
+
+![](pics/company-mode-parameters.png)
 
 #### popup.el interface
 
