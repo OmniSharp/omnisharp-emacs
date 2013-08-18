@@ -82,6 +82,14 @@ help buffer.
 
 #### Ido interface
 
+Ido allows for flexible matching of all text that the completions
+have. Each pressed character will narrow the list down to fewer
+options. It's also possible to do a cross search at any point with a
+new search term by pressing C-SPC.
+
+This makes it really easy to e.g. narrow the list down to members that
+handle a specific type, such as bool.
+
 ![](pics/auto-complete-ido.png)
 
 ### Go to type in current file
