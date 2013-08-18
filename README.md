@@ -168,8 +168,9 @@ access to all of this program's functions. You probably need to
 create a custom configuration for accessing them in your normal
 coding sessions.
 
-To enable company-mode autocompletion, install company-mode and add
-the following to your dotemacs:
+To enable company-mode autocompletion, omnisharp requires at least
+version 0.6.11 of company-mode to be installed. Then add the following
+to your dotemacs:
 
 ```
 (eval-after-load 'company
