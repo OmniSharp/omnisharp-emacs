@@ -156,6 +156,13 @@ omnisharp-emacs depends on the external program `curl` for accessing
 the background OmniSharp server process. You need to ensure this is
 installed and can be found by Emacs.
 
+To automatically load omnisharp-emacs when editing csharp files, add
+something like this to your csharp-mode-hook:
+
+```
+(add-hook 'csharp-mode-hook 'omnisharp-mode)
+```
+
 Start an OmniSharp server process on a solution, and you should have
 access to all of this program's functions. You probably need to
 create a custom configuration for accessing them in your normal
