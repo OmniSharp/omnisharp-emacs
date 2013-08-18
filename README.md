@@ -61,14 +61,14 @@ the following to your dotemacs:
   '(add-to-list 'company-backends 'company-omnisharp))
 `
 
-![](pics/company-mode-popup.png)
-
 company-mode showing parameters and function descriptions in the
 minibuffer.
 
-![](pics/company-mode-parameters.png)
+![](pics/company-mode-popup.png)
 
 company-mode also allows for yasnippet-like template completion of method parameters.
+
+![](pics/company-mode-parameters.png)
 
 #### popup.el interface
 
@@ -81,6 +81,14 @@ help buffer.
 ![](pics/auto-complete-popup-documentation.png)
 
 #### Ido interface
+
+Ido allows for flexible matching of all text that the completions
+have. Each pressed character will narrow the list down to fewer
+options. It's also possible to do a cross search at any point with a
+new search term by pressing C-SPC.
+
+This makes it really easy to e.g. narrow the list down to members that
+handle a specific type, such as bool.
 
 ![](pics/auto-complete-ido.png)
 
@@ -134,7 +142,7 @@ currently checked.
 ## Installation
 
 This supports Emacs 24.3 and above at least. It has been tested on
-Ubuntu 12.04 (Precise) and on Windows 7.
+Ubuntu 12.04 (Precise), on Windows 7 and on OSX.
 
 To install, use [MELPA][].
 After MELPA is installed, use
@@ -147,6 +155,13 @@ to install.
 omnisharp-emacs depends on the external program `curl` for accessing
 the background OmniSharp server process. You need to ensure this is
 installed and can be found by Emacs.
+
+To automatically load omnisharp-emacs when editing csharp files, add
+something like this to your csharp-mode-hook:
+
+```
+(add-hook 'csharp-mode-hook 'omnisharp-mode)
+```
 
 Start an OmniSharp server process on a solution, and you should have
 access to all of this program's functions. You probably need to
