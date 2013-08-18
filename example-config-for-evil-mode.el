@@ -1,29 +1,19 @@
 ;; Example evil-mode config
 
 (evil-define-key 'insert omnisharp-mode-map
-  (kbd "M-.")
-  (lambda () (interactive)
-    (omnisharp-auto-complete)))
+  (kbd "M-.") (omnisharp-auto-complete))
 
 (evil-define-key 'normal omnisharp-mode-map
-  (kbd "<f12>")
-  (lambda () (interactive)
-    (omnisharp-go-to-definition)))
+  (kbd "<f12>") (omnisharp-go-to-definition))
 
 (evil-define-key 'normal omnisharp-mode-map
-  (kbd "g u")
-  (lambda () (interactive)
-    (omnisharp-find-usages)))
+  (kbd "g u") (omnisharp-find-usages))
 
 (evil-define-key 'normal omnisharp-mode-map
-  (kbd "g o")
-  (lambda () (interactive)
-    (omnisharp-go-to-definition)))
+  (kbd "g o") (omnisharp-go-to-definition))
 
 (evil-define-key 'normal omnisharp-mode-map
-  (kbd "g r")
-  (lambda () (interactive)
-    (omnisharp-run-code-action-refactoring)))
+  (kbd "g r") (omnisharp-run-code-action-refactoring))
 
 (evil-define-key 'normal omnisharp-mode-map
   (kbd ", i") 'omnisharp-current-type-information)
