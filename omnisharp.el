@@ -235,9 +235,9 @@ recognizes, so that the user may jump to the results."
         (insert header))
 
       (mapc (lambda (element)
-                (insert element)
-                (insert "\n"))
-              lines-to-write)
+			  (insert element)
+			  (insert "\n"))
+			lines-to-write)
       (compilation-mode)
       (read-only-mode t)
       (display-buffer buffer-to-write-to))))
@@ -407,10 +407,12 @@ items."
 
 ;; company-mode integration
 (defvar omnisharp-company-do-template-completion t
-  "Set to true if you want in-line parameter completion, nil otherwise")
+  "Set to t if you want in-line parameter completion, nil
+  otherwise")
 
 (defvar omnisharp-company-type-separator " : "
-  "The string used to visually seperate functions/variables from their types") 
+  "The string used to visually seperate functions/variables from
+  their types")
 
 (defun company-omnisharp (command &optional arg &rest ignored)
   "Company-mode integration"
@@ -434,15 +436,15 @@ items."
 	  (post-completion (let* ((end (point-marker))
 							  (beg (- (point) (length arg))))
 						 (if omnisharp-company-do-template-completion
-							 ;If this was a function match, do templating
+							 ;;If this was a function match, do templating
 							 (if (string-match "([^)]" arg)
 								 (company-template-c-like-templatify arg)
-							   ;Otherwise, look for the type seperator and strip that off the end
+							   ;;Otherwise, look for the type seperator and strip that off the end
 							   (if (string-match omnisharp-company-type-separator arg)
 								   (when (re-search-backward omnisharp-company-type-separator beg t)
 									 (delete-region (match-beginning 0) end))))
-						   ;If we aren't doing templating, string away anything after the (
-						   ; or anything after the type separator, if we don't find that.
+						   ;;If we aren't doing templating, string away anything after the (
+						   ;; or anything after the type separator, if we don't find that.
 						   (if (string-match "(" arg)
 							   (when (re-search-backward "(" beg t)
 								 (delete-region (match-end 0) end)
@@ -450,7 +452,7 @@ items."
 							 (if (string-match omnisharp-company-type-separator arg)
 								 (when (re-search-backward omnisharp-company-type-separator beg t)
 								   (delete-region (match-beginning 0) end))))))))))
-						   
+
 
 
 (defun omnisharp--string-starts-with (s arg)
@@ -460,17 +462,19 @@ items."
 		(t nil)))
 
 (defun omnisharp--filter-company-candidate (candidate-string prefix)
-"Since company-mode doesn't handle fuzzy matching very well, 
-filter items that don't begin with the completion prefix"
+  "Since company-mode expects the candidates to begin with the
+completion prefix, filter items that don't begin with the
+completion prefix"
   (if (omnisharp--string-starts-with candidate-string prefix)
 	  candidate-string
 	nil))
-  
+
 
 (defun omnisharp--make-company-completion-text (item)
-  "company-mode expects the beginning of the candidate to be the same as the characters being completed.
-This method converts a function description of 'void SomeMethod(int parameter)' to 'SomeMethod(int parameter)'.
-Working with company-mode to eventually allow 'SomeMethod(int parameter) : void'"
+  "company-mode expects the beginning of the candidate to be the
+same as the characters being completed.  This method converts a
+function description of 'void SomeMethod(int parameter)' to
+'SomeMethod(int parameter) : void'."
   (let* ((case-fold-search nil)
 		 (completion (omnisharp--completion-result-item-get-completion-text item))
 		 (display (omnisharp--completion-result-item-get-display-text item))
@@ -482,9 +486,11 @@ Working with company-mode to eventually allow 'SomeMethod(int parameter) : void'
 	  display)))
 
 (defun omnisharp--get-company-candidates (pre)
-  "Returns completion results in company format.
-Company-mode doesn't make any distinction between the text to be inserted and the text to be displayed.
-As a result, since we want to see parameters and things, we need to munge 'DisplayText so it's company-mode-friendly"
+  "Returns completion results in company format.  Company-mode
+doesn't make any distinction between the text to be inserted and
+the text to be displayed.  As a result, since we want to see
+parameters and things, we need to munge 'DisplayText so it's
+company-mode-friendly"
   (let* ((json-false :json-false)
          ;; json-false helps distinguish between null and false in
          ;; json. This is an emacs limitation.
@@ -501,14 +507,16 @@ As a result, since we want to see parameters and things, we need to munge 'Displ
 	company-output))
 
 (defun omnisharp--get-company-candidate-meta (pre)
-  "Given one of our completion candidate strings, find the element it matches and return the 'DisplayText"
+  "Given one of our completion candidate strings, find the
+element it matches and return the 'DisplayText"
   (interactive)
   (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
 		   (when (string-equal (omnisharp--make-company-completion-text element) pre)
 			 (cl-return (cdr (assoc 'DisplayText element))))))
 
 (defun omnisharp--get-company-candidate-description (pre)
-  "Given one of our completion candidate strings, find the element it matches and return the 'Description"
+  "Given one of our completion candidate strings, find the
+element it matches and return the 'Description"
   (interactive)
   (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
 		   (when (string-equal (omnisharp--make-company-completion-text element) pre)
@@ -700,11 +708,11 @@ result."
 
 (defun omnisharp--get-curl-command (url params)
   `(:command "curl"
-    :arguments
-    ("--silent" "-H" "Content-type: application/json"
-     "--data"
-     ,(json-encode params)
-     ,url)))
+			 :arguments
+			 ("--silent" "-H" "Content-type: application/json"
+			  "--data"
+			  ,(json-encode params)
+			  ,url)))
 
 (defun omnisharp-post-message-curl-as-json (url params)
   (json-read-from-string
