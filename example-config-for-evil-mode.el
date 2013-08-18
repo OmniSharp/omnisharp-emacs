@@ -18,9 +18,6 @@
 (evil-define-key 'normal omnisharp-mode-map
   (kbd ", i") 'omnisharp-current-type-information)
 
-(evil-define-key 'normal omnisharp-mode-map
-  (kbd ", b") 'omnisharp-browse-type)
-
 (evil-define-key 'insert omnisharp-mode-map
   (kbd ".") 'omnisharp-add-dot-and-auto-complete)
 
