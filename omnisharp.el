@@ -112,6 +112,7 @@ omnisharp--auto-complete-display-backend for more information.")
     map)
   "Keymap for omnisharp-mode.")
 
+;;;###autoload
 (define-minor-mode omnisharp-mode
   "Omnicompletion (intellisense) and more for C# using an OmniSharp
 server backend."
@@ -119,7 +120,6 @@ server backend."
   :global nil
   :keymap omnisharp-mode-map)
 
-;;;###autoload
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
   (interactive)
@@ -128,7 +128,6 @@ server backend."
    ;; no params needed
    nil))
 
-;;;###autoload
 (defun omnisharp-go-to-definition ()
   "Jump to the definition of the symbol under point."
   (interactive)
@@ -141,7 +140,6 @@ server backend."
          "Cannot go to definition as none was returned by the API.")
       (omnisharp-go-to-file-line-and-column json-result))))
 
-;;;###autoload
 (defun omnisharp-find-usages ()
   "Find usages for the symbol under point"
   (interactive)
@@ -168,7 +166,6 @@ server backend."
      output-buffer
      omnisharp-find-usages-header)))
 
-;;;###autoload
 (defun omnisharp-find-implementations ()
   "Show a buffer containing all implementations of the interface under
 point, or classes derived from the class under point. Allow the user
@@ -190,7 +187,6 @@ to select one (or more) to jump to."
      (get-buffer-create omnisharp--find-implementations-buffer-name)
      omnisharp-find-implementations-header)))
 
-;;;###autoload
 (defun omnisharp-rename ()
   "Rename the current symbol to a new name. Lets the user choose what
 name to rename to, defaulting to the current name of the symbol."
@@ -269,7 +265,6 @@ follow results to the locations in the actual files."
 
 ;; TODO create omnisharp-add-to-solution that lets user choose which
 ;; file to add.
-;;;###autoload
 (defun omnisharp-add-to-solution-current-file ()
   (interactive)
   (let ((params (omnisharp--get-common-params)))
@@ -277,7 +272,6 @@ follow results to the locations in the actual files."
     (message "Added %s to the solution."
              (cdr (assoc 'FileName params)))))
 
-;;;###autoload
 (defun omnisharp-add-to-solution-dired-selected-files ()
   "Add the files currently selected in dired to the current solution."
   (interactive)
@@ -297,7 +291,6 @@ follow results to the locations in the actual files."
    (concat omnisharp-host "addtoproject")
    params))
 
-;;;###autoload
 (defun omnisharp-remove-from-project-current-file ()
   (interactive)
   (let ((params (omnisharp--get-common-params)))
@@ -305,7 +298,6 @@ follow results to the locations in the actual files."
     (message "Removed %s from the solution."
              (cdr (assoc 'FileName params)))))
 
-;;;###autoload
 (defun omnisharp-remove-from-project-dired-selected-files ()
   "Remove the files currently selected in dired from the current
 solution."
@@ -324,7 +316,6 @@ solution."
    (concat omnisharp-host "removefromproject")
    params))
 
-;;;###autoload
 (defun omnisharp-add-reference ()
   (interactive)
   (let* ((path-to-ref-file-to-add
@@ -346,7 +337,6 @@ solution."
    (concat omnisharp-host "addreference")
    params))
 
-;;;###autoload
 (defun omnisharp-auto-complete ()
   (interactive)
   (let* ((json-false :json-false)
@@ -364,7 +354,6 @@ solution."
 
     (funcall display-function json-result-auto-complete-response)))
 
-;;;###autoload
 (defun omnisharp-add-dot-and-auto-complete ()
   "Adds a . character and calls omnisharp-auto-complete. Meant to be
 bound to the dot key so pressing dot will automatically insert a dot
@@ -531,7 +520,6 @@ omnisharp--last-buffer-specific-auto-complete-result."
           json-result)
     ))
 
-;;;###autoload
 (defun omnisharp-auto-complete-overrides ()
   (interactive)
   (let ((params (omnisharp--get-common-params)))
@@ -569,7 +557,6 @@ omnisharp--last-buffer-specific-auto-complete-result."
      (cdr (assoc 'Line     json-result))
      (cdr (assoc 'Column   json-result)))))
 
-;;;###autoload
 (defun omnisharp-run-code-action-refactoring ()
   "Gets a list of refactoring code actions for the current editor
 position and file from the API. Asks the user what kind of refactoring
@@ -856,7 +843,6 @@ ring so that the user may return with (pop-tag-mark)."
 (defun omnisharp--vector-to-list (vector)
   (append vector nil))
 
-;;;###autoload
 (defun omnisharp--popup-to-ido ()
   "When in a popup menu with autocomplete suggestions, calling this
 function will close the popup and open an ido prompt instead.
@@ -870,7 +856,6 @@ the user selects a completion and the completion is inserted."
   (omnisharp--auto-complete-display-function-ido
    omnisharp--last-buffer-specific-auto-complete-result))
 
-;;;###autoload
 (defun omnisharp-current-type-information ()
   (interactive)
   (omnisharp-current-type-information-worker
@@ -889,7 +874,6 @@ the user selects a completion and the completion is inserted."
    (concat omnisharp-host "buildcommand")
    nil))
 
-;;;###autoload
 (defun omnisharp-build-in-emacs ()
   "Build the current solution in a non-blocking fashion inside emacs.
 Uses the standard compilation interface (compile)."
@@ -948,7 +932,6 @@ slashes."
 (defun omnisharp--convert-slashes-to-double-slashes (command)
   (replace-regexp-in-string "/" "//" command))
 
-;;;###autoload
 (defun omnisharp-code-format ()
   "Format the code in the current file. Replaces the file contents
 with the formatted result. Saves the file before starting."
@@ -1028,7 +1011,6 @@ type errors."
   ;; extensions available for these!
   :predicate (lambda () t))
 
-;;;###autoload
 (defun omnisharp-navigate-to-current-type-member ()
   (interactive)
   (omnisharp-navigate-to-current-type-member-worker
@@ -1069,7 +1051,6 @@ ido-completing-read. Returns the chosen element."
                        quickfix-choices)))
     (nth chosen-quickfix-index quickfixes)))
 
-;;;###autoload
 (defun omnisharp-navigate-to-type-in-current-file ()
   (interactive)
   (omnisharp-navigate-to-type-in-current-file-worker
@@ -1094,7 +1075,6 @@ ido-completing-read. Returns the chosen element."
      (omnisharp--vector-to-list
       (cdr (assoc 'QuickFixes quickfix-response))))))
 
-;;;###autoload
 (defun omnisharp-start-flycheck ()
   "Selects and starts the csharp-omnisharp-curl syntax checker for the
 current buffer. Use this in your csharp-mode hook."
