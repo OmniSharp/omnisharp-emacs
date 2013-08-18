@@ -416,42 +416,42 @@ items."
 
 (defun company-omnisharp (command &optional arg &rest ignored)
   "Company-mode integration"
-  ;;TODO - add in proper documentation support
-  (let ((omnisharp-auto-complete-want-documentation nil))
-    (case command
-      (prefix (and (equal major-mode 'csharp-mode) 
-				   (not (company-in-string-or-comment))
-				   (or (company-grab-symbol) 'stop)))
+  (case command
+	(prefix (and (equal major-mode 'csharp-mode) 
+				 (not (company-in-string-or-comment))
+				 (or (company-grab-symbol) 'stop)))
 
-      (candidates (omnisharp--get-company-candidates arg))
+	(candidates (omnisharp--get-company-candidates arg))
 
-	  ;; because "" doesn't return everything
-	  (no-cache (equal arg ""))
+	;; because "" doesn't return everything
+	(no-cache (equal arg ""))
 
-	  (crop (when (string-match "(" arg)
-			  (substring arg 0 (match-beginning 0))))
+	(crop (when (string-match "(" arg)
+			(substring arg 0 (match-beginning 0))))
 
-      (meta (omnisharp--get-company-candidate-meta arg))
-	  
-	  (post-completion (let* ((end (point-marker))
-							  (beg (- (point) (length arg))))
-						 (if omnisharp-company-do-template-completion
-							 ;;If this was a function match, do templating
-							 (if (string-match "([^)]" arg)
-								 (company-template-c-like-templatify arg)
-							   ;;Otherwise, look for the type seperator and strip that off the end
-							   (if (string-match omnisharp-company-type-separator arg)
-								   (when (re-search-backward omnisharp-company-type-separator beg t)
-									 (delete-region (match-beginning 0) end))))
-						   ;;If we aren't doing templating, string away anything after the (
-						   ;; or anything after the type separator, if we don't find that.
-						   (if (string-match "(" arg)
-							   (when (re-search-backward "(" beg t)
-								 (delete-region (match-end 0) end)
-								 (forward-char))
+	(meta (omnisharp--get-company-candidate-meta arg))
+	
+	(doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg)))
+	
+	(post-completion (let* ((end (point-marker))
+							(beg (- (point) (length arg))))
+					   (if omnisharp-company-do-template-completion
+						   ;;If this was a function match, do templating
+						   (if (string-match "([^)]" arg)
+							   (company-template-c-like-templatify arg)
+							 ;;Otherwise, look for the type seperator and strip that off the end
 							 (if (string-match omnisharp-company-type-separator arg)
 								 (when (re-search-backward omnisharp-company-type-separator beg t)
-								   (delete-region (match-beginning 0) end))))))))))
+								   (delete-region (match-beginning 0) end))))
+						 ;;If we aren't doing templating, string away anything after the (
+						 ;; or anything after the type separator, if we don't find that.
+						 (if (string-match "(" arg)
+							 (when (re-search-backward "(" beg t)
+							   (delete-region (match-end 0) end)
+							   (forward-char))
+						   (if (string-match omnisharp-company-type-separator arg)
+							   (when (re-search-backward omnisharp-company-type-separator beg t)
+								 (delete-region (match-beginning 0) end)))))))))
 
 
 
