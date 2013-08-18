@@ -401,7 +401,14 @@ items."
            json-result-auto-complete-response)))
     completions-in-popup-format))
 
+
 ;; company-mode integration
+(defvar omnisharp-company-do-template-completion t
+  "Set to true if you want in-line parameter completion, nil otherwise")
+
+(defvar omnisharp-company-type-separator " : "
+  "The string used to visually seperate functions/variables from their types") 
+
 (defun company-omnisharp (command &optional arg &rest ignored)
   "Company-mode integration"
   ;;TODO - add in proper documentation support
@@ -421,8 +428,26 @@ items."
 
       (meta (omnisharp--get-company-candidate-meta arg))
 	  
-	  (post-completion (when (string-match "([^)]" arg)
-                       (company-template-c-like-templatify arg))))))
+	  (post-completion (let* ((end (point-marker))
+							  (beg (- (point) (length arg))))
+						 (if omnisharp-company-do-template-completion
+							 ;If this was a function match, do templating
+							 (if (string-match "([^)]" arg)
+								 (company-template-c-like-templatify arg)
+							   ;Otherwise, look for the type seperator and strip that off the end
+							   (if (string-match omnisharp-company-type-separator arg)
+								   (when (re-search-backward omnisharp-company-type-separator beg t)
+									 (delete-region (match-beginning 0) end))))
+						   ;If we aren't doing templating, string away anything after the (
+						   ; or anything after the type separator, if we don't find that.
+						   (if (string-match "(" arg)
+							   (when (re-search-backward "(" beg t)
+								 (delete-region (match-end 0) end)
+								 (forward-char))
+							 (if (string-match omnisharp-company-type-separator arg)
+								 (when (re-search-backward omnisharp-company-type-separator beg t)
+								   (delete-region (match-beginning 0) end))))))))))
+						   
 
 
 (defun omnisharp--string-starts-with (s arg)
@@ -450,8 +475,7 @@ Working with company-mode to eventually allow 'SomeMethod(int parameter) : void'
 	(if (and func-start-pos (> func-start-pos 0))
 		(let ((func-return (substring display 0 func-start-pos))
 			  (func-body (substring display func-start-pos)))
-		  func-body)
-	  ;; (concat func-body ": " func-return))
+		  (concat func-body omnisharp-company-type-separator func-return))
 	  display)))
 
 (defun omnisharp--get-company-candidates (pre)
@@ -479,6 +503,13 @@ As a result, since we want to see parameters and things, we need to munge 'Displ
   (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
 		   (when (string-equal (omnisharp--make-company-completion-text element) pre)
 			 (cl-return (cdr (assoc 'DisplayText element))))))
+
+(defun omnisharp--get-company-candidate-description (pre)
+  "Given one of our completion candidate strings, find the element it matches and return the 'Description"
+  (interactive)
+  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
+		   (when (string-equal (omnisharp--make-company-completion-text element) pre)
+			 (cl-return (cdr (assoc 'Description element))))))
 
 
 ;;Add this completion backend to company-mode
