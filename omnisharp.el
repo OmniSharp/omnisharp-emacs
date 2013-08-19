@@ -159,7 +159,7 @@ server backend."
           ;; . "/foo")) ((Text ...)]
           (mapcar
            'omnisharp--find-usages-output-to-compilation-output
-           (cdr (assoc 'Usages json-result)))))
+           (cdr (assoc 'QuickFixes json-result)))))
 
     (omnisharp--write-lines-to-compilation-buffer
      output-in-compilation-mode-format
