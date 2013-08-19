@@ -579,23 +579,19 @@ current buffer)."
   (cdr (assoc omnisharp--auto-complete-display-backend
               omnisharp--auto-complete-display-backends-alist)))
 
-(defun omnisharp-auto-complete-worker (params)
-  "Takes a plist and makes an autocomplete query with them. Targets
-the given api-path.
+(defun omnisharp-auto-complete-worker (auto-complete-request)
+  "Takes an AutoCompleteRequest and makes an autocomplete query with
+them.
 
 Returns the raw JSON result. Also caches that result as
 omnisharp--last-buffer-specific-auto-complete-result."
-
-
-  ;; json.el URL encodes params automatically.
   (let ((json-result
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "autocomplete")
-          params)))
+          auto-complete-request)))
     ;; Cache result so it may be juggled in different contexts easily
     (setq omnisharp--last-buffer-specific-auto-complete-result
-          json-result)
-    ))
+          json-result)))
 
 (defun omnisharp-auto-complete-overrides ()
   (interactive)
