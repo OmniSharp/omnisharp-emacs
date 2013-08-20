@@ -41,8 +41,7 @@ Lacks a better UI and a good default configuration.
 * Format the current buffer
     * Currently only one formatting style supported, easy to add more.
 * Syntax checker for parse errors
-    * Can be run manually or using the provided [Flycheck][] checker
-      in the background.
+    * Runs using the provided [Flycheck][] checker in the background.
 * OmniSharp server instance manipulation
     * Reload solution
     * Stop server
