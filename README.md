@@ -93,12 +93,14 @@ handle a specific type, such as bool.
 
 ### Go to type in current file
 This is a standard functionality in e.g. Visual Studio.
+The types are shown in the order they occur in the source file.
 
 ![](pics/navigate-to-type-in-current-file.png)
 
 ### Go to member in current type
 This too is standard in various IDEs. Using ido makes navigating fast
 and intuitive.
+The members too are shown in the order they occur in the source file.
 
 ![](pics/navigate-to-current-type-member.png)
 
