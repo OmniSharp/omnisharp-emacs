@@ -452,7 +452,7 @@ triggers a completion immediately"
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
-                  
+    
     
     (post-completion (let* ((end (point-marker))
                             (beg (- (point) (length arg))))
@@ -488,9 +488,9 @@ completion prefix, filter items that don't begin with the
 completion prefix. Also filter out completions that just match
 the prefix exactly, as they just confuse things"
   (if (and (not (string= (omnisharp--completion-result-item-get-completion-text element) prefix))
-		   (omnisharp--string-starts-with candidate-string prefix))
-	  candidate-string
-	nil))
+           (omnisharp--string-starts-with candidate-string prefix))
+      candidate-string
+    nil))
 
 (defun omnisharp--make-company-completion-text (item)
   "company-mode expects the beginning of the candidate to be the
@@ -501,16 +501,16 @@ function description of 'void SomeMethod(int parameter)' to
          (completion (omnisharp--completion-result-item-get-completion-text item))
          (display (omnisharp--completion-result-item-get-display-text item))
          (func-start-pos (string-match completion display))
-		 (output display))
-	;;If this candidate has a type, stick the return type on the end
+         (output display))
+    ;;If this candidate has a type, stick the return type on the end
     (if (and func-start-pos (> func-start-pos 0))
         (let ((func-return (substring display 0 func-start-pos))
               (func-body (substring display func-start-pos)))
           (setq output (concat func-body omnisharp-company-type-separator func-return)))
-	  (let ((brackets-start (string-match "()" display)))
-		(when brackets-start
-		  (setq output (substring display 0 brackets-start)))))
-	output))
+      (let ((brackets-start (string-match "()" display)))
+        (when brackets-start
+          (setq output (substring display 0 brackets-start)))))
+    output))
 
 (defun omnisharp--get-company-candidates (pre)
   "Returns completion results in company format.  Company-mode
@@ -1083,26 +1083,26 @@ cursor at that location"
   (let* ((element-line (cdr (assoc 'Line quickfix-alist)))
          (element-column (cdr (assoc 'Column quickfix-alist)))
          (element-filename (cdr (assoc 'Filename quickfix-alist)))
-		 (use-buffer (current-buffer)))
+         (use-buffer (current-buffer)))
     (save-excursion 
-	  ;; doing this by hand instead of calling
-	  ;; omnisharp-go-to-file-line-and-column-worker because I don't
-	  ;; want to mess with the mark ring. Might be worth pulling this out into a shared function
-	  ;; calling goto-line directly results in a compiler warning.
+      ;; doing this by hand instead of calling
+      ;; omnisharp-go-to-file-line-and-column-worker because I don't
+      ;; want to mess with the mark ring. Might be worth pulling this out into a shared function
+      ;; calling goto-line directly results in a compiler warning.
 
-	  (when (not (equal element-filename nil))
-		(setq use-buffer (find-file element-filename)))
-	  (with-current-buffer use-buffer
-		(beginning-of-buffer)
-		(beginning-of-line element-line)
-		(move-to-column (- element-column 1))
-		(point-marker)))))
+      (when (not (equal element-filename nil))
+        (setq use-buffer (find-file element-filename)))
+      (with-current-buffer use-buffer
+        (beginning-of-buffer)
+        (beginning-of-line element-line)
+        (move-to-column (- element-column 1))
+        (point-marker)))))
 
 (defun omnisharp-imenu-create-index ()
   (interactive)
   (let* ((quickfixes (omnisharp-post-message-curl-as-json
-                     (concat omnisharp-host "currentfilemembersasflat")
-                     (omnisharp--get-common-params)))
+                      (concat omnisharp-host "currentfilemembersasflat")
+                      (omnisharp--get-common-params)))
          (list-quickfixes (omnisharp--vector-to-list quickfixes))
          (imenu-list (mapcar (lambda (quickfix-alist)
                                (cons (cdr (assoc 'Text quickfix-alist))
