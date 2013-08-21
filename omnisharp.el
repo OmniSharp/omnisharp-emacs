@@ -489,8 +489,8 @@ completion prefix. Also filter out completions that just match
 the prefix exactly, as they just confuse things"
   (if (and (not (string= (omnisharp--completion-result-item-get-completion-text element) prefix))
 		   (omnisharp--string-starts-with candidate-string prefix))
-		candidate-string
-	  nil))
+	  candidate-string
+	nil))
 
 (defun omnisharp--make-company-completion-text (item)
   "company-mode expects the beginning of the candidate to be the
@@ -509,7 +509,7 @@ function description of 'void SomeMethod(int parameter)' to
           (setq output (concat func-body omnisharp-company-type-separator func-return)))
 	  (let ((brackets-start (string-match "()" display)))
 		(when brackets-start
-			(setq output (substring display 0 brackets-start)))))
+		  (setq output (substring display 0 brackets-start)))))
 	output))
 
 (defun omnisharp--get-company-candidates (pre)
