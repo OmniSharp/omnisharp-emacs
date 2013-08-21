@@ -1071,6 +1071,68 @@ type errors."
   ;; extensions available for these!
   :predicate (lambda () t))
 
+(defun omnisharp--imenu-make-marker (element)
+  "Takes an json-alist element and returns the position of the
+cursor at that location"
+  (let* ((element-line (cdr (assoc 'Line quickfix-alist)))
+         (element-column (cdr (assoc 'Column quickfix-alist)))
+         (element-filename (cdr (assoc 'Filename quickfix-alist)))
+		 (use-buffer (current-buffer)))
+    (save-excursion 
+	  ;; doing this by hand instead of calling
+	  ;; omnisharp-go-to-file-line-and-column-worker because I don't
+	  ;; want to mess with the mark ring. Might be worth pulling this out into a shared function
+	  ;; calling goto-line directly results in a compiler warning.
+
+	  (when (not (equal element-filename nil))
+		(setq use-buffer (find-file element-filename)))
+	  (with-current-buffer use-buffer
+		(beginning-of-buffer)
+		(beginning-of-line element-line)
+		(move-to-column (- element-column 1))
+		(point-marker)))))
+
+(defun omnisharp--imenu-jump-to-position (index-name index-pos index-function index-line index-column index-filename)
+  "The function imenu will call when a given imenu element is selected.
+IMenu documentation says the parameters are title, pos, args, but
+experience is showing the parameters are actually title, pos,
+function(?), args.  Not currently used as imenu doesn't seem to
+work properly when functions are passed in"
+  (omnisharp-go-to-file-line-and-column-worker index-line index-column index-filename))
+  
+;; Emacs support for 'special elements' which allow you to call a function when an imenu element is selected
+;; appears to be broken - see emacs bug 14029.
+
+;; (defun omnisharp-imenu-create-index ()
+;;   (interactive)
+;;   (let* ((quickfixes (omnisharp-post-message-curl-as-json
+;;                      (concat omnisharp-host "currentfilemembersasflat")
+;;                      (omnisharp--get-common-params)))
+;;          (list-quickfixes (omnisharp--vector-to-list quickfixes))
+;;          (imenu-list (mapcar (lambda (quickfix-alist)
+;;                                (list (cdr (assoc 'Text quickfix-alist))
+;; 									 22
+;; 									 'omnisharp--imenu-jump-to-position
+;; 									 (cdr (assoc 'Line quickfix-alist))
+;; 									 (cdr (assoc 'Column quickfix-alist))
+;; 									 (cdr (assoc 'FileName quickfix-alist))))
+;;                              list-quickfixes)))
+;;     (message "%s" imenu-list)
+;;     imenu-list))
+
+(defun omnisharp-imenu-create-index ()
+  (interactive)
+  (let* ((quickfixes (omnisharp-post-message-curl-as-json
+                     (concat omnisharp-host "currentfilemembersasflat")
+                     (omnisharp--get-common-params)))
+         (list-quickfixes (omnisharp--vector-to-list quickfixes))
+         (imenu-list (mapcar (lambda (quickfix-alist)
+                               (cons (cdr (assoc 'Text quickfix-alist))
+                                     (omnisharp--imenu-make-marker quickfix-alist)))
+                             list-quickfixes)))
+    imenu-list))
+
+
 (defun omnisharp-navigate-to-current-type-member ()
   (interactive)
   (omnisharp-navigate-to-current-type-member-worker
