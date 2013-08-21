@@ -482,14 +482,16 @@ triggers a completion immediately"
          (string-equal (substring s 0 (length arg)) arg))
         (t nil)))
 
-(defun omnisharp--filter-company-candidate (candidate-string prefix)
+(defun omnisharp--filter-company-candidate (candidate-string element prefix)
   "Since company-mode expects the candidates to begin with the
 completion prefix, filter items that don't begin with the
-completion prefix"
-  (if (omnisharp--string-starts-with candidate-string prefix)
-      candidate-string
-    nil))
-
+completion prefix. Also filter out completions that just match
+the prefix exactly, as they just confuse things"
+  (if (string= (omnisharp--completion-result-item-get-completion-text element) prefix)
+	  nil
+	(if (omnisharp--string-starts-with candidate-string prefix)
+		candidate-string
+	  nil)))
 
 (defun omnisharp--make-company-completion-text (item)
   "company-mode expects the beginning of the candidate to be the
@@ -499,12 +501,17 @@ function description of 'void SomeMethod(int parameter)' to
   (let* ((case-fold-search nil)
          (completion (omnisharp--completion-result-item-get-completion-text item))
          (display (omnisharp--completion-result-item-get-display-text item))
-         (func-start-pos (string-match completion display)))
+         (func-start-pos (string-match completion display))
+		 (output display))
+	;;If this candidate has a type, stick the return type on the end
     (if (and func-start-pos (> func-start-pos 0))
         (let ((func-return (substring display 0 func-start-pos))
               (func-body (substring display func-start-pos)))
-          (concat func-body omnisharp-company-type-separator func-return))
-      display)))
+          (setq output (concat func-body omnisharp-company-type-separator func-return)))
+	  (let ((brackets-start (string-match "()" display)))
+		(when brackets-start
+			(setq output (substring display 0 brackets-start)))))
+	output))
 
 (defun omnisharp--get-company-candidates (pre)
   "Returns completion results in company format.  Company-mode
@@ -523,7 +530,7 @@ company-mode-friendly"
          (company-output (delq nil 
                                (mapcar
                                 (lambda (element)
-                                  (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) pre))
+                                  (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) element pre))
                                 json-result-auto-complete-response))))
     company-output))
 
