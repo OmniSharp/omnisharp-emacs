@@ -487,11 +487,10 @@ triggers a completion immediately"
 completion prefix, filter items that don't begin with the
 completion prefix. Also filter out completions that just match
 the prefix exactly, as they just confuse things"
-  (if (string= (omnisharp--completion-result-item-get-completion-text element) prefix)
-	  nil
-	(if (omnisharp--string-starts-with candidate-string prefix)
+  (if (and (not (string= (omnisharp--completion-result-item-get-completion-text element) prefix))
+		   (omnisharp--string-starts-with candidate-string prefix))
 		candidate-string
-	  nil)))
+	  nil))
 
 (defun omnisharp--make-company-completion-text (item)
   "company-mode expects the beginning of the candidate to be the
@@ -1098,34 +1097,6 @@ cursor at that location"
 		(beginning-of-line element-line)
 		(move-to-column (- element-column 1))
 		(point-marker)))))
-
-(defun omnisharp--imenu-jump-to-position (index-name index-pos index-function index-line index-column index-filename)
-  "The function imenu will call when a given imenu element is selected.
-IMenu documentation says the parameters are title, pos, args, but
-experience is showing the parameters are actually title, pos,
-function(?), args.  Not currently used as imenu doesn't seem to
-work properly when functions are passed in"
-  (omnisharp-go-to-file-line-and-column-worker index-line index-column index-filename))
-  
-;; Emacs support for 'special elements' which allow you to call a function when an imenu element is selected
-;; appears to be broken - see emacs bug 14029.
-
-;; (defun omnisharp-imenu-create-index ()
-;;   (interactive)
-;;   (let* ((quickfixes (omnisharp-post-message-curl-as-json
-;;                      (concat omnisharp-host "currentfilemembersasflat")
-;;                      (omnisharp--get-common-params)))
-;;          (list-quickfixes (omnisharp--vector-to-list quickfixes))
-;;          (imenu-list (mapcar (lambda (quickfix-alist)
-;;                                (list (cdr (assoc 'Text quickfix-alist))
-;; 									 22
-;; 									 'omnisharp--imenu-jump-to-position
-;; 									 (cdr (assoc 'Line quickfix-alist))
-;; 									 (cdr (assoc 'Column quickfix-alist))
-;; 									 (cdr (assoc 'FileName quickfix-alist))))
-;;                              list-quickfixes)))
-;;     (message "%s" imenu-list)
-;;     imenu-list))
 
 (defun omnisharp-imenu-create-index ()
   (interactive)
