@@ -118,7 +118,13 @@ omnisharp--auto-complete-display-backend for more information.")
 server backend."
   :lighter " omnisharp"
   :global nil
-  :keymap omnisharp-mode-map)
+  :keymap omnisharp-mode-map
+  (when omnisharp-imenu-support
+    (if omnisharp-mode 
+        (progn
+          (setq imenu-create-index-function 'omnisharp-imenu-create-index)
+          (imenu-add-menubar-index))
+      (setq imenu-create-index-function 'imenu-default-create-index-function))))
 
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
@@ -418,6 +424,9 @@ items."
   "If t, begin completion when pressing '.' after a class, object
   or namespace")
 
+(defvar omnisharp-imenu-support t
+"If t, activate imenu integration")
+
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
 triggers a completion immediately"
@@ -452,7 +461,7 @@ triggers a completion immediately"
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
-                  
+    
     
     (post-completion (let* ((end (point-marker))
                             (beg (- (point) (length arg))))
@@ -482,14 +491,15 @@ triggers a completion immediately"
          (string-equal (substring s 0 (length arg)) arg))
         (t nil)))
 
-(defun omnisharp--filter-company-candidate (candidate-string prefix)
+(defun omnisharp--filter-company-candidate (candidate-string element prefix)
   "Since company-mode expects the candidates to begin with the
 completion prefix, filter items that don't begin with the
-completion prefix"
-  (if (omnisharp--string-starts-with candidate-string prefix)
+completion prefix. Also filter out completions that just match
+the prefix exactly, as they just confuse things"
+  (if (and (not (string= (omnisharp--completion-result-item-get-completion-text element) prefix))
+           (omnisharp--string-starts-with candidate-string prefix))
       candidate-string
     nil))
-
 
 (defun omnisharp--make-company-completion-text (item)
   "company-mode expects the beginning of the candidate to be the
@@ -499,12 +509,17 @@ function description of 'void SomeMethod(int parameter)' to
   (let* ((case-fold-search nil)
          (completion (omnisharp--completion-result-item-get-completion-text item))
          (display (omnisharp--completion-result-item-get-display-text item))
-         (func-start-pos (string-match completion display)))
+         (func-start-pos (string-match completion display))
+         (output display))
+    ;;If this candidate has a type, stick the return type on the end
     (if (and func-start-pos (> func-start-pos 0))
         (let ((func-return (substring display 0 func-start-pos))
               (func-body (substring display func-start-pos)))
-          (concat func-body omnisharp-company-type-separator func-return))
-      display)))
+          (setq output (concat func-body omnisharp-company-type-separator func-return)))
+      (let ((brackets-start (string-match "()" display)))
+        (when brackets-start
+          (setq output (substring display 0 brackets-start)))))
+    output))
 
 (defun omnisharp--get-company-candidates (pre)
   "Returns completion results in company format.  Company-mode
@@ -523,7 +538,7 @@ company-mode-friendly"
          (company-output (delq nil 
                                (mapcar
                                 (lambda (element)
-                                  (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) pre))
+                                  (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) element pre))
                                 json-result-auto-complete-response))))
     company-output))
 
@@ -710,7 +725,7 @@ the OmniSharp server understands."
   (replace-regexp-in-string "/" "\\\\" str))
 
 (defun omnisharp--get-current-buffer-contents ()
-  (buffer-substring-no-properties 1 (buffer-size)))
+  (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
 
 (defun omnisharp-post-message-curl (url params)
   "Post json stuff to url with --data set to given params. Return
@@ -1070,6 +1085,41 @@ type errors."
   ;; TODO use only is csharp files - but there are a few different
   ;; extensions available for these!
   :predicate (lambda () t))
+
+(defun omnisharp--imenu-make-marker (element)
+  "Takes a QuickCheck element and returns the position of the
+cursor at that location"
+  (let* ((element-line (cdr (assoc 'Line quickfix-alist)))
+         (element-column (cdr (assoc 'Column quickfix-alist)))
+         (element-filename (cdr (assoc 'Filename quickfix-alist)))
+         (use-buffer (current-buffer)))
+    (save-excursion 
+      ;; doing this by hand instead of calling
+      ;; omnisharp-go-to-file-line-and-column-worker because I don't
+      ;; want to mess with the mark ring. Might be worth pulling this out into a shared function
+      ;; calling goto-line directly results in a compiler warning.
+
+      (when (not (equal element-filename nil))
+        (setq use-buffer (find-file element-filename)))
+      (with-current-buffer use-buffer
+        (beginning-of-buffer)
+        (beginning-of-line element-line)
+        (move-to-column (- element-column 1))
+        (point-marker)))))
+
+(defun omnisharp-imenu-create-index ()
+  "Imenu callback function - returns an alist of ((member-name . position))" 
+  (interactive)
+  (let* ((quickfixes (omnisharp-post-message-curl-as-json
+                      (concat omnisharp-host "currentfilemembersasflat")
+                      (omnisharp--get-common-params)))
+         (list-quickfixes (omnisharp--vector-to-list quickfixes))
+         (imenu-list (mapcar (lambda (quickfix-alist)
+                               (cons (cdr (assoc 'Text quickfix-alist))
+                                     (omnisharp--imenu-make-marker quickfix-alist)))
+                             list-quickfixes)))
+    imenu-list))
+
 
 (defun omnisharp-navigate-to-current-type-member ()
   (interactive)
