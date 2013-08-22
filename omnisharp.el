@@ -167,10 +167,12 @@ server backend."
            'omnisharp--find-usages-output-to-compilation-output
            (cdr (assoc 'QuickFixes json-result)))))
 
-    (omnisharp--write-lines-to-compilation-buffer
-     output-in-compilation-mode-format
-     output-buffer
-     omnisharp-find-usages-header)))
+    (if (equal 0 (length output-in-compilation-mode-format))
+        (message "No usages found.")
+      (omnisharp--write-lines-to-compilation-buffer
+       output-in-compilation-mode-format
+       output-buffer
+       omnisharp-find-usages-header))))
 
 (defun omnisharp-find-implementations ()
   "Show a buffer containing all implementations of the interface under
