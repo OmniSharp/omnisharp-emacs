@@ -118,7 +118,13 @@ omnisharp--auto-complete-display-backend for more information.")
 server backend."
   :lighter " omnisharp"
   :global nil
-  :keymap omnisharp-mode-map)
+  :keymap omnisharp-mode-map
+  (when omnisharp-imenu-support
+    (if omnisharp-mode 
+        (progn
+          (setq imenu-create-index-function 'omnisharp-imenu-create-index)
+          (imenu-add-menubar-index))
+      (setq imenu-create-index-function 'imenu-default-create-index-function))))
 
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
@@ -417,6 +423,9 @@ items."
 (defvar omnisharp-company-begin-after-member-access t
   "If t, begin completion when pressing '.' after a class, object
   or namespace")
+
+(defvar omnisharp-imenu-support t
+"If t, activate imenu integration")
 
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
@@ -1078,7 +1087,7 @@ type errors."
   :predicate (lambda () t))
 
 (defun omnisharp--imenu-make-marker (element)
-  "Takes an json-alist element and returns the position of the
+  "Takes a QuickCheck element and returns the position of the
 cursor at that location"
   (let* ((element-line (cdr (assoc 'Line quickfix-alist)))
          (element-column (cdr (assoc 'Column quickfix-alist)))
@@ -1099,6 +1108,7 @@ cursor at that location"
         (point-marker)))))
 
 (defun omnisharp-imenu-create-index ()
+  "Imenu callback function - returns an alist of ((member-name . position))" 
   (interactive)
   (let* ((quickfixes (omnisharp-post-message-curl-as-json
                       (concat omnisharp-host "currentfilemembersasflat")
