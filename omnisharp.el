@@ -716,7 +716,7 @@ the OmniSharp server understands."
   (replace-regexp-in-string "/" "\\\\" str))
 
 (defun omnisharp--get-current-buffer-contents ()
-  (buffer-substring-no-properties 1 (buffer-size)))
+  (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
 
 (defun omnisharp-post-message-curl (url params)
   "Post json stuff to url with --data set to given params. Return
