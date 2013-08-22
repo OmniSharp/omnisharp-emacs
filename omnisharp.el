@@ -1175,7 +1175,7 @@ ido-completing-read. Returns the chosen element."
      quickfixes)))
 
 ;; No need for a worker pattern since findsymbols takes no arguments
-(defun omnisharp-nagivate-to-solution-member ()
+(defun omnisharp-navigate-to-solution-member ()
   (interactive)
   (let ((quickfix-response
          (omnisharp-post-message-curl-as-json
