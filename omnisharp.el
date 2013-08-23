@@ -112,7 +112,6 @@ omnisharp--auto-complete-display-backend for more information.")
     map)
   "Keymap for omnisharp-mode.")
 
-;; TODO could use a global default, e.g. C:/omnisharp-tmp-file.cs
 ;; Note that emacs seems to internally expect windows paths to have
 ;; forward slashes.
 (defvar omnisharp--windows-curl-tmp-file-path
