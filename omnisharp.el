@@ -1161,12 +1161,12 @@ cursor at that location"
     imenu-list))
 
 
-(defun omnisharp-navigate-to-current-type-member ()
+(defun omnisharp-navigate-to-current-file-member ()
   (interactive)
-  (omnisharp-navigate-to-current-type-member-worker
+  (omnisharp-navigate-to-current-file-member-worker
    (omnisharp--get-common-params)))
 
-(defun omnisharp-navigate-to-current-type-member-worker (request)
+(defun omnisharp-navigate-to-current-file-member-worker (request)
   (let ((quickfixes (omnisharp-post-message-curl-as-json
                      (concat omnisharp-host "currentfilemembersasflat")
                      request)))
