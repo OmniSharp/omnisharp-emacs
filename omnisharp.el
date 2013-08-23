@@ -112,6 +112,15 @@ omnisharp--auto-complete-display-backend for more information.")
     map)
   "Keymap for omnisharp-mode.")
 
+;; TODO could use a global default, e.g. C:/omnisharp-tmp-file.cs
+;; Note that emacs seems to internally expect windows paths to have
+;; forward slashes.
+(defvar omnisharp--windows-curl-tmp-file-path
+  "C:/omnisharp-tmp-file.cs"
+  "The full file path where to save temporary stuff that gets sent to
+the OmniSharp API. Only used on Windows.
+Must be writable by the current user.")
+
 ;;;###autoload
 (define-minor-mode omnisharp-mode
   "Omnicompletion (intellisense) and more for C# using an OmniSharp
@@ -741,12 +750,46 @@ result."
       (buffer-string))))
 
 (defun omnisharp--get-curl-command (url params)
+  "Returns a command that may be used to communicate with the API via
+the curl program. Depends on the operating system."
+  (if (equal system-type 'windows-nt)
+      (omnisharp--get-curl-command-windows-with-tmp-file url params)
+    (omnisharp--get-curl-command-unix url params)))
+
+(defun omnisharp--get-curl-command-unix (url params)
+  "Returns a command using plain curl that can be executed to
+communicate with the API."
   `(:command "curl"
              :arguments
              ("--silent" "-H" "Content-type: application/json"
               "--data"
               ,(json-encode params)
               ,url)))
+
+(defun omnisharp--get-curl-command-windows-with-tmp-file (url params)
+  "Basically: put PARAMS to file, then create a curl command to the
+api at URL using that file as the parameters."
+  ;; TODO could optimise: short buffers need not be written to tmp
+  ;; files.
+  (omnisharp--write-json-params-to-tmp-file
+   omnisharp--windows-curl-tmp-file-path
+   (json-encode params))
+  (let ((path-with-curl-prefix
+         (concat "@"
+                 omnisharp--windows-curl-tmp-file-path)))
+    `(:command "curl"
+               :arguments
+               ("--silent" "-H" "Content-type: application/json"
+                "--data-binary"
+                ;; @ specifies a file path to curl
+                ,path-with-curl-prefix
+                ,url))))
+
+(defun omnisharp--write-json-params-to-tmp-file
+  (target-path stuff-to-write-to-file)
+  "Deletes the file when done."
+  (with-temp-file target-path
+    (insert stuff-to-write-to-file)))
 
 (defun omnisharp-post-message-curl-as-json (url params)
   (json-read-from-string
