@@ -116,7 +116,10 @@ omnisharp--auto-complete-display-backend for more information.")
 ;; Note that emacs seems to internally expect windows paths to have
 ;; forward slashes.
 (defvar omnisharp--windows-curl-tmp-file-path
-  "omnisharp-tmp-file.cs")
+  "C:/omnisharp-tmp-file.cs"
+  "The full file path where to save temporary stuff that gets sent to
+the OmniSharp API. Only used on Windows.
+Must be writable by the current user.")
 
 ;;;###autoload
 (define-minor-mode omnisharp-mode
@@ -751,11 +754,15 @@ result."
       (buffer-string))))
 
 (defun omnisharp--get-curl-command (url params)
+  "Returns a command that may be used to communicate with the API via
+the curl program. Depends on the operating system."
   (if (equal system-type 'windows-nt)
       (omnisharp--get-curl-command-windows-with-tmp-file url params)
     (omnisharp--get-curl-command-unix url params)))
 
 (defun omnisharp--get-curl-command-unix (url params)
+  "Returns a command using plain curl that can be executed to
+communicate with the API."
   `(:command "curl"
              :arguments
              ("--silent" "-H" "Content-type: application/json"
@@ -764,12 +771,10 @@ result."
               ,url)))
 
 (defun omnisharp--get-curl-command-windows-with-tmp-file (url params)
-  ;; TODO document
+  "Basically: put PARAMS to file, then create a curl command to the
+api at URL using that file as the parameters."
   ;; TODO could optimise: short buffers need not be written to tmp
   ;; files.
-
-  ;; Basically: put stuff to file, then create a curl command using
-  ;; that file.
   (omnisharp--write-json-params-to-tmp-file
    omnisharp--windows-curl-tmp-file-path
    (json-encode params))
