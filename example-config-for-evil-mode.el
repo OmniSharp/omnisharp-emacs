@@ -22,7 +22,7 @@
   (kbd ".") 'omnisharp-add-dot-and-auto-complete)
 
 (evil-define-key 'normal omnisharp-mode-map
-  (kbd ", n t") 'omnisharp-navigate-to-current-type-member)
+  (kbd ", n t") 'omnisharp-navigate-to-current-file-member)
 
 (evil-define-key 'normal omnisharp-mode-map
   (kbd ", n s") 'omnisharp-navigate-to-solution-member)
