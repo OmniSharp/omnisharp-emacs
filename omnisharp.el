@@ -112,6 +112,12 @@ omnisharp--auto-complete-display-backend for more information.")
     map)
   "Keymap for omnisharp-mode.")
 
+;; TODO could use a global default, e.g. C:/omnisharp-tmp-file.cs
+;; Note that emacs seems to internally expect windows paths to have
+;; forward slashes.
+(defvar omnisharp--windows-curl-tmp-file-path
+  "omnisharp-tmp-file.cs")
+
 ;;;###autoload
 (define-minor-mode omnisharp-mode
   "Omnicompletion (intellisense) and more for C# using an OmniSharp
@@ -745,12 +751,46 @@ result."
       (buffer-string))))
 
 (defun omnisharp--get-curl-command (url params)
+  (if (equal system-type 'windows-nt)
+      (omnisharp--get-curl-command-windows-with-tmp-file url params)
+    (omnisharp--get-curl-command-unix url params)))
+
+(defun omnisharp--get-curl-command-unix (url params)
   `(:command "curl"
              :arguments
              ("--silent" "-H" "Content-type: application/json"
               "--data"
               ,(json-encode params)
               ,url)))
+
+(defun omnisharp--get-curl-command-windows-with-tmp-file (url params)
+  ;; TODO document
+  ;; TODO could optimise: short buffers need not be written to tmp
+  ;; files.
+
+  ;; Basically: put stuff to file, then create a curl command using
+  ;; that file.
+  (omnisharp--write-json-params-to-tmp-file
+   omnisharp--windows-curl-tmp-file-path
+   (json-encode params))
+  (let ((path-with-curl-prefix
+         (concat "@"
+                 omnisharp--windows-curl-tmp-file-path)))
+    `(:command "curl"
+               :arguments
+               ("--silent" "-H" "Content-type: application/json"
+                "--data-binary"
+                ;; @ specifies a file path to curl
+                ,path-with-curl-prefix
+                ,url))))
+
+(defun omnisharp--write-json-params-to-tmp-file
+  (target-path stuff-to-write-to-file)
+  "Deletes the file when done."
+  ;; TODO does this run some save hooks?
+  ;; We need a very fast and stupid way.
+  (with-temp-file target-path
+    (insert stuff-to-write-to-file)))
 
 (defun omnisharp-post-message-curl-as-json (url params)
   (json-read-from-string
