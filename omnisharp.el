@@ -134,6 +134,48 @@ server backend."
           (imenu-add-menubar-index))
       (setq imenu-create-index-function 'imenu-default-create-index-function))))
 
+(easy-menu-define omnisharp-mode-menu omnisharp-mode-map
+  "Menu for omnisharp-mode"
+  '("OmniSharp"
+    ("Auto-complete"
+     ["at point" omnisharp-auto-complete]
+     ["Add . and complete members" omnisharp-add-dot-and-auto-complete]
+     ["Override superclass member" omnisharp-auto-complete-overrides])
+
+    ("Navigate to.."
+     ["Definition at point" omnisharp-go-to-definition]
+     ["Current file member" omnisharp-navigate-to-current-file-member]
+     ["Type in current file" omnisharp-navigate-to-type-in-current-file]
+     ["Solution member" omnisharp-navigate-to-solution-member])
+
+    ("OmniSharp server"
+     ["Reload solution" omnisharp-reload-solution]
+     ["Stop OmniSharp server" omnisharp-stop-server])
+
+    ("Current symbol"
+     ["Show type" omnisharp-current-type-information]
+     ["Find usages" omnisharp-find-usages]
+     ["Find implementations" omnisharp-find-implementations]
+     ["Rename" omnisharp-rename])
+
+    ("Solution actions"
+     ["Add current file to solution"
+      omnisharp-add-to-solution-current-file]
+     ["Remove current file from solution"
+      omnisharp-remove-from-project-current-file]
+     ["Add marked files in dired to solution"
+      omnisharp-add-to-solution-dired-selected-files]
+     ["Remove marked files in dired from solution"
+      omnisharp-remove-from-project-current-file]
+     ["Add reference to dll or project"
+      omnisharp-add-reference]
+     ["Build solution in emacs" omnisharp-build-in-emacs])
+
+    ["Run contextual code action / refactoring at point"
+     omnisharp-run-code-action-refactoring]
+    ["Run code format on current buffer" omnisharp-code-format]
+    ))
+
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
   (interactive)
