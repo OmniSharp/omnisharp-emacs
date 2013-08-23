@@ -792,8 +792,6 @@ api at URL using that file as the parameters."
 (defun omnisharp--write-json-params-to-tmp-file
   (target-path stuff-to-write-to-file)
   "Deletes the file when done."
-  ;; TODO does this run some save hooks?
-  ;; We need a very fast and stupid way.
   (with-temp-file target-path
     (insert stuff-to-write-to-file)))
 
