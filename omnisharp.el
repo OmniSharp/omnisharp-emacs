@@ -287,7 +287,10 @@ Expects the lines to be in a format that compilation-mode
 recognizes, so that the user may jump to the results."
   (with-current-buffer buffer-to-write-to
     (let ((inhibit-read-only t))
-      (read-only-mode nil)
+      ;; read-only-mode new in Emacs 24.3
+      (if (fboundp 'read-only-mode)
+	  (read-only-mode nil)
+	(setq buffer-read-only nil))
       (erase-buffer)
 
       (when (not (null header))
@@ -298,7 +301,9 @@ recognizes, so that the user may jump to the results."
               (insert "\n"))
             lines-to-write)
       (compilation-mode)
-      (read-only-mode t)
+      (if (fboundp 'read-only-mode)
+	  (read-only-mode t)
+	(setq buffer-read-only t))
       (display-buffer buffer-to-write-to))))
 
 (defun omnisharp--find-usages-output-to-compilation-output
