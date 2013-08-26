@@ -1,7 +1,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 0.8
+;; Version: 0.9
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -146,7 +146,8 @@ server backend."
      ["Definition at point" omnisharp-go-to-definition]
      ["Current file member" omnisharp-navigate-to-current-file-member]
      ["Type in current file" omnisharp-navigate-to-type-in-current-file]
-     ["Solution member" omnisharp-navigate-to-solution-member])
+     ["Solution member" omnisharp-navigate-to-solution-member]
+     ["File in solution" omnisharp-navigate-to-solution-file])
 
     ("OmniSharp server"
      ["Reload solution" omnisharp-reload-solution]
@@ -1200,17 +1201,14 @@ cursor at that location"
          (element-filename (cdr (assoc 'Filename quickfix-alist)))
          (use-buffer (current-buffer)))
     (save-excursion 
-      ;; doing this by hand instead of calling
-      ;; omnisharp-go-to-file-line-and-column-worker because I don't
-      ;; want to mess with the mark ring. Might be worth pulling this out into a shared function
-      ;; calling goto-line directly results in a compiler warning.
-
       (when (not (equal element-filename nil))
-        (setq use-buffer (find-file element-filename)))
-      (with-current-buffer use-buffer
-        (beginning-of-buffer)
-        (beginning-of-line element-line)
-        (move-to-column (- element-column 1))
+        (omnisharp-go-to-file-line-and-column-worker
+         element-line
+         element-column
+         element-filename
+         nil ; other-window
+         ;; dont-save-old-pos
+         t)
         (point-marker)))))
 
 (defun omnisharp-imenu-create-index ()
@@ -1290,6 +1288,24 @@ ido-completing-read. Returns the chosen element."
     (omnisharp--choose-and-go-to-quickfix-ido
      (omnisharp--vector-to-list
       (cdr (assoc 'QuickFixes quickfix-response))))))
+
+(defun omnisharp-navigate-to-solution-file ()
+  (interactive)
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "gotofile")
+          nil)))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     (omnisharp--vector-to-list
+      (cdr (assoc 'QuickFixes quickfix-response))))))
+
+(defun omnisharp-navigate-to-solution-file-then-file-member
+  ()
+  "Navigates to a file in the solution first, then to a member in that
+file."
+  (interactive)
+  (omnisharp-navigate-to-solution-file)
+  (omnisharp-navigate-to-current-file-member))
 
 (defun omnisharp-start-flycheck ()
   "Selects and starts the csharp-omnisharp-curl syntax checker for the
