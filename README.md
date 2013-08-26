@@ -141,6 +141,16 @@ currently checked.
 
 ![](pics/syntax-error-flycheck.png)
 
+To start the check, use (omnisharp-start-flycheck) or select it in the
+menu. The check will then be performed after the current buffer has
+been idle for a certain number of seconds. Currently the default is
+0.5 seconds.
+
+To make syntax checking start sooner/later, use:
+```
+(setq flycheck-idle-change-delay 2) ; in seconds
+```
+
 ## Installation
 
 This supports Emacs 24.3 and above at least. It has been tested on
