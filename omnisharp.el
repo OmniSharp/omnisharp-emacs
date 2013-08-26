@@ -1292,6 +1292,14 @@ ido-completing-read. Returns the chosen element."
      (omnisharp--vector-to-list
       (cdr (assoc 'QuickFixes quickfix-response))))))
 
+(defun omnisharp-navigate-to-solution-file-then-file-member
+  ()
+  "Navigates to a file in the solution first, then to a member in that
+file."
+  (interactive)
+  (omnisharp-navigate-to-solution-file)
+  (omnisharp-navigate-to-current-file-member))
+
 (defun omnisharp-start-flycheck ()
   "Selects and starts the csharp-omnisharp-curl syntax checker for the
 current buffer. Use this in your csharp-mode hook."

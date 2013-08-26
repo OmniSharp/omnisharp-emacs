@@ -28,7 +28,10 @@
   (kbd ", n s") 'omnisharp-navigate-to-solution-member)
 
 (evil-define-key 'normal omnisharp-mode-map
-  (kbd ", n f") 'omnisharp-navigate-to-solution-file)
+  (kbd ", n f") 'omnisharp-navigate-to-solution-file-then-file-member)
+
+(evil-define-key 'normal omnisharp-mode-map
+  (kbd ", n F") 'omnisharp-navigate-to-solution-file)
 
 ;; Speed up auto-complete on mono drastically. This comes with the
 ;; downside that documentation is impossible to fetch.
