@@ -1012,7 +1012,11 @@ messing with the ring."
   (let ((current-prefix-arg line))
     (call-interactively 'goto-line line))
 
-  (move-to-column column))
+  (move-to-column column)
+
+  (unless dont-save-old-pos
+    (message "Previous position in %s saved. Go back with (pop-tag-mark)."
+             buffer-file-name)))
 
 (defun omnisharp--vector-to-list (vector)
   (append vector nil))
