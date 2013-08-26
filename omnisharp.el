@@ -992,11 +992,19 @@ GotoDefinitionResponse line json-result."
 (defun omnisharp-go-to-file-line-and-column-worker (line
                                                     column
                                                     &optional filename
-                                                    other-window)
+                                                    other-window
+                                                    dont-save-old-pos)
   "Open file filename at line and column. If filename is not given,
 defaults to the current file. Saves the current location into the tag
-ring so that the user may return with (pop-tag-mark)."
-  (ring-insert find-tag-marker-ring (point-marker))
+ring so that the user may return with (pop-tag-mark).
+
+If DONT-SAVE-OLD-POS is specified, will not save current position to
+find-tag-marker-ring. This is so this function may be used without
+messing with the ring."
+
+  (unless dont-save-old-pos
+    (ring-insert find-tag-marker-ring (point-marker)))
+
   (when (not (equal filename nil))
     (funcall (if other-window 'find-file-other-window 'find-file) filename))
 
