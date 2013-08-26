@@ -241,10 +241,12 @@ to select one (or more) to jump to."
            'omnisharp--find-usages-output-to-compilation-output
            (cdr (assoc 'Locations json-result)))))
 
-    (omnisharp--write-lines-to-compilation-buffer
-     output-in-compilation-mode-format
-     (get-buffer-create omnisharp--find-implementations-buffer-name)
-     omnisharp-find-implementations-header)))
+    (if (equal 0 (length output-in-compilation-mode-format))
+        (message "No implementations found.")
+      (omnisharp--write-lines-to-compilation-buffer
+       output-in-compilation-mode-format
+       (get-buffer-create omnisharp--find-implementations-buffer-name)
+       omnisharp-find-implementations-header))))
 
 (defun omnisharp-rename ()
   "Rename the current symbol to a new name. Lets the user choose what
