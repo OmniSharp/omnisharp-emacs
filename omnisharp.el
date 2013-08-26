@@ -146,7 +146,8 @@ server backend."
      ["Definition at point" omnisharp-go-to-definition]
      ["Current file member" omnisharp-navigate-to-current-file-member]
      ["Type in current file" omnisharp-navigate-to-type-in-current-file]
-     ["Solution member" omnisharp-navigate-to-solution-member])
+     ["Solution member" omnisharp-navigate-to-solution-member]
+     ["File in solution" omnisharp-navigate-to-solution-file])
 
     ("OmniSharp server"
      ["Reload solution" omnisharp-reload-solution]
@@ -1276,6 +1277,16 @@ ido-completing-read. Returns the chosen element."
   (let ((quickfix-response
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "findsymbols")
+          nil)))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     (omnisharp--vector-to-list
+      (cdr (assoc 'QuickFixes quickfix-response))))))
+
+(defun omnisharp-navigate-to-solution-file ()
+  (interactive)
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "gotofile")
           nil)))
     (omnisharp--choose-and-go-to-quickfix-ido
      (omnisharp--vector-to-list
