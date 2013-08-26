@@ -1063,7 +1063,8 @@ Uses the standard compilation interface (compile)."
      ;; around this by using double backslashes. Other systems are not
      ;; affected.
      (omnisharp--fix-build-command-if-on-windows
-      build-command))))
+      build-command))
+    (add-to-list 'compile-history build-command)))
 
 (defun omnisharp--recognize-mono-compilation-error-format ()
   "Makes Emacs recognize the mono compiler errors as clickable
