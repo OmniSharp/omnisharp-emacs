@@ -180,8 +180,9 @@ server backend."
    nil))
 
 (defun omnisharp-go-to-definition (&optional other-window)
-  "Jump to the definition of the symbol under point."
-  (interactive)
+  "Jump to the definition of the symbol under point. With prefix
+argument, use another window."
+  (interactive "P")
   (let* ((json-result (omnisharp-post-message-curl-as-json
                        (concat omnisharp-host "gotodefinition")
                        (omnisharp--get-common-params)))

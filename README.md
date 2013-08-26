@@ -18,7 +18,8 @@ Lacks a better UI and a good default configuration.
     * Also shows documentation like other IDEs
 * Show type of the current symbol in the minibuffer
 * Navigation helpers
-    * Go to definition of a type/variable/method etc.
+    * Go to definition of a type/variable/method etc. With the prefix
+  argument (C-u), use another window.
     * Find usages of the current symbol in the solution
     * Find implementations/derived types of the current type
     * Go to definition of a type in the current file with [ido-mode][]
