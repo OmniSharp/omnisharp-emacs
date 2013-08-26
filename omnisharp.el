@@ -159,21 +159,15 @@ server backend."
      ["Rename" omnisharp-rename])
 
     ("Solution actions"
-     ["Add current file to solution"
-      omnisharp-add-to-solution-current-file]
-     ["Remove current file from solution"
-      omnisharp-remove-from-project-current-file]
-     ["Add marked files in dired to solution"
-      omnisharp-add-to-solution-dired-selected-files]
-     ["Remove marked files in dired from solution"
-      omnisharp-remove-from-project-current-file]
-     ["Add reference to dll or project"
-      omnisharp-add-reference]
+     ["Add current file to solution" omnisharp-add-to-solution-current-file]
+     ["Remove current file from solution" omnisharp-remove-from-project-current-file]
+     ["Add marked files in dired to solution" omnisharp-add-to-solution-dired-selected-files]
+     ["Remove marked files in dired from solution" omnisharp-remove-from-project-current-file]
+     ["Add reference to dll or project" omnisharp-add-reference]
      ["Build solution in emacs" omnisharp-build-in-emacs]
      ["Start syntax check" omnisharp-start-flycheck])
 
-    ["Run contextual code action / refactoring at point"
-     omnisharp-run-code-action-refactoring]
+    ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
     ["Run code format on current buffer" omnisharp-code-format]
     ))
 
