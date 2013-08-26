@@ -185,7 +185,7 @@ server backend."
    ;; no params needed
    nil))
 
-(defun omnisharp-go-to-definition ()
+(defun omnisharp-go-to-definition (&optional other-window)
   "Jump to the definition of the symbol under point."
   (interactive)
   (let* ((json-result (omnisharp-post-message-curl-as-json
@@ -195,7 +195,12 @@ server backend."
     (if (null filename)
         (message
          "Cannot go to definition as none was returned by the API.")
-      (omnisharp-go-to-file-line-and-column json-result))))
+      (omnisharp-go-to-file-line-and-column json-result other-window))))
+
+(defun omnisharp-go-to-definition-other-window ()
+  "Do `omnisharp-go-to-definition' displaying the result in a different window."
+  (interactive)
+  (omnisharp-go-to-definition t))
 
 (defun omnisharp-find-usages ()
   "Find usages for the symbol under point"
@@ -973,24 +978,27 @@ is a more sophisticated matching framework than what popup.el offers."
               params)
       params)))
 
-(defun omnisharp-go-to-file-line-and-column (json-result)
+(defun omnisharp-go-to-file-line-and-column (json-result
+                                             &optional other-window)
   "Open file :FileName at :Line and :Column. If filename is not given,
 defaults to the current file. This function works for a
 GotoDefinitionResponse line json-result."
   (omnisharp-go-to-file-line-and-column-worker
    (cdr (assoc 'Line json-result))
    (- (cdr (assoc 'Column json-result)) 1)
-   (cdr (assoc 'FileName json-result))))
+   (cdr (assoc 'FileName json-result))
+   other-window))
 
 (defun omnisharp-go-to-file-line-and-column-worker (line
                                                     column
-                                                    &optional filename)
+                                                    &optional filename
+                                                    other-window)
   "Open file filename at line and column. If filename is not given,
 defaults to the current file. Saves the current location into the tag
 ring so that the user may return with (pop-tag-mark)."
   (ring-insert find-tag-marker-ring (point-marker))
   (when (not (equal filename nil))
-    (find-file filename))
+    (funcall (if other-window 'find-file-other-window 'find-file) filename))
 
   ;; calling goto-line directly results in a compiler warning.
   (let ((current-prefix-arg line))
