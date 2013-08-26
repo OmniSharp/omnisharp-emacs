@@ -1193,17 +1193,14 @@ cursor at that location"
          (element-filename (cdr (assoc 'Filename quickfix-alist)))
          (use-buffer (current-buffer)))
     (save-excursion 
-      ;; doing this by hand instead of calling
-      ;; omnisharp-go-to-file-line-and-column-worker because I don't
-      ;; want to mess with the mark ring. Might be worth pulling this out into a shared function
-      ;; calling goto-line directly results in a compiler warning.
-
       (when (not (equal element-filename nil))
-        (setq use-buffer (find-file element-filename)))
-      (with-current-buffer use-buffer
-        (beginning-of-buffer)
-        (beginning-of-line element-line)
-        (move-to-column (- element-column 1))
+        (omnisharp-go-to-file-line-and-column-worker
+         element-line
+         element-column
+         element-filename
+         nil ; other-window
+         ;; dont-save-old-pos
+         t)
         (point-marker)))))
 
 (defun omnisharp-imenu-create-index ()
