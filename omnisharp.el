@@ -1225,26 +1225,36 @@ cursor at that location"
     imenu-list))
 
 
-(defun omnisharp-navigate-to-current-file-member ()
-  (interactive)
+(defun omnisharp-navigate-to-current-file-member
+  (&optional other-window)
+  "Show a list of all members in the current file, and jump to the
+selected member. With prefix argument, use another window."
+  (interactive "P")
   (omnisharp-navigate-to-current-file-member-worker
-   (omnisharp--get-common-params)))
+   (omnisharp--get-common-params)
+   other-window))
 
-(defun omnisharp-navigate-to-current-file-member-worker (request)
+(defun omnisharp-navigate-to-current-file-member-worker
+  (request &optional other-window)
   (let ((quickfixes (omnisharp-post-message-curl-as-json
                      (concat omnisharp-host "currentfilemembersasflat")
                      request)))
     (omnisharp--choose-and-go-to-quickfix-ido
-     quickfixes)))
+     quickfixes
+     other-window)))
 
-(defun omnisharp--choose-and-go-to-quickfix-ido (quickfixes)
+(defun omnisharp--choose-and-go-to-quickfix-ido
+  (quickfixes &optional other-window)
   "Given a list of QuickFixes in list format (not JSON), displays them
 in an ido-completing-read prompt and jumps to the chosen one's
-Location."
+Location.
+
+If OTHER-WINDOW is given, will jump to the result in another window."
   (let ((chosen-quickfix
          (omnisharp--choose-quickfix-ido
           (omnisharp--vector-to-list quickfixes))))
-    (omnisharp-go-to-file-line-and-column chosen-quickfix)))
+    (omnisharp-go-to-file-line-and-column chosen-quickfix
+                                          other-window)))
 
 (defun omnisharp--choose-quickfix-ido (quickfixes)
   "Given a list of QuickFixes, lets the user choose one using
