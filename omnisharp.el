@@ -1234,6 +1234,10 @@ selected member. With prefix argument, use another window."
    (omnisharp--get-common-params)
    other-window))
 
+(defun omnisharp-navigate-to-current-file-member-other-window ()
+  (interactive)
+  (omnisharp-navigate-to-current-file-member t))
+
 (defun omnisharp-navigate-to-current-file-member-worker
   (request &optional other-window)
   (let ((quickfixes (omnisharp-post-message-curl-as-json
