@@ -485,8 +485,8 @@ items."
   "If t, begin completion when pressing '.' after a class, object
   or namespace")
 
-(defvar omnisharp-imenu-support t
-"If t, activate imenu integration")
+(defvar omnisharp-imenu-support nil
+"If t, activate imenu integration. Defaults to nil.")
 
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
