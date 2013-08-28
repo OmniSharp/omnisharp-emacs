@@ -1293,33 +1293,46 @@ ido-completing-read. Returns the chosen element."
      quickfixes)))
 
 ;; No need for a worker pattern since findsymbols takes no arguments
-(defun omnisharp-navigate-to-solution-member ()
-  (interactive)
+(defun omnisharp-navigate-to-solution-member
+  (&optional other-window)
+  (interactive "P")
   (let ((quickfix-response
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "findsymbols")
           nil)))
     (omnisharp--choose-and-go-to-quickfix-ido
      (omnisharp--vector-to-list
-      (cdr (assoc 'QuickFixes quickfix-response))))))
+      (cdr (assoc 'QuickFixes quickfix-response)))
+     other-window)))
 
-(defun omnisharp-navigate-to-solution-file ()
-  (interactive)
+(defun omnisharp-navigate-to-solution-member-other-window
+  (omnisharp-navigate-to-solution-member t))
+
+(defun omnisharp-navigate-to-solution-file
+  (&optional other-window)
+  (interactive "P")
   (let ((quickfix-response
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "gotofile")
           nil)))
     (omnisharp--choose-and-go-to-quickfix-ido
      (omnisharp--vector-to-list
-      (cdr (assoc 'QuickFixes quickfix-response))))))
+      (cdr (assoc 'QuickFixes quickfix-response)))
+     other-window)))
 
 (defun omnisharp-navigate-to-solution-file-then-file-member
-  ()
+  (&optional other-window)
   "Navigates to a file in the solution first, then to a member in that
-file."
-  (interactive)
-  (omnisharp-navigate-to-solution-file)
+file. With prefix argument uses another window."
+  (interactive "P")
+  (omnisharp-navigate-to-solution-file other-window)
+  ;; Do not set other-window here. No need to use two different
+  ;; windows.
   (omnisharp-navigate-to-current-file-member))
+
+(defun omnisharp-navigate-to-solution-file-then-file-member-other-window
+  (&optional other-window)
+  (omnisharp-navigate-to-solution-file-then-file-member t))
 
 (defun omnisharp-start-flycheck ()
   "Selects and starts the csharp-omnisharp-curl syntax checker for the
