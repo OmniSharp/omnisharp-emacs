@@ -291,6 +291,8 @@ name to rename to, defaulting to the current name of the symbol."
 compilation-mode on. The contents of the buffer are erased. The
 buffer is marked read-only after inserting all lines.
 
+LINES-TO-WRITE are the lines to write, as-is.
+
 If HEADER is given, that is written to the top of the buffer.
 
 Expects the lines to be in a format that compilation-mode
