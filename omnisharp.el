@@ -147,7 +147,8 @@ server backend."
      ["Current file member" omnisharp-navigate-to-current-file-member]
      ["Type in current file" omnisharp-navigate-to-type-in-current-file]
      ["Solution member" omnisharp-navigate-to-solution-member]
-     ["File in solution" omnisharp-navigate-to-solution-file])
+     ["File in solution" omnisharp-navigate-to-solution-file]
+     ["Navigate to region in current file" omnisharp-navigate-to-region])
 
     ("OmniSharp server"
      ["Reload solution" omnisharp-reload-solution]
@@ -1299,6 +1300,16 @@ file."
   (interactive)
   (omnisharp-navigate-to-solution-file)
   (omnisharp-navigate-to-current-file-member))
+
+(defun omnisharp-navigate-to-region ()
+  "Navigate to region in current file"
+  (interactive)
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "gotoregion")
+          (omnisharp--get-common-params))))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     (cdr (assoc 'QuickFixes quickfix-response)))))
 
 (defun omnisharp-start-flycheck ()
   "Selects and starts the csharp-omnisharp-curl syntax checker for the

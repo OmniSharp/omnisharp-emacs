@@ -26,6 +26,7 @@ Lacks a better UI and a good default configuration.
       (fast).
     * Go to definition of a member in the current type with
       [ido-mode][] (likewise fast :)).
+    * Go to region / endregion in current file
 * Rename the current symbol and all references to it
 * Solution manipulation
     * Add/remove the current file

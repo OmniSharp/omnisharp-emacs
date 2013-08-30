@@ -33,6 +33,9 @@
 (evil-define-key 'normal omnisharp-mode-map
   (kbd ", n F") 'omnisharp-navigate-to-solution-file)
 
+(evil-define-key 'normal omnisharp-mode-map
+  (kbd ", n r") 'omnisharp-navigate-to-region)
+
 ;; Speed up auto-complete on mono drastically. This comes with the
 ;; downside that documentation is impossible to fetch.
 (setq omnisharp-auto-complete-want-documentation nil)
