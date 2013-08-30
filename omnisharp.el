@@ -285,6 +285,21 @@ name to rename to, defaulting to the current name of the symbol."
                1))
             modified-files))))
 
+(defun omnisharp--write-quickfixes-to-compilation-buffer
+  (quickfixes buffer-name buffer-header)
+  "Takes a list of QuickFix objects and writes them to the
+compilation buffer with HEADER as its header. Shows the buffer
+when finished."
+  (let ((output-in-compilation-mode-format
+         (mapcar
+          'omnisharp--find-usages-output-to-compilation-output
+          quickfixes)))
+
+    (omnisharp--write-lines-to-compilation-buffer
+     output-in-compilation-mode-format
+     (get-buffer-create buffer-name)
+     buffer-header)))
+
 (defun omnisharp--write-lines-to-compilation-buffer
   (lines-to-write buffer-to-write-to &optional header)
   "Writes the given lines to the given buffer, and sets
