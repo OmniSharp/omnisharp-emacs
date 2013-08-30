@@ -1231,14 +1231,18 @@ cursor at that location"
     (omnisharp--choose-and-go-to-quickfix-ido
      quickfixes)))
 
-(defun omnisharp--choose-and-go-to-quickfix-ido (quickfixes)
+(defun omnisharp--choose-and-go-to-quickfix-ido
+  (quickfixes &optional other-window)
   "Given a list of QuickFixes in list format (not JSON), displays them
 in an ido-completing-read prompt and jumps to the chosen one's
-Location."
+Location.
+
+If OTHER-WINDOW is given, uses another window."
   (let ((chosen-quickfix
          (omnisharp--choose-quickfix-ido
           (omnisharp--vector-to-list quickfixes))))
-    (omnisharp-go-to-file-line-and-column chosen-quickfix)))
+    (omnisharp-go-to-file-line-and-column chosen-quickfix
+                                          other-window)))
 
 (defun omnisharp--choose-quickfix-ido (quickfixes)
   "Given a list of QuickFixes, lets the user choose one using
