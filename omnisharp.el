@@ -253,7 +253,7 @@ api call made with the given Request."
                              (concat omnisharp-host "findimplementations")
                              request))
          (quickfixes (omnisharp--vector-to-list
-                     (cdr (assoc 'QuickFixes quickfix-response)))))
+                      (cdr (assoc 'QuickFixes quickfix-response)))))
     quickfixes))
 
 (defun omnisharp-rename ()
