@@ -48,6 +48,18 @@ results of a 'find usages' call.")
   "The name of the temporary buffer that is used to display the
 results of a 'find implementations' call.")
 
+(defvar omnisharp--last-auto-complete-result-buffer-name
+  "* OmniSharp : Last auto-complete result *"
+  "The name of the temporary buffer that is used to display the
+results of an auto-complete call.")
+
+(defvar omnisharp--last-auto-complete-result-buffer-header
+  (concat
+   "Last auto-complete result:"
+   "\n\n")
+  "The header for the temporary buffer that is used to display the
+results of an auto-complete call.")
+
 (defvar omnisharp-auto-complete-popup-help-delay nil
   "The timeout after which the auto-complete popup will show its help
   popup. Disabled by default because the help is often scrambled and
@@ -1341,6 +1353,38 @@ current buffer. Use this in your csharp-mode hook."
   (flycheck-mode)
   (flycheck-select-checker 'csharp-omnisharp-curl)
   (flycheck-start-checker  'csharp-omnisharp-curl))
+
+(defun omnisharp-navigate-to-region ()
+  (interactive)
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "gotoregion")
+          (omnisharp--get-common-params))))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     (cdr (assoc 'QuickFixes quickfix-response)))))
+
+(defun omnisharp-show-last-auto-complete-result ()
+  (interactive)
+  (let ((buffer
+         (get-buffer-create
+          omnisharp--last-auto-complete-result-buffer-name))
+        (auto-complete-result-in-human-readable-form
+         (--map (cdr (assoc 'DisplayText it))
+                omnisharp--last-buffer-specific-auto-complete-result)))
+    (omnisharp--write-lines-to-compilation-buffer
+     auto-complete-result-in-human-readable-form
+     buffer
+     omnisharp--last-auto-complete-result-buffer-name)))
+
+(defun omnisharp-show-overloads-at-point ()
+  (interactive)
+  ;; Request completions from API but only cache them - don't show the
+  ;; results to the user
+  (save-excursion
+    (end-of-thing 'symbol)
+    (omnisharp-auto-complete-worker
+     (omnisharp--get-auto-complete-params))
+    (omnisharp-show-last-auto-complete-result)))
 
 (provide 'omnisharp)
 
