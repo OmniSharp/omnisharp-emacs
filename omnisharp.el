@@ -1318,6 +1318,9 @@ use another window."
      (cdr (assoc 'QuickFixes quickfix-response))
      other-window)))
 
+(defun omnisharp-navigate-to-region-other-window ()
+  (interactive) (omnisharp-navigate-to-region t))
+
 (defun omnisharp-start-flycheck ()
   "Selects and starts the csharp-omnisharp-curl syntax checker for the
 current buffer. Use this in your csharp-mode hook."
