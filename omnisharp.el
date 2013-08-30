@@ -232,21 +232,29 @@ argument, use another window."
 point, or classes derived from the class under point. Allow the user
 to select one (or more) to jump to."
   (interactive)
-  (omnisharp-find-implementations-worker (omnisharp--get-common-params)))
+  (let* ((quickfixes
+          (omnisharp-find-implementations-worker
+           (omnisharp--get-common-params)))
 
-(defun omnisharp-find-implementations-worker (params)
-  (let* ((json-result (omnisharp-post-message-curl-as-json
-                       (concat omnisharp-host "findimplementations")
-                       params))
          (output-in-compilation-mode-format
           (mapcar
            'omnisharp--find-usages-output-to-compilation-output
-           (cdr (assoc 'Locations json-result)))))
+           quickfixes)))
 
     (omnisharp--write-lines-to-compilation-buffer
      output-in-compilation-mode-format
      (get-buffer-create omnisharp--find-implementations-buffer-name)
      omnisharp-find-implementations-header)))
+
+(defun omnisharp-find-implementations-worker (request)
+  "Returns a list of QuickFix lisp objects from a findimplementations
+api call made with the given Request."
+  (let* ((quickfix-response (omnisharp-post-message-curl-as-json
+                             (concat omnisharp-host "findimplementations")
+                             request))
+         (quickfixes (omnisharp--vector-to-list
+                     (cdr (assoc 'QuickFixes quickfix-response)))))
+    quickfixes))
 
 (defun omnisharp-rename ()
   "Rename the current symbol to a new name. Lets the user choose what
