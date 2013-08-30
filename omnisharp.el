@@ -1305,15 +1305,18 @@ file."
   (omnisharp-navigate-to-solution-file)
   (omnisharp-navigate-to-current-file-member))
 
-(defun omnisharp-navigate-to-region ()
-  "Navigate to region in current file"
-  (interactive)
+(defun omnisharp-navigate-to-region
+  (&optional other-window)
+  "Navigate to region in current file. If OTHER-WINDOW is given and t,
+use another window."
+  (interactive "P")
   (let ((quickfix-response
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "gotoregion")
           (omnisharp--get-common-params))))
     (omnisharp--choose-and-go-to-quickfix-ido
-     (cdr (assoc 'QuickFixes quickfix-response)))))
+     (cdr (assoc 'QuickFixes quickfix-response))
+     other-window)))
 
 (defun omnisharp-start-flycheck ()
   "Selects and starts the csharp-omnisharp-curl syntax checker for the
