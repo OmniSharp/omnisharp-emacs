@@ -202,48 +202,38 @@ argument, use another window."
 (defun omnisharp-find-usages ()
   "Find usages for the symbol under point"
   (interactive)
-  (omnisharp-find-usages-worker (omnisharp--get-common-params)))
+  (let ((quickfixes (omnisharp-find-usages-worker
+                     (omnisharp--get-common-params))))
 
-(defun omnisharp-find-usages-worker (params)
-  ;; TODO make this asyncronic like all other compilation processes!
-  (let* ((json-result (omnisharp-post-message-curl-as-json
-                       (concat omnisharp-host "findusages")
-                       params))
-         (output-buffer (get-buffer-create
-                         omnisharp--find-usages-buffer-name))
-         (output-in-compilation-mode-format
-          ;; Loop over a vector such as:
-          ;; [((Text . "public static AstNode GetDefinition(this
-          ;; AstNode node)") (Column . 25) (Line . 39) (FileName
-          ;; . "/foo")) ((Text ...)]
-          (mapcar
-           'omnisharp--find-usages-output-to-compilation-output
-           (cdr (assoc 'QuickFixes json-result)))))
-
-    (if (equal 0 (length output-in-compilation-mode-format))
+    (if (equal 0 (length quickfixes))
         (message "No usages found.")
-      (omnisharp--write-lines-to-compilation-buffer
-       output-in-compilation-mode-format
-       output-buffer
+
+      (omnisharp--write-quickfixes-to-compilation-buffer
+       quickfixes
+       omnisharp--find-usages-buffer-name
        omnisharp-find-usages-header))))
+
+(defun omnisharp-find-usages-worker (request)
+  ;; TODO make this asyncronic like all other compilation processes!
+  (let* ((quickfix-response (omnisharp-post-message-curl-as-json
+                             (concat omnisharp-host "findusages")
+                             request))
+         (quickfixes (omnisharp--vector-to-list
+                      (cdr (assoc 'QuickFixes quickfix-response)))))
+    quickfixes))
 
 (defun omnisharp-find-implementations ()
   "Show a buffer containing all implementations of the interface under
 point, or classes derived from the class under point. Allow the user
 to select one (or more) to jump to."
   (interactive)
-  (let* ((quickfixes
-          (omnisharp-find-implementations-worker
-           (omnisharp--get-common-params)))
+  (let ((quickfixes
+         (omnisharp-find-implementations-worker
+          (omnisharp--get-common-params))))
 
-         (output-in-compilation-mode-format
-          (mapcar
-           'omnisharp--find-usages-output-to-compilation-output
-           quickfixes)))
-
-    (omnisharp--write-lines-to-compilation-buffer
-     output-in-compilation-mode-format
-     (get-buffer-create omnisharp--find-implementations-buffer-name)
+    (omnisharp--write-quickfixes-to-compilation-buffer
+     quickfixes
+     omnisharp--find-implementations-buffer-name
      omnisharp-find-implementations-header)))
 
 (defun omnisharp-find-implementations-worker (request)
