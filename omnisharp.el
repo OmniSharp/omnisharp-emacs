@@ -787,8 +787,7 @@ the OmniSharp server understands."
 
 (defun omnisharp--buffer-exists-for-file-name (file-name)
   (cl-some (lambda (a)
-             (equalp (buffer-file-name)
-                     file-name))
+             (equalp a file-name))
            (buffer-list)))
 
 (defun omnisharp--convert-slashes-to-double-backslashes (str)
