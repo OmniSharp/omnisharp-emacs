@@ -1022,14 +1022,20 @@ messing with the ring."
   (unless dont-save-old-pos
     (ring-insert find-tag-marker-ring (point-marker)))
 
-  (when (not (equal filename nil))
-    (funcall (if other-window 'find-file-other-window 'find-file) filename))
+  (omnisharp--find-file-possibly-in-other-window filename
+                                                 other-window)
 
   ;; calling goto-line directly results in a compiler warning.
   (let ((current-prefix-arg line))
     (call-interactively 'goto-line line))
 
   (move-to-column column))
+
+(defun omnisharp--find-file-possibly-in-other-window (filename
+                                                      other-window)
+  (when (not (equal filename nil))
+    (funcall (if other-window 'find-file-other-window 'find-file)
+             filename)))
 
 (defun omnisharp--vector-to-list (vector)
   (append vector nil))
