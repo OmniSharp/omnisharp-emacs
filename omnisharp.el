@@ -786,9 +786,10 @@ the OmniSharp server understands."
     (current-column)))
 
 (defun omnisharp--buffer-exists-for-file-name (file-name)
-  (cl-some (lambda (a)
-             (equalp a file-name))
-           (buffer-list)))
+  (let ((all-open-buffers-list
+         (-map 'buffer-file-name (buffer-list))))
+    (--any? (string-equal file-name it)
+           all-open-buffers-list)))
 
 (defun omnisharp--convert-slashes-to-double-backslashes (str)
   "This might be useful. A direct port from OmniSharp.py."
