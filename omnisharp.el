@@ -994,6 +994,22 @@ is a more sophisticated matching framework than what popup.el offers."
               params)
       params)))
 
+(defun omnisharp--get-common-params-for-emacs-side-use ()
+  "Gets a Request class that can be only handled safely inside
+Emacs. This should not be transferred to the server backend - it might
+not work on all platforms."
+  (let* ((line-number (line-number-at-pos))
+         (column-number (omnisharp--current-column))
+         (buffer-contents (omnisharp--get-current-buffer-contents))
+         (filename-tmp (or buffer-file-name ""))
+         (params `((Line     . ,line-number)
+                   (Column   . ,column-number)
+                   (Buffer   . ,buffer-contents))))
+    (if (/= 0 (length filename-tmp))
+        (cons `(FileName . ,filename-tmp)
+              params)
+      params)))
+
 (defun omnisharp-go-to-file-line-and-column (json-result
                                              &optional other-window)
   "Open file :FileName at :Line and :Column. If filename is not given,
