@@ -1030,11 +1030,12 @@ messing with the ring."
 
   (move-to-column column))
 
-(defun omnisharp--find-file-possibly-in-other-window (filename
-                                                      other-window)
-  (when (not (equal filename nil))
-    (funcall (if other-window 'find-file-other-window 'find-file)
-             filename)))
+(defun omnisharp--find-file-possibly-in-other-window
+  (filename &optional other-window)
+  (funcall (if other-window
+               'find-file-other-window
+             'find-file)
+           filename))
 
 (defun omnisharp--vector-to-list (vector)
   (append vector nil))
