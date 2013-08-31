@@ -1015,7 +1015,7 @@ not work on all platforms."
                                              &optional other-window)
   "Open file :FileName at :Line and :Column. If filename is not given,
 defaults to the current file. This function works for a
-GotoDefinitionResponse line json-result."
+QuickFix class json result."
   (omnisharp-go-to-file-line-and-column-worker
    (cdr (assoc 'Line json-result))
    (- (cdr (assoc 'Column json-result)) 1)
