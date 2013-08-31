@@ -1025,8 +1025,8 @@ messing with the ring."
                                                  other-window)
 
   ;; calling goto-line directly results in a compiler warning.
-  (let ((current-prefix-arg line))
-    (call-interactively 'goto-line line))
+  (with-no-warnings
+    (goto-line line))
 
   (move-to-column column))
 
