@@ -1050,7 +1050,9 @@ messing with the ring."
 (defun omnisharp--find-file-possibly-in-other-window
   (filename &optional other-window)
   "Open a buffer editing FILENAME. If no buffer for that filename
-exists, a new one is created."
+exists, a new one is created.
+If the optional argument OTHER-WINDOW is non-nil, uses another
+window."
 
   (cond
    ((omnisharp--buffer-exists-for-file-name filename)
