@@ -1343,27 +1343,31 @@ type errors."
                           column
                           " "
                           (message (one-or-more not-newline))))
-  ;; TODO this should be moved out, but I can't get it to compile that
+  ;; TODO this should be cleaned, but I can't get it to compile that
   ;; way.
   :error-parser (lambda (output checker buffer)
-                  (let* ((json-result
-                          (json-read-from-string output))
-                         (errors (omnisharp--vector-to-list
-                                  (cdr (assoc 'Errors json-result)))))
-                    (when (not (equal (length errors) 0))
-                      (mapcar (lambda (it)
-                                (flycheck-error-new
-                                 :buffer buffer
-                                 :checker checker
-                                 :filename (cdr (assoc 'FileName it))
-                                 :line (cdr (assoc 'Line it))
-                                 :column (cdr (assoc 'Column it))
-                                 :message (cdr (assoc 'Message it))
-                                 :level 'error))
-                              errors))))
+                  (omnisharp--flycheck-error-parser
+                   output checker buffer))
   ;; TODO use only is csharp files - but there are a few different
   ;; extensions available for these!
   :predicate (lambda () t))
+
+(defun omnisharp--flycheck-error-parser (output checker buffer)
+  (let* ((json-result
+          (json-read-from-string output))
+         (errors (omnisharp--vector-to-list
+                  (cdr (assoc 'Errors json-result)))))
+    (when (not (equal (length errors) 0))
+      (mapcar (lambda (it)
+                (flycheck-error-new
+                 :buffer buffer
+                 :checker checker
+                 :filename (cdr (assoc 'FileName it))
+                 :line (cdr (assoc 'Line it))
+                 :column (cdr (assoc 'Column it))
+                 :message (cdr (assoc 'Message it))
+                 :level 'error))
+              errors))))
 
 (defun omnisharp--imenu-make-marker (element)
   "Takes a QuickCheck element and returns the position of the
