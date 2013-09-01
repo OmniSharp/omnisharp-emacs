@@ -1332,7 +1332,7 @@ If OTHER-WINDOW is given, uses another window."
 ido-completing-read. Returns the chosen element."
   ;; Ido cannot navigate non-unique items reliably. It either gets
   ;; stuck, or results in that we cannot reliably determine the index
-  ;; of the item. Work around this by appending the index of all items
+  ;; of the item. Work around this by prepending the index of all items
   ;; to their end. This makes them unique.
   (let* ((quickfix-choices
           (--map-indexed
