@@ -1049,10 +1049,24 @@ messing with the ring."
 
 (defun omnisharp--find-file-possibly-in-other-window
   (filename &optional other-window)
-  (funcall (if other-window
+  "Open a buffer editing FILENAME. If no buffer for that filename
+exists, a new one is created."
+
+  (cond
+   ((omnisharp--buffer-exists-for-file-name filename)
+    (let ((target-buffer-to-switch-to
+           (--first (string= (buffer-file-name it)
+                             filename)
+                    (buffer-list))))
+      (if other-window
+          (pop-to-buffer target-buffer-to-switch-to)
+        (pop-to-buffer-same-window target-buffer-to-switch-to))))
+
+   (t ; no buffer for this file exists yet
+    (funcall (if other-window
                'find-file-other-window
              'find-file)
-           filename))
+           filename))))
 
 (defun omnisharp--vector-to-list (vector)
   (append vector nil))
