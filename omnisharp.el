@@ -254,26 +254,41 @@ name to rename to, defaulting to the current name of the symbol."
          (rename-to (read-string "Rename to: " current-word))
          (rename-request
           (cons `(RenameTo . ,rename-to)
-                (omnisharp--get-common-params))))
+                (omnisharp--get-common-params)))
 
-    (omnisharp-rename-worker rename-request)
-    (message "Rename complete")))
+         (modified-file-responses
+          (omnisharp-rename-worker rename-request))
+         (location-before-rename
+          (omnisharp--get-common-params-for-emacs-side-use)))
+
+    ;; save-excursion does not work here for some reason.
+
+    ;; Set all modified files' contents to what the server thinks they
+    ;; now contain. Doing this will make the user see the results of
+    ;; the rename.
+    (--each modified-file-responses
+      (omnisharp--set-buffer-contents-to
+       (cdr (assoc 'FileName it))
+       (cdr (assoc 'Buffer it))))
+
+    ;; Keep point in the buffer that initialized the rename so that
+    ;; the user deos not feel disoriented
+    (omnisharp-go-to-file-line-and-column location-before-rename)
+
+    (message "Rename complete in files: %s"
+             (--map (cdr (assoc 'FileName it))
+                    modified-file-responses))))
 
 (defun omnisharp-rename-worker (rename-request)
+  "Given a RenameRequest, returns a list of ModifiedFileResponse
+objects."
   (let* ((rename-responses
           (omnisharp-post-message-curl-as-json
            (concat omnisharp-host "rename")
            rename-request))
          (modified-files (omnisharp--vector-to-list
                           (cdr (assoc 'Changes rename-responses)))))
-    (save-excursion
-      (mapc (lambda (modified-file-response)
-              (omnisharp--set-buffer-contents-to
-               (cdr (assoc 'FileName modified-file-response))
-               (cdr (assoc 'Buffer modified-file-response))
-               1
-               1))
-            modified-files))))
+    modified-files))
 
 (defun omnisharp--write-quickfixes-to-compilation-buffer
   (quickfixes buffer-name buffer-header)
