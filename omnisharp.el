@@ -1330,9 +1330,20 @@ If OTHER-WINDOW is given, uses another window."
 (defun omnisharp--choose-quickfix-ido (quickfixes)
   "Given a list of QuickFixes, lets the user choose one using
 ido-completing-read. Returns the chosen element."
-  (let* ((quickfix-choices (--map
-                            (cdr (assoc 'Text it))
-                            quickfixes))
+  ;; Ido cannot navigate non-unique items reliably. It either gets
+  ;; stuck, or results in that we cannot reliably determine the index
+  ;; of the item. Work around this by appending the index of all items
+  ;; to their end. This makes them unique.
+  (let* ((quickfix-choices
+          (--map-indexed
+           (let ((this-quickfix-text (cdr (assoc 'Text it))))
+             (concat "#"
+                     (number-to-string it-index)
+                     "\t"
+                     this-quickfix-text))
+
+           quickfixes))
+
          (chosen-quickfix-text
           (ido-completing-read
            "Go to: "
