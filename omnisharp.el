@@ -357,10 +357,13 @@ format that the compilation major mode understands and lets the user
 follow results to the locations in the actual files."
   (let ((filename (cdr (assoc 'FileName json-result-single-element)))
         (line (cdr (assoc 'Line json-result-single-element)))
+        (column (cdr (assoc 'Column json-result-single-element)))
         (text (cdr (assoc 'Text json-result-single-element))))
     (concat filename
             ":"
             (prin1-to-string line)
+            ":"
+            (prin1-to-string column)
             ": "
             text)))
 
