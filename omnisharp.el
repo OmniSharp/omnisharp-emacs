@@ -1,7 +1,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 1.1
+;; Version: 1.2
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -159,7 +159,8 @@ server backend."
      ["Show type and add it to kill ring" omnisharp-current-type-information-to-kill-ring]
      ["Find usages" omnisharp-find-usages]
      ["Find implementations" omnisharp-find-implementations]
-     ["Rename" omnisharp-rename])
+     ["Rename" omnisharp-rename]
+     ["Rename interactively " omnisharp-rename-interactively])
 
     ("Solution actions"
      ["Add current file to solution" omnisharp-add-to-solution-current-file]
@@ -304,6 +305,25 @@ objects."
          (modified-files (omnisharp--vector-to-list
                           (cdr (assoc 'Changes rename-responses)))))
     modified-files))
+
+(defun omnisharp-rename-interactively ()
+  "Rename the current symbol to a new name. Lets the user choose what
+name to rename to, defaulting to the current name of the symbol. Any
+renames require interactive confirmation from the user."
+  (interactive)
+  (let* ((current-word (thing-at-point 'symbol))
+         (rename-to (read-string "Rename to: " current-word))
+         (delimited
+          (y-or-n-p "Only rename full words?"))
+         (all-solution-files
+          (omnisharp--get-solution-files-list-of-strings)))
+    (tags-query-replace current-word
+                        rename-to
+                        delimited
+                        ;; This is expected to be a form that will be
+                        ;; evaluated to get the list of all files to
+                        ;; process.
+                        'all-solution-files)))
 
 (defun omnisharp--write-quickfixes-to-compilation-buffer
   (quickfixes buffer-name buffer-header)
@@ -1452,6 +1472,16 @@ files in the current solution."
   (omnisharp-post-message-curl-as-json
    (concat omnisharp-host "gotofile")
    nil))
+
+(defun omnisharp--get-solution-files-list-of-strings ()
+  "Returns all files in the current solution as a list of strings."
+  ;; This is just mapping functions one after another. Read from top
+  ;; to bottom.
+  (->> (omnisharp--get-solution-files-quickfix-response)
+    (assoc 'QuickFixes)
+    (cdr)
+    (omnisharp--vector-to-list)
+    (--map (cdr (assoc 'FileName it)))))
 
 (defun omnisharp-navigate-to-solution-file-then-file-member
   (&optional other-window)
