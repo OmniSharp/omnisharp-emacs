@@ -1,7 +1,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 0.9
+;; Version: 1.1
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -237,6 +237,7 @@ to select one (or more) to jump to."
      omnisharp--find-implementations-buffer-name
      omnisharp-find-implementations-header)))
 
+
 (defun omnisharp-find-implementations-worker (request)
   "Returns a list of QuickFix lisp objects from a findimplementations
 api call made with the given Request."
@@ -246,6 +247,19 @@ api call made with the given Request."
          (quickfixes (omnisharp--vector-to-list
                       (cdr (assoc 'QuickFixes quickfix-response)))))
     quickfixes))
+
+(defun omnisharp-navigate-to-region
+  (&optional other-window)
+  "Navigate to region in current file. If OTHER-WINDOW is given and t,
+use another window."
+  (interactive "P")
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "gotoregion")
+          (omnisharp--get-common-params))))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     (cdr (assoc 'QuickFixes quickfix-response))
+     other-window)))
 
 (defun omnisharp-rename ()
   "Rename the current symbol to a new name. Lets the user choose what
@@ -515,8 +529,8 @@ items."
   "If t, begin completion when pressing '.' after a class, object
   or namespace")
 
-(defvar omnisharp-imenu-support t
-"If t, activate imenu integration")
+(defvar omnisharp-imenu-support nil
+"If t, activate imenu integration. Defaults to nil.")
 
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
@@ -1075,7 +1089,11 @@ messing with the ring."
   (with-no-warnings
     (goto-line line))
 
-  (move-to-column column))
+  (move-to-column column)
+
+  (unless dont-save-old-pos
+    (message "Previous position in %s saved. Go back with (pop-tag-mark)."
+             buffer-file-name)))
 
 (defun omnisharp--find-file-possibly-in-other-window
   (filename &optional other-window)
@@ -1161,7 +1179,8 @@ Uses the standard compilation interface (compile)."
      ;; around this by using double backslashes. Other systems are not
      ;; affected.
      (omnisharp--fix-build-command-if-on-windows
-      build-command))))
+      build-command))
+    (add-to-list 'compile-history build-command)))
 
 (defun omnisharp--recognize-mono-compilation-error-format ()
   "Makes Emacs recognize the mono compiler errors as clickable
@@ -1319,17 +1338,27 @@ cursor at that location"
     imenu-list))
 
 
-(defun omnisharp-navigate-to-current-file-member ()
-  (interactive)
+(defun omnisharp-navigate-to-current-file-member
+  (&optional other-window)
+  "Show a list of all members in the current file, and jump to the
+selected member. With prefix argument, use another window."
+  (interactive "P")
   (omnisharp-navigate-to-current-file-member-worker
-   (omnisharp--get-common-params)))
+   (omnisharp--get-common-params)
+   other-window))
 
-(defun omnisharp-navigate-to-current-file-member-worker (request)
+(defun omnisharp-navigate-to-current-file-member-other-window ()
+  (interactive)
+  (omnisharp-navigate-to-current-file-member t))
+
+(defun omnisharp-navigate-to-current-file-member-worker
+  (request &optional other-window)
   (let ((quickfixes (omnisharp-post-message-curl-as-json
                      (concat omnisharp-host "currentfilemembersasflat")
                      request)))
     (omnisharp--choose-and-go-to-quickfix-ido
-     quickfixes)))
+     quickfixes
+     other-window)))
 
 (defun omnisharp--choose-and-go-to-quickfix-ido
   (quickfixes &optional other-window)
@@ -1337,7 +1366,7 @@ cursor at that location"
 in an ido-completing-read prompt and jumps to the chosen one's
 Location.
 
-If OTHER-WINDOW is given, uses another window."
+If OTHER-WINDOW is given, will jump to the result in another window."
   (let ((chosen-quickfix
          (omnisharp--choose-quickfix-ido
           (omnisharp--vector-to-list quickfixes))))
@@ -1388,32 +1417,41 @@ ido-completing-read. Returns the chosen element."
      quickfixes)))
 
 ;; No need for a worker pattern since findsymbols takes no arguments
-(defun omnisharp-navigate-to-solution-member ()
-  (interactive)
+(defun omnisharp-navigate-to-solution-member
+  (&optional other-window)
+  (interactive "P")
   (let ((quickfix-response
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "findsymbols")
           nil)))
     (omnisharp--choose-and-go-to-quickfix-ido
      (omnisharp--vector-to-list
-      (cdr (assoc 'QuickFixes quickfix-response))))))
+      (cdr (assoc 'QuickFixes quickfix-response)))
+     other-window)))
 
-(defun omnisharp-navigate-to-solution-file ()
-  (interactive)
+(defun omnisharp-navigate-to-solution-member-other-window
+  (omnisharp-navigate-to-solution-member t))
+
+(defun omnisharp-navigate-to-solution-file
+  (&optional other-window)
+  (interactive "P")
   (let ((quickfix-response
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "gotofile")
           nil)))
     (omnisharp--choose-and-go-to-quickfix-ido
      (omnisharp--vector-to-list
-      (cdr (assoc 'QuickFixes quickfix-response))))))
+      (cdr (assoc 'QuickFixes quickfix-response)))
+     other-window)))
 
 (defun omnisharp-navigate-to-solution-file-then-file-member
-  ()
+  (&optional other-window)
   "Navigates to a file in the solution first, then to a member in that
-file."
-  (interactive)
-  (omnisharp-navigate-to-solution-file)
+file. With prefix argument uses another window."
+  (interactive "P")
+  (omnisharp-navigate-to-solution-file other-window)
+  ;; Do not set other-window here. No need to use two different
+  ;; windows.
   (omnisharp-navigate-to-current-file-member))
 
 (defun omnisharp-navigate-to-region
@@ -1431,6 +1469,10 @@ use another window."
 
 (defun omnisharp-navigate-to-region-other-window ()
   (interactive) (omnisharp-navigate-to-region t))
+
+(defun omnisharp-navigate-to-solution-file-then-file-member-other-window
+  (&optional other-window)
+  (omnisharp-navigate-to-solution-file-then-file-member t))
 
 (defun omnisharp-start-flycheck ()
   "Selects and starts the csharp-omnisharp-curl syntax checker for the

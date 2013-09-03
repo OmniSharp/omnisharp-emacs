@@ -28,6 +28,9 @@ Lacks a better UI and a good default configuration.
     * Go to definition of a member in the current type with
       [ido-mode][] (likewise fast :)).
     * Go to region / endregion in current file
+    * Go to any member in the solution (property, method etc.)
+    * Go to file, then go to member (type, property, method) in that
+      file.
 * Rename the current symbol and all references to it
 * Solution manipulation
     * Add/remove the current file
@@ -142,6 +145,16 @@ when found. Note that this is not a type checker, only syntax is
 currently checked.
 
 ![](pics/syntax-error-flycheck.png)
+
+To start the check, use (omnisharp-start-flycheck) or select it in the
+menu. The check will then be performed after the current buffer has
+been idle for a certain number of seconds. Currently the default is
+0.5 seconds.
+
+To make syntax checking start sooner/later, use:
+```
+(setq flycheck-idle-change-delay 2) ; in seconds
+```
 
 ## Installation
 
