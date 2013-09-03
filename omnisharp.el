@@ -1,7 +1,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 1.1
+;; Version: 1.2
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -147,7 +147,8 @@ server backend."
      ["Current file member" omnisharp-navigate-to-current-file-member]
      ["Type in current file" omnisharp-navigate-to-type-in-current-file]
      ["Solution member" omnisharp-navigate-to-solution-member]
-     ["File in solution" omnisharp-navigate-to-solution-file])
+     ["File in solution" omnisharp-navigate-to-solution-file]
+     ["Navigate to region in current file" omnisharp-navigate-to-region])
 
     ("OmniSharp server"
      ["Reload solution" omnisharp-reload-solution]
@@ -158,7 +159,8 @@ server backend."
      ["Show type and add it to kill ring" omnisharp-current-type-information-to-kill-ring]
      ["Find usages" omnisharp-find-usages]
      ["Find implementations" omnisharp-find-implementations]
-     ["Rename" omnisharp-rename])
+     ["Rename" omnisharp-rename]
+     ["Rename interactively " omnisharp-rename-interactively])
 
     ("Solution actions"
      ["Add current file to solution" omnisharp-add-to-solution-current-file]
@@ -202,53 +204,63 @@ argument, use another window."
 (defun omnisharp-find-usages ()
   "Find usages for the symbol under point"
   (interactive)
-  (omnisharp-find-usages-worker (omnisharp--get-common-params)))
+  (let ((quickfixes (omnisharp-find-usages-worker
+                     (omnisharp--get-common-params))))
 
-(defun omnisharp-find-usages-worker (params)
-  ;; TODO make this asyncronic like all other compilation processes!
-  (let* ((json-result (omnisharp-post-message-curl-as-json
-                       (concat omnisharp-host "findusages")
-                       params))
-         (output-buffer (get-buffer-create
-                         omnisharp--find-usages-buffer-name))
-         (output-in-compilation-mode-format
-          ;; Loop over a vector such as:
-          ;; [((Text . "public static AstNode GetDefinition(this
-          ;; AstNode node)") (Column . 25) (Line . 39) (FileName
-          ;; . "/foo")) ((Text ...)]
-          (mapcar
-           'omnisharp--find-usages-output-to-compilation-output
-           (cdr (assoc 'QuickFixes json-result)))))
-
-    (if (equal 0 (length output-in-compilation-mode-format))
+    (if (equal 0 (length quickfixes))
         (message "No usages found.")
-      (omnisharp--write-lines-to-compilation-buffer
-       output-in-compilation-mode-format
-       output-buffer
+
+      (omnisharp--write-quickfixes-to-compilation-buffer
+       quickfixes
+       omnisharp--find-usages-buffer-name
        omnisharp-find-usages-header))))
+
+(defun omnisharp-find-usages-worker (request)
+  ;; TODO make this asyncronic like all other compilation processes!
+  (let* ((quickfix-response (omnisharp-post-message-curl-as-json
+                             (concat omnisharp-host "findusages")
+                             request))
+         (quickfixes (omnisharp--vector-to-list
+                      (cdr (assoc 'QuickFixes quickfix-response)))))
+    quickfixes))
 
 (defun omnisharp-find-implementations ()
   "Show a buffer containing all implementations of the interface under
 point, or classes derived from the class under point. Allow the user
 to select one (or more) to jump to."
   (interactive)
-  (omnisharp-find-implementations-worker (omnisharp--get-common-params)))
+  (let ((quickfixes
+         (omnisharp-find-implementations-worker
+          (omnisharp--get-common-params))))
 
-(defun omnisharp-find-implementations-worker (params)
-  (let* ((json-result (omnisharp-post-message-curl-as-json
-                       (concat omnisharp-host "findimplementations")
-                       params))
-         (output-in-compilation-mode-format
-          (mapcar
-           'omnisharp--find-usages-output-to-compilation-output
-           (cdr (assoc 'Locations json-result)))))
+    (omnisharp--write-quickfixes-to-compilation-buffer
+     quickfixes
+     omnisharp--find-implementations-buffer-name
+     omnisharp-find-implementations-header)))
 
-    (if (equal 0 (length output-in-compilation-mode-format))
-        (message "No implementations found.")
-      (omnisharp--write-lines-to-compilation-buffer
-       output-in-compilation-mode-format
-       (get-buffer-create omnisharp--find-implementations-buffer-name)
-       omnisharp-find-implementations-header))))
+
+(defun omnisharp-find-implementations-worker (request)
+  "Returns a list of QuickFix lisp objects from a findimplementations
+api call made with the given Request."
+  (let* ((quickfix-response (omnisharp-post-message-curl-as-json
+                             (concat omnisharp-host "findimplementations")
+                             request))
+         (quickfixes (omnisharp--vector-to-list
+                      (cdr (assoc 'QuickFixes quickfix-response)))))
+    quickfixes))
+
+(defun omnisharp-navigate-to-region
+  (&optional other-window)
+  "Navigate to region in current file. If OTHER-WINDOW is given and t,
+use another window."
+  (interactive "P")
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "gotoregion")
+          (omnisharp--get-common-params))))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     (cdr (assoc 'QuickFixes quickfix-response))
+     other-window)))
 
 (defun omnisharp-rename ()
   "Rename the current symbol to a new name. Lets the user choose what
@@ -258,32 +270,83 @@ name to rename to, defaulting to the current name of the symbol."
          (rename-to (read-string "Rename to: " current-word))
          (rename-request
           (cons `(RenameTo . ,rename-to)
-                (omnisharp--get-common-params))))
+                (omnisharp--get-common-params)))
 
-    (omnisharp-rename-worker rename-request)
-    (message "Rename complete")))
+         (modified-file-responses
+          (omnisharp-rename-worker rename-request))
+         (location-before-rename
+          (omnisharp--get-common-params-for-emacs-side-use)))
+
+    ;; save-excursion does not work here for some reason.
+
+    ;; Set all modified files' contents to what the server thinks they
+    ;; now contain. Doing this will make the user see the results of
+    ;; the rename.
+    (--each modified-file-responses
+      (omnisharp--set-buffer-contents-to
+       (cdr (assoc 'FileName it))
+       (cdr (assoc 'Buffer it))))
+
+    ;; Keep point in the buffer that initialized the rename so that
+    ;; the user deos not feel disoriented
+    (omnisharp-go-to-file-line-and-column location-before-rename)
+
+    (message "Rename complete in files: %s"
+             (--map (cdr (assoc 'FileName it))
+                    modified-file-responses))))
 
 (defun omnisharp-rename-worker (rename-request)
+  "Given a RenameRequest, returns a list of ModifiedFileResponse
+objects."
   (let* ((rename-responses
           (omnisharp-post-message-curl-as-json
            (concat omnisharp-host "rename")
            rename-request))
          (modified-files (omnisharp--vector-to-list
                           (cdr (assoc 'Changes rename-responses)))))
-    (save-excursion
-      (mapc (lambda (modified-file-response)
-              (omnisharp--set-buffer-contents-to
-               (cdr (assoc 'FileName modified-file-response))
-               (cdr (assoc 'Buffer modified-file-response))
-               1
-               1))
-            modified-files))))
+    modified-files))
+
+(defun omnisharp-rename-interactively ()
+  "Rename the current symbol to a new name. Lets the user choose what
+name to rename to, defaulting to the current name of the symbol. Any
+renames require interactive confirmation from the user."
+  (interactive)
+  (let* ((current-word (thing-at-point 'symbol))
+         (rename-to (read-string "Rename to: " current-word))
+         (delimited
+          (y-or-n-p "Only rename full words?"))
+         (all-solution-files
+          (omnisharp--get-solution-files-list-of-strings)))
+    (tags-query-replace current-word
+                        rename-to
+                        delimited
+                        ;; This is expected to be a form that will be
+                        ;; evaluated to get the list of all files to
+                        ;; process.
+                        'all-solution-files)))
+
+(defun omnisharp--write-quickfixes-to-compilation-buffer
+  (quickfixes buffer-name buffer-header)
+  "Takes a list of QuickFix objects and writes them to the
+compilation buffer with HEADER as its header. Shows the buffer
+when finished."
+  (let ((output-in-compilation-mode-format
+         (mapcar
+          'omnisharp--find-usages-output-to-compilation-output
+          quickfixes)))
+
+    (omnisharp--write-lines-to-compilation-buffer
+     output-in-compilation-mode-format
+     (get-buffer-create buffer-name)
+     buffer-header)))
 
 (defun omnisharp--write-lines-to-compilation-buffer
   (lines-to-write buffer-to-write-to &optional header)
   "Writes the given lines to the given buffer, and sets
 compilation-mode on. The contents of the buffer are erased. The
 buffer is marked read-only after inserting all lines.
+
+LINES-TO-WRITE are the lines to write, as-is.
 
 If HEADER is given, that is written to the top of the buffer.
 
@@ -316,13 +379,17 @@ recognizes, so that the user may jump to the results."
 format that the compilation major mode understands and lets the user
 follow results to the locations in the actual files."
   (let ((filename (cdr (assoc 'FileName json-result-single-element)))
+        (text (cdr (assoc 'Text json-result-single-element)))
         (line (cdr (assoc 'Line json-result-single-element)))
-        (text (cdr (assoc 'Text json-result-single-element))))
+        (column (cdr (assoc 'Column json-result-single-element))))
     (concat filename
             ":"
             (prin1-to-string line)
-            ": "
-            text)))
+            ":"
+            (prin1-to-string column)
+            ": \n"
+            text
+            "\n")))
 
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
@@ -750,15 +817,29 @@ run-action-params: original parameters sent to /runcodeaction API."
 
 (defun omnisharp--set-buffer-contents-to (filename-for-buffer
                                           new-buffer-contents
+                                          &optional
                                           result-point-line
                                           result-point-column)
   "Sets the buffer contents to new-buffer-contents for the buffer
-visiting filename-for-buffer. Afterwards moves point to the
-coordinates result-point-line and result-point-column."
-  (omnisharp-go-to-file-line-and-column-worker
-   result-point-line result-point-column filename-for-buffer)
-  (save-buffer)
+visiting filename-for-buffer. If no buffer is visiting that file, does
+nothing. Afterwards moves point to the coordinates RESULT-POINT-LINE
+and RESULT-POINT-COLUMN.
 
+If RESULT-POINT-LINE and RESULT-POINT-COLUMN are not given, and a
+buffer exists for FILENAME-FOR-BUFFER, its current positions are
+used. If a buffer does not exist, the file is visited and the default
+point position is used."
+  (omnisharp--find-file-possibly-in-other-window
+   filename-for-buffer nil) ; not in other-window
+
+  ;; Default values are the ones in the buffer that is visiting
+  ;; filename-for-buffer.
+  (setq result-point-line
+        (or result-point-line (line-number-at-pos)))
+  (setq result-point-column
+        (or result-point-column (omnisharp--current-column)))
+
+  (save-buffer)
   (erase-buffer)
   (insert new-buffer-contents)
 
@@ -773,10 +854,10 @@ the OmniSharp server understands."
     (current-column)))
 
 (defun omnisharp--buffer-exists-for-file-name (file-name)
-  (cl-some (lambda (a)
-             (equalp (buffer-file-name)
-                     file-name))
-           (buffer-list)))
+  (let ((all-open-buffers-list
+         (-map 'buffer-file-name (buffer-list))))
+    (--any? (string-equal file-name it)
+           all-open-buffers-list)))
 
 (defun omnisharp--convert-slashes-to-double-backslashes (str)
   "This might be useful. A direct port from OmniSharp.py."
@@ -982,11 +1063,27 @@ is a more sophisticated matching framework than what popup.el offers."
               params)
       params)))
 
+(defun omnisharp--get-common-params-for-emacs-side-use ()
+  "Gets a Request class that can be only handled safely inside
+Emacs. This should not be transferred to the server backend - it might
+not work on all platforms."
+  (let* ((line-number (line-number-at-pos))
+         (column-number (omnisharp--current-column))
+         (buffer-contents (omnisharp--get-current-buffer-contents))
+         (filename-tmp (or buffer-file-name ""))
+         (params `((Line     . ,line-number)
+                   (Column   . ,column-number)
+                   (Buffer   . ,buffer-contents))))
+    (if (/= 0 (length filename-tmp))
+        (cons `(FileName . ,filename-tmp)
+              params)
+      params)))
+
 (defun omnisharp-go-to-file-line-and-column (json-result
                                              &optional other-window)
   "Open file :FileName at :Line and :Column. If filename is not given,
 defaults to the current file. This function works for a
-GotoDefinitionResponse line json-result."
+QuickFix class json result."
   (omnisharp-go-to-file-line-and-column-worker
    (cdr (assoc 'Line json-result))
    (- (cdr (assoc 'Column json-result)) 1)
@@ -1009,18 +1106,41 @@ messing with the ring."
   (unless dont-save-old-pos
     (ring-insert find-tag-marker-ring (point-marker)))
 
-  (when (not (equal filename nil))
-    (funcall (if other-window 'find-file-other-window 'find-file) filename))
+  (omnisharp--find-file-possibly-in-other-window filename
+                                                 other-window)
 
   ;; calling goto-line directly results in a compiler warning.
-  (let ((current-prefix-arg line))
-    (call-interactively 'goto-line line))
+  (with-no-warnings
+    (goto-line line))
 
   (move-to-column column)
 
   (unless dont-save-old-pos
     (message "Previous position in %s saved. Go back with (pop-tag-mark)."
              buffer-file-name)))
+
+(defun omnisharp--find-file-possibly-in-other-window
+  (filename &optional other-window)
+  "Open a buffer editing FILENAME. If no buffer for that filename
+exists, a new one is created.
+If the optional argument OTHER-WINDOW is non-nil, uses another
+window."
+
+  (cond
+   ((omnisharp--buffer-exists-for-file-name filename)
+    (let ((target-buffer-to-switch-to
+           (--first (string= (buffer-file-name it)
+                             filename)
+                    (buffer-list))))
+      (if other-window
+          (pop-to-buffer target-buffer-to-switch-to)
+        (pop-to-buffer-same-window target-buffer-to-switch-to))))
+
+   (t ; no buffer for this file exists yet
+    (funcall (if other-window
+               'find-file-other-window
+             'find-file)
+           filename))))
 
 (defun omnisharp--vector-to-list (vector)
   (append vector nil))
@@ -1280,9 +1400,20 @@ If OTHER-WINDOW is given, will jump to the result in another window."
 (defun omnisharp--choose-quickfix-ido (quickfixes)
   "Given a list of QuickFixes, lets the user choose one using
 ido-completing-read. Returns the chosen element."
-  (let* ((quickfix-choices (--map
-                            (cdr (assoc 'Text it))
-                            quickfixes))
+  ;; Ido cannot navigate non-unique items reliably. It either gets
+  ;; stuck, or results in that we cannot reliably determine the index
+  ;; of the item. Work around this by prepending the index of all items
+  ;; to their end. This makes them unique.
+  (let* ((quickfix-choices
+          (--map-indexed
+           (let ((this-quickfix-text (cdr (assoc 'Text it))))
+             (concat "#"
+                     (number-to-string it-index)
+                     "\t"
+                     this-quickfix-text))
+
+           quickfixes))
+
          (chosen-quickfix-text
           (ido-completing-read
            "Go to: "
@@ -1329,13 +1460,28 @@ ido-completing-read. Returns the chosen element."
   (&optional other-window)
   (interactive "P")
   (let ((quickfix-response
-         (omnisharp-post-message-curl-as-json
-          (concat omnisharp-host "gotofile")
-          nil)))
+         (omnisharp--get-solution-files-quickfix-response)))
     (omnisharp--choose-and-go-to-quickfix-ido
      (omnisharp--vector-to-list
       (cdr (assoc 'QuickFixes quickfix-response)))
      other-window)))
+
+(defun omnisharp--get-solution-files-quickfix-response ()
+  "Return a QuickFixResponse containing a list of all locations of
+files in the current solution."
+  (omnisharp-post-message-curl-as-json
+   (concat omnisharp-host "gotofile")
+   nil))
+
+(defun omnisharp--get-solution-files-list-of-strings ()
+  "Returns all files in the current solution as a list of strings."
+  ;; This is just mapping functions one after another. Read from top
+  ;; to bottom.
+  (->> (omnisharp--get-solution-files-quickfix-response)
+    (assoc 'QuickFixes)
+    (cdr)
+    (omnisharp--vector-to-list)
+    (--map (cdr (assoc 'FileName it)))))
 
 (defun omnisharp-navigate-to-solution-file-then-file-member
   (&optional other-window)
@@ -1346,6 +1492,22 @@ file. With prefix argument uses another window."
   ;; Do not set other-window here. No need to use two different
   ;; windows.
   (omnisharp-navigate-to-current-file-member))
+
+(defun omnisharp-navigate-to-region
+  (&optional other-window)
+  "Navigate to region in current file. If OTHER-WINDOW is given and t,
+use another window."
+  (interactive "P")
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "gotoregion")
+          (omnisharp--get-common-params))))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     (cdr (assoc 'QuickFixes quickfix-response))
+     other-window)))
+
+(defun omnisharp-navigate-to-region-other-window ()
+  (interactive) (omnisharp-navigate-to-region t))
 
 (defun omnisharp-navigate-to-solution-file-then-file-member-other-window
   (&optional other-window)

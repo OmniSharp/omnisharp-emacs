@@ -27,10 +27,13 @@ Lacks a better UI and a good default configuration.
       (fast).
     * Go to definition of a member in the current type with
       [ido-mode][] (likewise fast :)).
+    * Go to region / endregion in current file
     * Go to any member in the solution (property, method etc.)
     * Go to file, then go to member (type, property, method) in that
       file.
 * Rename the current symbol and all references to it
+    * Rename only semantic references ("smart" rename)
+    * Rename as verbatim text ("dumb" rename)
 * Solution manipulation
     * Add/remove the current file
     * Add/remove selected files in the dired directory editor
