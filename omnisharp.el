@@ -1440,13 +1440,18 @@ ido-completing-read. Returns the chosen element."
   (&optional other-window)
   (interactive "P")
   (let ((quickfix-response
-         (omnisharp-post-message-curl-as-json
-          (concat omnisharp-host "gotofile")
-          nil)))
+         (omnisharp--get-solution-files-quickfix-response)))
     (omnisharp--choose-and-go-to-quickfix-ido
      (omnisharp--vector-to-list
       (cdr (assoc 'QuickFixes quickfix-response)))
      other-window)))
+
+(defun omnisharp--get-solution-files-quickfix-response ()
+  "Return a QuickFixResponse containing a list of all locations of
+files in the current solution."
+  (omnisharp-post-message-curl-as-json
+   (concat omnisharp-host "gotofile")
+   nil))
 
 (defun omnisharp-navigate-to-solution-file-then-file-member
   (&optional other-window)
