@@ -367,8 +367,9 @@ follow results to the locations in the actual files."
             (prin1-to-string line)
             ":"
             (prin1-to-string column)
-            ": "
-            text)))
+            ": \n"
+            text
+            "\n")))
 
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
