@@ -16,7 +16,8 @@ Lacks a better UI and a good default configuration.
       interface, with the possibility to fall back on all of ido's
       flexible matching power.
     * Also shows documentation like other IDEs
-* Show type of the current symbol in the minibuffer
+* Show type of the current symbol in the minibuffer. With prefix
+  argument, add it to kill ring.
 * Navigation helpers
     * Go to definition of a type/variable/method etc. With the prefix
   argument (C-u), use another window.

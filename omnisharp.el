@@ -155,6 +155,7 @@ server backend."
 
     ("Current symbol"
      ["Show type" omnisharp-current-type-information]
+     ["Show type and add it to kill ring" omnisharp-current-type-information-to-kill-ring]
      ["Find usages" omnisharp-find-usages]
      ["Find implementations" omnisharp-find-implementations]
      ["Rename" omnisharp-rename])
@@ -1037,17 +1038,33 @@ the user selects a completion and the completion is inserted."
   (omnisharp--auto-complete-display-function-ido
    omnisharp--last-buffer-specific-auto-complete-result))
 
-(defun omnisharp-current-type-information ()
-  (interactive)
-  (omnisharp-current-type-information-worker
-   (omnisharp--get-common-params)))
+(defun omnisharp-current-type-information (&optional add-to-kill-ring)
+  "Display information of the current type under point. With prefix
+argument, add the displayed result to the kill ring. This can be used
+to insert the result in code, for example."
+  (interactive "P")
+  (let ((current-type-information
+         (omnisharp-current-type-information-worker
+          (omnisharp--get-common-params))))
+
+    (message current-type-information)
+    (when add-to-kill-ring
+      (kill-new current-type-information))))
 
 (defun omnisharp-current-type-information-worker (params)
+  "Returns information about the type under the cursor in the given
+PARAMS as a single human-readable string."
   (let ((json-result
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "typelookup")
           params)))
-    (message (cdr (assoc 'Type json-result)))))
+    (cdr (assoc 'Type json-result))))
+
+(defun omnisharp-current-type-information-to-kill-ring ()
+  "Shows the information of the current type and adds it to the kill
+ring."
+  (interactive)
+  (omnisharp-current-type-information t))
 
 (defun omnisharp-get-build-command ()
   "Retrieve the shell command to build the current solution."
