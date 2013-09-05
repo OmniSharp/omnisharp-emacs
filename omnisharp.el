@@ -48,6 +48,18 @@ results of a 'find usages' call.")
   "The name of the temporary buffer that is used to display the
 results of a 'find implementations' call.")
 
+(defvar omnisharp--last-auto-complete-result-buffer-name
+  "* OmniSharp : Last auto-complete result *"
+  "The name of the temporary buffer that is used to display the
+results of an auto-complete call.")
+
+(defvar omnisharp--last-auto-complete-result-buffer-header
+  (concat
+   "Last auto-complete result:"
+   "\n\n")
+  "The header for the temporary buffer that is used to display the
+results of an auto-complete call.")
+
 (defvar omnisharp-auto-complete-popup-help-delay nil
   "The timeout after which the auto-complete popup will show its help
   popup. Disabled by default because the help is often scrambled and
@@ -102,6 +114,19 @@ omnisharp--auto-complete-display-backends-alist.")
 See the documentation for the variable
 omnisharp--auto-complete-display-backend for more information.")
 
+(defvar omnisharp--show-last-auto-complete-result-frontend
+  'plain-buffer
+  "Defines the function that is used for displaying the last
+auto-complete result with various functions. Valid values are found in
+omnisharp--auto-complete-display-backends-alist.")
+
+(defvar omnisharp--show-last-auto-complete-result-frontends-alist
+  '((plain-buffer . omnisharp--show-last-auto-complete-result-in-plain-buffer))
+  "Holds an alist of all available frontends for displaying the last
+auto-complete result.  See the documentation for the variable
+omnisharp--show-last-auto-complete-result-frontend for more
+information.")
+
 (defvar omnisharp-code-format-expand-tab t
   "Whether to expand tabs to spaces in code format requests.")
 
@@ -128,7 +153,7 @@ server backend."
   :global nil
   :keymap omnisharp-mode-map
   (when omnisharp-imenu-support
-    (if omnisharp-mode 
+    (if omnisharp-mode
         (progn
           (setq imenu-create-index-function 'omnisharp-imenu-create-index)
           (imenu-add-menubar-index))
@@ -140,7 +165,9 @@ server backend."
     ("Auto-complete"
      ["at point" omnisharp-auto-complete]
      ["Add . and complete members" omnisharp-add-dot-and-auto-complete]
-     ["Override superclass member" omnisharp-auto-complete-overrides])
+     ["Override superclass member" omnisharp-auto-complete-overrides]
+     ["Show last result" omnisharp-show-last-auto-complete-result]
+     ["Show overloads at point" omnisharp-show-overloads-at-point])
 
     ("Navigate to.."
      ["Definition at point" omnisharp-go-to-definition]
@@ -148,7 +175,7 @@ server backend."
      ["Type in current file" omnisharp-navigate-to-type-in-current-file]
      ["Solution member" omnisharp-navigate-to-solution-member]
      ["File in solution" omnisharp-navigate-to-solution-file]
-     ["Navigate to region in current file" omnisharp-navigate-to-region])
+     ["Region in current file" omnisharp-navigate-to-region])
 
     ("OmniSharp server"
      ["Reload solution" omnisharp-reload-solution]
@@ -160,7 +187,7 @@ server backend."
      ["Find usages" omnisharp-find-usages]
      ["Find implementations" omnisharp-find-implementations]
      ["Rename" omnisharp-rename]
-     ["Rename interactively " omnisharp-rename-interactively])
+     ["Rename interactively" omnisharp-rename-interactively])
 
     ("Solution actions"
      ["Add current file to solution" omnisharp-add-to-solution-current-file]
@@ -237,7 +264,6 @@ to select one (or more) to jump to."
      quickfixes
      omnisharp--find-implementations-buffer-name
      omnisharp-find-implementations-header)))
-
 
 (defun omnisharp-find-implementations-worker (request)
   "Returns a list of QuickFix lisp objects from a findimplementations
@@ -316,20 +342,32 @@ renames require interactive confirmation from the user."
          (delimited
           (y-or-n-p "Only rename full words?"))
          (all-solution-files
-          (omnisharp--get-solution-files-list-of-strings)))
+          (omnisharp--get-solution-files-list-of-strings))
+         (location-before-rename
+          (omnisharp--get-common-params-for-emacs-side-use)))
     (tags-query-replace current-word
                         rename-to
                         delimited
                         ;; This is expected to be a form that will be
                         ;; evaluated to get the list of all files to
                         ;; process.
-                        'all-solution-files)))
+                        'all-solution-files)
+    ;; Keep point in the buffer that initialized the rename so that
+    ;; the user deos not feel disoriented
+    (omnisharp-go-to-file-line-and-column location-before-rename)))
 
 (defun omnisharp--write-quickfixes-to-compilation-buffer
-  (quickfixes buffer-name buffer-header)
+  (quickfixes
+   buffer-name
+   buffer-header
+   &optional dont-save-old-pos)
   "Takes a list of QuickFix objects and writes them to the
 compilation buffer with HEADER as its header. Shows the buffer
-when finished."
+when finished.
+
+If DONT-SAVE-OLD-POS is specified, will not save current position to
+find-tag-marker-ring. This is so this function may be used without
+messing with the ring."
   (let ((output-in-compilation-mode-format
          (mapcar
           'omnisharp--find-usages-output-to-compilation-output
@@ -338,7 +376,11 @@ when finished."
     (omnisharp--write-lines-to-compilation-buffer
      output-in-compilation-mode-format
      (get-buffer-create buffer-name)
-     buffer-header)))
+     buffer-header)
+    (unless dont-save-old-pos
+      (ring-insert find-tag-marker-ring (point-marker))
+      (omnisharp--show-last-buffer-position-saved-message
+       (buffer-file-name)))))
 
 (defun omnisharp--write-lines-to-compilation-buffer
   (lines-to-write buffer-to-write-to &optional header)
@@ -381,7 +423,8 @@ follow results to the locations in the actual files."
   (let ((filename (cdr (assoc 'FileName json-result-single-element)))
         (text (cdr (assoc 'Text json-result-single-element)))
         (line (cdr (assoc 'Line json-result-single-element)))
-        (column (cdr (assoc 'Column json-result-single-element))))
+        (column (cdr (assoc 'Column json-result-single-element)))
+        (text (cdr (assoc 'Text json-result-single-element))))
     (concat filename
             ":"
             (prin1-to-string line)
@@ -572,7 +615,7 @@ triggers a completion immediately"
 (defun company-omnisharp (command &optional arg &rest ignored)
   "Company-mode integration"
   (case command
-    (prefix (and omnisharp-mode 
+    (prefix (and omnisharp-mode
                  (not (company-in-string-or-comment))
                  (omnisharp-company--prefix)))
 
@@ -585,13 +628,13 @@ triggers a completion immediately"
             (substring arg 0 (match-beginning 0))))
 
     (meta (omnisharp--get-company-candidate-meta arg))
-    
+
     (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg))))
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
-    
-    
+
+
     (post-completion (let* ((end (point-marker))
                             (beg (- (point) (length arg))))
                        (if omnisharp-company-do-template-completion
@@ -664,7 +707,7 @@ company-mode-friendly"
 
          (json-result-auto-complete-response
           (omnisharp-auto-complete-worker params))
-         (company-output (delq nil 
+         (company-output (delq nil
                                (mapcar
                                 (lambda (element)
                                   (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) element pre))
@@ -675,7 +718,7 @@ company-mode-friendly"
   "Given one of our completion candidate strings, find the
 element it matches and return the 'DisplayText"
   (interactive)
-  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
+  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
            (when (string-equal (omnisharp--make-company-completion-text element) pre)
              (cl-return (cdr (assoc 'DisplayText element))))))
 
@@ -683,7 +726,7 @@ element it matches and return the 'DisplayText"
   "Given one of our completion candidate strings, find the
 element it matches and return the 'Description"
   (interactive)
-  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
+  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
            (when (string-equal (omnisharp--make-company-completion-text element) pre)
              (cl-return (cdr (assoc 'Description element))))))
 
@@ -705,6 +748,13 @@ handle inserting that result in the way it sees fit (e.g. in the
 current buffer)."
   (cdr (assoc omnisharp--auto-complete-display-backend
               omnisharp--auto-complete-display-backends-alist)))
+
+(defun omnisharp--get-last-auto-complete-result-display-function ()
+  "Returns a function that can be fed the output from
+omnisharp-auto-complete-worker (an AutoCompleteResponse). The function
+must take a single argument, the auto-complete result texts to show."
+  (cdr (assoc omnisharp--show-last-auto-complete-result-frontend
+              omnisharp--show-last-auto-complete-result-frontends-alist)))
 
 (defun omnisharp-auto-complete-worker (auto-complete-request)
   "Takes an AutoCompleteRequest and makes an autocomplete query with
@@ -771,16 +821,21 @@ user is less likely to lose data."
          ;; CodeActions is a vector. Need to convert it to a list.
          (actions-list
           (omnisharp--vector-to-list
-           (cdr (assoc 'CodeActions actions-vector))))
-         (chosen-action (ido-completing-read
-                         "Run code action: "
-                         actions-list
-                         t))
-         (chosen-action-index
-          (position chosen-action actions-list)))
-    (when (not (= 0 (length chosen-action)))
-      (omnisharp-run-code-action-refactoring-worker
-       chosen-action-index))))
+           (cdr (assoc 'CodeActions actions-vector)))))
+    ;; Exit early if no refactorings are provided by the API.
+    (if (<= (length actions-list) 0)
+        (message "No refactorings available at this position.")
+
+      (progn
+        (let* ((chosen-action (ido-completing-read
+                               "Run code action: "
+                               actions-list
+                               t))
+               (chosen-action-index
+                (position chosen-action actions-list)))
+
+          (omnisharp-run-code-action-refactoring-worker
+           chosen-action-index))))))
 
 (defun omnisharp--get-code-actions-from-api ()
   "Fetches and returns a GetCodeActionsResponse: the runnable
@@ -1103,21 +1158,38 @@ If DONT-SAVE-OLD-POS is specified, will not save current position to
 find-tag-marker-ring. This is so this function may be used without
 messing with the ring."
 
-  (unless dont-save-old-pos
-    (ring-insert find-tag-marker-ring (point-marker)))
+  (let ((position-before-jumping (point-marker)))
+    (omnisharp--find-file-possibly-in-other-window filename
+                                                   other-window)
 
-  (omnisharp--find-file-possibly-in-other-window filename
-                                                 other-window)
+    ;; calling goto-line directly results in a compiler warning.
+    (with-no-warnings
+      (goto-line line))
 
-  ;; calling goto-line directly results in a compiler warning.
-  (with-no-warnings
-    (goto-line line))
+    (move-to-column column)
 
-  (move-to-column column)
+    (unless dont-save-old-pos
+      (omnisharp--save-position-to-find-tag-marker-ring
+       position-before-jumping)
+      (omnisharp--show-last-buffer-position-saved-message
+       (buffer-file-name
+        (marker-buffer position-before-jumping))))))
 
-  (unless dont-save-old-pos
-    (message "Previous position in %s saved. Go back with (pop-tag-mark)."
-             buffer-file-name)))
+(defun omnisharp--show-last-buffer-position-saved-message
+  (&optional file-name)
+  "Notifies the user that the previous buffer position has been saved
+with a message in the minibuffer. If FILE-NAME is given, shows that as
+the file. Otherwise uses the current file name."
+  (message "Previous position in %s saved. Go back with (pop-tag-mark)."
+           (or file-name
+               (buffer-file-name))))
+
+(defun omnisharp--save-position-to-find-tag-marker-ring
+  (&optional marker)
+  "Record position in find-tag-marker-ring. If MARKER is non-nil,
+record that position. Otherwise record the current position."
+  (setq marker (or marker (point-marker)))
+  (ring-insert find-tag-marker-ring marker))
 
 (defun omnisharp--find-file-possibly-in-other-window
   (filename &optional other-window)
@@ -1308,27 +1380,32 @@ type errors."
                           column
                           " "
                           (message (one-or-more not-newline))))
-  ;; TODO this should be moved out, but I can't get it to compile that
+  ;; TODO this should be cleaned, but I can't get it to compile that
   ;; way.
   :error-parser (lambda (output checker buffer)
-                  (let* ((json-result
-                          (json-read-from-string output))
-                         (errors (omnisharp--vector-to-list
-                                  (cdr (assoc 'Errors json-result)))))
-                    (when (not (equal (length errors) 0))
-                      (mapcar (lambda (it)
-                                (flycheck-error-new
-                                 :buffer buffer
-                                 :checker checker
-                                 :filename (cdr (assoc 'FileName it))
-                                 :line (cdr (assoc 'Line it))
-                                 :column (cdr (assoc 'Column it))
-                                 :message (cdr (assoc 'Message it))
-                                 :level 'error))
-                              errors))))
+                  (omnisharp--flycheck-error-parser-raw-json
+                   output checker buffer))
   ;; TODO use only is csharp files - but there are a few different
   ;; extensions available for these!
   :predicate (lambda () t))
+
+(defun omnisharp--flycheck-error-parser-raw-json
+  (output checker buffer)
+  (let* ((json-result
+          (json-read-from-string output))
+         (errors (omnisharp--vector-to-list
+                  (cdr (assoc 'Errors json-result)))))
+    (when (not (equal (length errors) 0))
+      (mapcar (lambda (it)
+                (flycheck-error-new
+                 :buffer buffer
+                 :checker checker
+                 :filename (cdr (assoc 'FileName it))
+                 :line (cdr (assoc 'Line it))
+                 :column (cdr (assoc 'Column it))
+                 :message (cdr (assoc 'Message it))
+                 :level 'error))
+              errors))))
 
 (defun omnisharp--imenu-make-marker (element)
   "Takes a QuickCheck element and returns the position of the
@@ -1337,7 +1414,7 @@ cursor at that location"
          (element-column (cdr (assoc 'Column quickfix-alist)))
          (element-filename (cdr (assoc 'Filename quickfix-alist)))
          (use-buffer (current-buffer)))
-    (save-excursion 
+    (save-excursion
       (when (not (equal element-filename nil))
         (omnisharp-go-to-file-line-and-column-worker
          element-line
@@ -1349,7 +1426,7 @@ cursor at that location"
         (point-marker)))))
 
 (defun omnisharp-imenu-create-index ()
-  "Imenu callback function - returns an alist of ((member-name . position))" 
+  "Imenu callback function - returns an alist of ((member-name . position))"
   (interactive)
   (let* ((quickfixes (omnisharp-post-message-curl-as-json
                       (concat omnisharp-host "currentfilemembersasflat")
@@ -1493,6 +1570,10 @@ file. With prefix argument uses another window."
   ;; windows.
   (omnisharp-navigate-to-current-file-member))
 
+(defun omnisharp-navigate-to-solution-file-then-file-member-other-window
+  (&optional other-window)
+  (omnisharp-navigate-to-solution-file-then-file-member t))
+
 (defun omnisharp-navigate-to-region
   (&optional other-window)
   "Navigate to region in current file. If OTHER-WINDOW is given and t,
@@ -1509,10 +1590,6 @@ use another window."
 (defun omnisharp-navigate-to-region-other-window ()
   (interactive) (omnisharp-navigate-to-region t))
 
-(defun omnisharp-navigate-to-solution-file-then-file-member-other-window
-  (&optional other-window)
-  (omnisharp-navigate-to-solution-file-then-file-member t))
-
 (defun omnisharp-start-flycheck ()
   "Selects and starts the csharp-omnisharp-curl syntax checker for the
 current buffer. Use this in your csharp-mode hook."
@@ -1520,6 +1597,46 @@ current buffer. Use this in your csharp-mode hook."
   (flycheck-mode)
   (flycheck-select-checker 'csharp-omnisharp-curl)
   (flycheck-start-checker  'csharp-omnisharp-curl))
+
+(defun omnisharp-navigate-to-region ()
+  (interactive)
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "gotoregion")
+          (omnisharp--get-common-params))))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     (cdr (assoc 'QuickFixes quickfix-response)))))
+
+(defun omnisharp-show-last-auto-complete-result ()
+  (interactive)
+  (let ((auto-complete-result-in-human-readable-form
+         (--map (cdr (assoc 'DisplayText it))
+                omnisharp--last-buffer-specific-auto-complete-result)))
+    (funcall (omnisharp--get-last-auto-complete-result-display-function)
+             auto-complete-result-in-human-readable-form)))
+
+(defun omnisharp--show-last-auto-complete-result-in-plain-buffer
+  (auto-complete-result-in-human-readable-form-list)
+  "Display function for omnisharp-show-last-auto-complete-result using
+a simple 'compilation' like buffer to display the last auto-complete
+result."
+  (let ((buffer
+         (get-buffer-create
+          omnisharp--last-auto-complete-result-buffer-name)))
+    (omnisharp--write-lines-to-compilation-buffer
+     auto-complete-result-in-human-readable-form-list
+     buffer
+     omnisharp--last-auto-complete-result-buffer-header)))
+
+(defun omnisharp-show-overloads-at-point ()
+  (interactive)
+  ;; Request completions from API but only cache them - don't show the
+  ;; results to the user
+  (save-excursion
+    (end-of-thing 'symbol)
+    (omnisharp-auto-complete-worker
+     (omnisharp--get-auto-complete-params))
+    (omnisharp-show-last-auto-complete-result)))
 
 (provide 'omnisharp)
 
