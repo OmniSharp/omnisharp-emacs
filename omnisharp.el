@@ -160,7 +160,7 @@ server backend."
      ["Find usages" omnisharp-find-usages]
      ["Find implementations" omnisharp-find-implementations]
      ["Rename" omnisharp-rename]
-     ["Rename interactively " omnisharp-rename-interactively])
+     ["Rename interactively" omnisharp-rename-interactively])
 
     ("Solution actions"
      ["Add current file to solution" omnisharp-add-to-solution-current-file]
