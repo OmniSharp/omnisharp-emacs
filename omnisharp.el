@@ -49,9 +49,7 @@ results of a 'find usages' call.")
 results of a 'find implementations' call.")
 
 (defvar omnisharp--last-auto-complete-result-buffer-name
-  (concat
-   "* OmniSharp : Last auto-complete result *"
-   "\n\n")
+  "* OmniSharp : Last auto-complete result *"
   "The name of the temporary buffer that is used to display the
 results of an auto-complete call.")
 
