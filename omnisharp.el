@@ -331,10 +331,17 @@ renames require interactive confirmation from the user."
     (omnisharp-go-to-file-line-and-column location-before-rename)))
 
 (defun omnisharp--write-quickfixes-to-compilation-buffer
-  (quickfixes buffer-name buffer-header)
+  (quickfixes
+   buffer-name
+   buffer-header
+   &optional dont-save-old-pos)
   "Takes a list of QuickFix objects and writes them to the
 compilation buffer with HEADER as its header. Shows the buffer
-when finished."
+when finished.
+
+If DONT-SAVE-OLD-POS is specified, will not save current position to
+find-tag-marker-ring. This is so this function may be used without
+messing with the ring."
   (let ((output-in-compilation-mode-format
          (mapcar
           'omnisharp--find-usages-output-to-compilation-output
@@ -343,7 +350,11 @@ when finished."
     (omnisharp--write-lines-to-compilation-buffer
      output-in-compilation-mode-format
      (get-buffer-create buffer-name)
-     buffer-header)))
+     buffer-header)
+    (unless dont-save-old-pos
+      (ring-insert find-tag-marker-ring (point-marker))
+      (omnisharp--show-last-buffer-position-saved-message
+       (buffer-file-name)))))
 
 (defun omnisharp--write-lines-to-compilation-buffer
   (lines-to-write buffer-to-write-to &optional header)
@@ -1121,8 +1132,13 @@ messing with the ring."
     (unless dont-save-old-pos
       (omnisharp--save-position-to-find-tag-marker-ring
        position-before-jumping)
-      (message "Previous position in %s saved. Go back with (pop-tag-mark)."
-               buffer-file-name))))
+      (omnisharp--show-last-buffer-position-saved-message))))
+
+(defun omnisharp--show-last-buffer-position-saved-message (buffer-file-name)
+  "Notifies the user that the previous buffer position has been saved
+with a message in the minibuffer."
+  (message "Previous position in %s saved. Go back with (pop-tag-mark)."
+           buffer-file-name))
 
 (defun omnisharp--save-position-to-find-tag-marker-ring
   (&optional marker)
