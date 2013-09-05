@@ -128,7 +128,7 @@ server backend."
   :global nil
   :keymap omnisharp-mode-map
   (when omnisharp-imenu-support
-    (if omnisharp-mode 
+    (if omnisharp-mode
         (progn
           (setq imenu-create-index-function 'omnisharp-imenu-create-index)
           (imenu-add-menubar-index))
@@ -588,7 +588,7 @@ triggers a completion immediately"
 (defun company-omnisharp (command &optional arg &rest ignored)
   "Company-mode integration"
   (case command
-    (prefix (and omnisharp-mode 
+    (prefix (and omnisharp-mode
                  (not (company-in-string-or-comment))
                  (omnisharp-company--prefix)))
 
@@ -601,13 +601,13 @@ triggers a completion immediately"
             (substring arg 0 (match-beginning 0))))
 
     (meta (omnisharp--get-company-candidate-meta arg))
-    
+
     (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg))))
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
-    
-    
+
+
     (post-completion (let* ((end (point-marker))
                             (beg (- (point) (length arg))))
                        (if omnisharp-company-do-template-completion
@@ -680,7 +680,7 @@ company-mode-friendly"
 
          (json-result-auto-complete-response
           (omnisharp-auto-complete-worker params))
-         (company-output (delq nil 
+         (company-output (delq nil
                                (mapcar
                                 (lambda (element)
                                   (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) element pre))
@@ -691,7 +691,7 @@ company-mode-friendly"
   "Given one of our completion candidate strings, find the
 element it matches and return the 'DisplayText"
   (interactive)
-  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
+  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
            (when (string-equal (omnisharp--make-company-completion-text element) pre)
              (cl-return (cdr (assoc 'DisplayText element))))))
 
@@ -699,7 +699,7 @@ element it matches and return the 'DisplayText"
   "Given one of our completion candidate strings, find the
 element it matches and return the 'Description"
   (interactive)
-  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
+  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
            (when (string-equal (omnisharp--make-company-completion-text element) pre)
              (cl-return (cdr (assoc 'Description element))))))
 
@@ -1370,7 +1370,7 @@ cursor at that location"
          (element-column (cdr (assoc 'Column quickfix-alist)))
          (element-filename (cdr (assoc 'Filename quickfix-alist)))
          (use-buffer (current-buffer)))
-    (save-excursion 
+    (save-excursion
       (when (not (equal element-filename nil))
         (omnisharp-go-to-file-line-and-column-worker
          element-line
@@ -1382,7 +1382,7 @@ cursor at that location"
         (point-marker)))))
 
 (defun omnisharp-imenu-create-index ()
-  "Imenu callback function - returns an alist of ((member-name . position))" 
+  "Imenu callback function - returns an alist of ((member-name . position))"
   (interactive)
   (let* ((quickfixes (omnisharp-post-message-curl-as-json
                       (concat omnisharp-host "currentfilemembersasflat")
