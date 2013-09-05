@@ -316,14 +316,19 @@ renames require interactive confirmation from the user."
          (delimited
           (y-or-n-p "Only rename full words?"))
          (all-solution-files
-          (omnisharp--get-solution-files-list-of-strings)))
+          (omnisharp--get-solution-files-list-of-strings))
+         (location-before-rename
+          (omnisharp--get-common-params-for-emacs-side-use)))
     (tags-query-replace current-word
                         rename-to
                         delimited
                         ;; This is expected to be a form that will be
                         ;; evaluated to get the list of all files to
                         ;; process.
-                        'all-solution-files)))
+                        'all-solution-files)
+    ;; Keep point in the buffer that initialized the rename so that
+    ;; the user deos not feel disoriented
+    (omnisharp-go-to-file-line-and-column location-before-rename)))
 
 (defun omnisharp--write-quickfixes-to-compilation-buffer
   (quickfixes buffer-name buffer-header)
