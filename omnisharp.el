@@ -1607,16 +1607,24 @@ current buffer. Use this in your csharp-mode hook."
 
 (defun omnisharp-show-last-auto-complete-result ()
   (interactive)
-  (let ((buffer
-         (get-buffer-create
-          omnisharp--last-auto-complete-result-buffer-name))
-        (auto-complete-result-in-human-readable-form
+  (let ((auto-complete-result-in-human-readable-form
          (--map (cdr (assoc 'DisplayText it))
                 omnisharp--last-buffer-specific-auto-complete-result)))
+    (funcall (omnisharp--get-last-auto-complete-result-display-function)
+             auto-complete-result-in-human-readable-form)))
+
+(defun omnisharp--show-last-auto-complete-result-in-plain-buffer
+  (auto-complete-result-in-human-readable-form-list)
+  "Display function for omnisharp-show-last-auto-complete-result using
+a simple 'compilation' like buffer to display the last auto-complete
+result."
+  (let ((buffer
+         (get-buffer-create
+          omnisharp--last-auto-complete-result-buffer-name)))
     (omnisharp--write-lines-to-compilation-buffer
-     auto-complete-result-in-human-readable-form
+     auto-complete-result-in-human-readable-form-list
      buffer
-     omnisharp--last-auto-complete-result-buffer-name)))
+     omnisharp--last-auto-complete-result-buffer-header)))
 
 (defun omnisharp-show-overloads-at-point ()
   (interactive)
