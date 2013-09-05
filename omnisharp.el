@@ -48,6 +48,18 @@ results of a 'find usages' call.")
   "The name of the temporary buffer that is used to display the
 results of a 'find implementations' call.")
 
+(defvar omnisharp--last-auto-complete-result-buffer-name
+  "* OmniSharp : Last auto-complete result *"
+  "The name of the temporary buffer that is used to display the
+results of an auto-complete call.")
+
+(defvar omnisharp--last-auto-complete-result-buffer-header
+  (concat
+   "Last auto-complete result:"
+   "\n\n")
+  "The header for the temporary buffer that is used to display the
+results of an auto-complete call.")
+
 (defvar omnisharp-auto-complete-popup-help-delay nil
   "The timeout after which the auto-complete popup will show its help
   popup. Disabled by default because the help is often scrambled and
@@ -102,6 +114,19 @@ omnisharp--auto-complete-display-backends-alist.")
 See the documentation for the variable
 omnisharp--auto-complete-display-backend for more information.")
 
+(defvar omnisharp--show-last-auto-complete-result-frontend
+  'plain-buffer
+  "Defines the function that is used for displaying the last
+auto-complete result with various functions. Valid values are found in
+omnisharp--auto-complete-display-backends-alist.")
+
+(defvar omnisharp--show-last-auto-complete-result-frontends-alist
+  '((plain-buffer . omnisharp--show-last-auto-complete-result-in-plain-buffer))
+  "Holds an alist of all available frontends for displaying the last
+auto-complete result.  See the documentation for the variable
+omnisharp--show-last-auto-complete-result-frontend for more
+information.")
+
 (defvar omnisharp-code-format-expand-tab t
   "Whether to expand tabs to spaces in code format requests.")
 
@@ -140,7 +165,9 @@ server backend."
     ("Auto-complete"
      ["at point" omnisharp-auto-complete]
      ["Add . and complete members" omnisharp-add-dot-and-auto-complete]
-     ["Override superclass member" omnisharp-auto-complete-overrides])
+     ["Override superclass member" omnisharp-auto-complete-overrides]
+     ["Show last result" omnisharp-show-last-auto-complete-result]
+     ["Show overloads at point" omnisharp-show-overloads-at-point])
 
     ("Navigate to.."
      ["Definition at point" omnisharp-go-to-definition]
@@ -237,7 +264,6 @@ to select one (or more) to jump to."
      quickfixes
      omnisharp--find-implementations-buffer-name
      omnisharp-find-implementations-header)))
-
 
 (defun omnisharp-find-implementations-worker (request)
   "Returns a list of QuickFix lisp objects from a findimplementations
@@ -397,7 +423,8 @@ follow results to the locations in the actual files."
   (let ((filename (cdr (assoc 'FileName json-result-single-element)))
         (text (cdr (assoc 'Text json-result-single-element)))
         (line (cdr (assoc 'Line json-result-single-element)))
-        (column (cdr (assoc 'Column json-result-single-element))))
+        (column (cdr (assoc 'Column json-result-single-element)))
+        (text (cdr (assoc 'Text json-result-single-element))))
     (concat filename
             ":"
             (prin1-to-string line)
@@ -721,6 +748,13 @@ handle inserting that result in the way it sees fit (e.g. in the
 current buffer)."
   (cdr (assoc omnisharp--auto-complete-display-backend
               omnisharp--auto-complete-display-backends-alist)))
+
+(defun omnisharp--get-last-auto-complete-result-display-function ()
+  "Returns a function that can be fed the output from
+omnisharp-auto-complete-worker (an AutoCompleteResponse). The function
+must take a single argument, the auto-complete result texts to show."
+  (cdr (assoc omnisharp--show-last-auto-complete-result-frontend
+              omnisharp--show-last-auto-complete-result-frontends-alist)))
 
 (defun omnisharp-auto-complete-worker (auto-complete-request)
   "Takes an AutoCompleteRequest and makes an autocomplete query with
@@ -1141,11 +1175,14 @@ messing with the ring."
        (buffer-file-name
         (marker-buffer position-before-jumping))))))
 
-(defun omnisharp--show-last-buffer-position-saved-message (buffer-file-name)
+(defun omnisharp--show-last-buffer-position-saved-message
+  (&optional file-name)
   "Notifies the user that the previous buffer position has been saved
-with a message in the minibuffer."
+with a message in the minibuffer. If FILE-NAME is given, shows that as
+the file. Otherwise uses the current file name."
   (message "Previous position in %s saved. Go back with (pop-tag-mark)."
-           buffer-file-name))
+           (or file-name
+               (buffer-file-name))))
 
 (defun omnisharp--save-position-to-find-tag-marker-ring
   (&optional marker)
@@ -1533,6 +1570,10 @@ file. With prefix argument uses another window."
   ;; windows.
   (omnisharp-navigate-to-current-file-member))
 
+(defun omnisharp-navigate-to-solution-file-then-file-member-other-window
+  (&optional other-window)
+  (omnisharp-navigate-to-solution-file-then-file-member t))
+
 (defun omnisharp-navigate-to-region
   (&optional other-window)
   "Navigate to region in current file. If OTHER-WINDOW is given and t,
@@ -1549,10 +1590,6 @@ use another window."
 (defun omnisharp-navigate-to-region-other-window ()
   (interactive) (omnisharp-navigate-to-region t))
 
-(defun omnisharp-navigate-to-solution-file-then-file-member-other-window
-  (&optional other-window)
-  (omnisharp-navigate-to-solution-file-then-file-member t))
-
 (defun omnisharp-start-flycheck ()
   "Selects and starts the csharp-omnisharp-curl syntax checker for the
 current buffer. Use this in your csharp-mode hook."
@@ -1560,6 +1597,46 @@ current buffer. Use this in your csharp-mode hook."
   (flycheck-mode)
   (flycheck-select-checker 'csharp-omnisharp-curl)
   (flycheck-start-checker  'csharp-omnisharp-curl))
+
+(defun omnisharp-navigate-to-region ()
+  (interactive)
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "gotoregion")
+          (omnisharp--get-common-params))))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     (cdr (assoc 'QuickFixes quickfix-response)))))
+
+(defun omnisharp-show-last-auto-complete-result ()
+  (interactive)
+  (let ((auto-complete-result-in-human-readable-form
+         (--map (cdr (assoc 'DisplayText it))
+                omnisharp--last-buffer-specific-auto-complete-result)))
+    (funcall (omnisharp--get-last-auto-complete-result-display-function)
+             auto-complete-result-in-human-readable-form)))
+
+(defun omnisharp--show-last-auto-complete-result-in-plain-buffer
+  (auto-complete-result-in-human-readable-form-list)
+  "Display function for omnisharp-show-last-auto-complete-result using
+a simple 'compilation' like buffer to display the last auto-complete
+result."
+  (let ((buffer
+         (get-buffer-create
+          omnisharp--last-auto-complete-result-buffer-name)))
+    (omnisharp--write-lines-to-compilation-buffer
+     auto-complete-result-in-human-readable-form-list
+     buffer
+     omnisharp--last-auto-complete-result-buffer-header)))
+
+(defun omnisharp-show-overloads-at-point ()
+  (interactive)
+  ;; Request completions from API but only cache them - don't show the
+  ;; results to the user
+  (save-excursion
+    (end-of-thing 'symbol)
+    (omnisharp-auto-complete-worker
+     (omnisharp--get-auto-complete-params))
+    (omnisharp-show-last-auto-complete-result)))
 
 (provide 'omnisharp)
 
