@@ -1,7 +1,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 1.0
+;; Version: 1.2
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -160,7 +160,7 @@ server backend."
      ["Type in current file" omnisharp-navigate-to-type-in-current-file]
      ["Solution member" omnisharp-navigate-to-solution-member]
      ["File in solution" omnisharp-navigate-to-solution-file]
-     ["Navigate to region in current file" omnisharp-navigate-to-region])
+     ["Region in current file" omnisharp-navigate-to-region])
 
     ("OmniSharp server"
      ["Reload solution" omnisharp-reload-solution]
@@ -168,9 +168,11 @@ server backend."
 
     ("Current symbol"
      ["Show type" omnisharp-current-type-information]
+     ["Show type and add it to kill ring" omnisharp-current-type-information-to-kill-ring]
      ["Find usages" omnisharp-find-usages]
      ["Find implementations" omnisharp-find-implementations]
-     ["Rename" omnisharp-rename])
+     ["Rename" omnisharp-rename]
+     ["Rename interactively" omnisharp-rename-interactively])
 
     ("Solution actions"
      ["Add current file to solution" omnisharp-add-to-solution-current-file]
@@ -258,6 +260,19 @@ api call made with the given Request."
                       (cdr (assoc 'QuickFixes quickfix-response)))))
     quickfixes))
 
+(defun omnisharp-navigate-to-region
+  (&optional other-window)
+  "Navigate to region in current file. If OTHER-WINDOW is given and t,
+use another window."
+  (interactive "P")
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat omnisharp-host "gotoregion")
+          (omnisharp--get-common-params))))
+    (omnisharp--choose-and-go-to-quickfix-ido
+     (cdr (assoc 'QuickFixes quickfix-response))
+     other-window)))
+
 (defun omnisharp-rename ()
   "Rename the current symbol to a new name. Lets the user choose what
 name to rename to, defaulting to the current name of the symbol."
@@ -302,11 +317,42 @@ objects."
                           (cdr (assoc 'Changes rename-responses)))))
     modified-files))
 
+(defun omnisharp-rename-interactively ()
+  "Rename the current symbol to a new name. Lets the user choose what
+name to rename to, defaulting to the current name of the symbol. Any
+renames require interactive confirmation from the user."
+  (interactive)
+  (let* ((current-word (thing-at-point 'symbol))
+         (rename-to (read-string "Rename to: " current-word))
+         (delimited
+          (y-or-n-p "Only rename full words?"))
+         (all-solution-files
+          (omnisharp--get-solution-files-list-of-strings))
+         (location-before-rename
+          (omnisharp--get-common-params-for-emacs-side-use)))
+    (tags-query-replace current-word
+                        rename-to
+                        delimited
+                        ;; This is expected to be a form that will be
+                        ;; evaluated to get the list of all files to
+                        ;; process.
+                        'all-solution-files)
+    ;; Keep point in the buffer that initialized the rename so that
+    ;; the user deos not feel disoriented
+    (omnisharp-go-to-file-line-and-column location-before-rename)))
+
 (defun omnisharp--write-quickfixes-to-compilation-buffer
-  (quickfixes buffer-name buffer-header)
+  (quickfixes
+   buffer-name
+   buffer-header
+   &optional dont-save-old-pos)
   "Takes a list of QuickFix objects and writes them to the
 compilation buffer with HEADER as its header. Shows the buffer
-when finished."
+when finished.
+
+If DONT-SAVE-OLD-POS is specified, will not save current position to
+find-tag-marker-ring. This is so this function may be used without
+messing with the ring."
   (let ((output-in-compilation-mode-format
          (mapcar
           'omnisharp--find-usages-output-to-compilation-output
@@ -315,7 +361,11 @@ when finished."
     (omnisharp--write-lines-to-compilation-buffer
      output-in-compilation-mode-format
      (get-buffer-create buffer-name)
-     buffer-header)))
+     buffer-header)
+    (unless dont-save-old-pos
+      (ring-insert find-tag-marker-ring (point-marker))
+      (omnisharp--show-last-buffer-position-saved-message
+       (buffer-file-name)))))
 
 (defun omnisharp--write-lines-to-compilation-buffer
   (lines-to-write buffer-to-write-to &optional header)
@@ -356,6 +406,7 @@ recognizes, so that the user may jump to the results."
 format that the compilation major mode understands and lets the user
 follow results to the locations in the actual files."
   (let ((filename (cdr (assoc 'FileName json-result-single-element)))
+        (text (cdr (assoc 'Text json-result-single-element)))
         (line (cdr (assoc 'Line json-result-single-element)))
         (column (cdr (assoc 'Column json-result-single-element)))
         (text (cdr (assoc 'Text json-result-single-element))))
@@ -364,8 +415,9 @@ follow results to the locations in the actual files."
             (prin1-to-string line)
             ":"
             (prin1-to-string column)
-            ": "
-            text)))
+            ": \n"
+            text
+            "\n")))
 
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
@@ -1079,21 +1131,33 @@ If DONT-SAVE-OLD-POS is specified, will not save current position to
 find-tag-marker-ring. This is so this function may be used without
 messing with the ring."
 
-  (unless dont-save-old-pos
-    (ring-insert find-tag-marker-ring (point-marker)))
+  (let ((position-before-jumping (point-marker)))
+    (omnisharp--find-file-possibly-in-other-window filename
+                                                   other-window)
 
-  (omnisharp--find-file-possibly-in-other-window filename
-                                                 other-window)
+    ;; calling goto-line directly results in a compiler warning.
+    (with-no-warnings
+      (goto-line line))
 
-  ;; calling goto-line directly results in a compiler warning.
-  (with-no-warnings
-    (goto-line line))
+    (move-to-column column)
 
-  (move-to-column column)
+    (unless dont-save-old-pos
+      (omnisharp--save-position-to-find-tag-marker-ring
+       position-before-jumping)
+      (omnisharp--show-last-buffer-position-saved-message))))
 
-  (unless dont-save-old-pos
-    (message "Previous position in %s saved. Go back with (pop-tag-mark)."
-             buffer-file-name)))
+(defun omnisharp--show-last-buffer-position-saved-message (buffer-file-name)
+  "Notifies the user that the previous buffer position has been saved
+with a message in the minibuffer."
+  (message "Previous position in %s saved. Go back with (pop-tag-mark)."
+           buffer-file-name))
+
+(defun omnisharp--save-position-to-find-tag-marker-ring
+  (&optional marker)
+  "Record position in find-tag-marker-ring. If MARKER is non-nil,
+record that position. Otherwise record the current position."
+  (setq marker (or marker (point-marker)))
+  (ring-insert find-tag-marker-ring marker))
 
 (defun omnisharp--find-file-possibly-in-other-window
   (filename &optional other-window)
@@ -1134,17 +1198,33 @@ the user selects a completion and the completion is inserted."
   (omnisharp--auto-complete-display-function-ido
    omnisharp--last-buffer-specific-auto-complete-result))
 
-(defun omnisharp-current-type-information ()
-  (interactive)
-  (omnisharp-current-type-information-worker
-   (omnisharp--get-common-params)))
+(defun omnisharp-current-type-information (&optional add-to-kill-ring)
+  "Display information of the current type under point. With prefix
+argument, add the displayed result to the kill ring. This can be used
+to insert the result in code, for example."
+  (interactive "P")
+  (let ((current-type-information
+         (omnisharp-current-type-information-worker
+          (omnisharp--get-common-params))))
+
+    (message current-type-information)
+    (when add-to-kill-ring
+      (kill-new current-type-information))))
 
 (defun omnisharp-current-type-information-worker (params)
+  "Returns information about the type under the cursor in the given
+PARAMS as a single human-readable string."
   (let ((json-result
          (omnisharp-post-message-curl-as-json
           (concat omnisharp-host "typelookup")
           params)))
-    (message (cdr (assoc 'Type json-result)))))
+    (cdr (assoc 'Type json-result))))
+
+(defun omnisharp-current-type-information-to-kill-ring ()
+  "Shows the information of the current type and adds it to the kill
+ring."
+  (interactive)
+  (omnisharp-current-type-information t))
 
 (defun omnisharp-get-build-command ()
   "Retrieve the shell command to build the current solution."
@@ -1420,13 +1500,28 @@ ido-completing-read. Returns the chosen element."
   (&optional other-window)
   (interactive "P")
   (let ((quickfix-response
-         (omnisharp-post-message-curl-as-json
-          (concat omnisharp-host "gotofile")
-          nil)))
+         (omnisharp--get-solution-files-quickfix-response)))
     (omnisharp--choose-and-go-to-quickfix-ido
      (omnisharp--vector-to-list
       (cdr (assoc 'QuickFixes quickfix-response)))
      other-window)))
+
+(defun omnisharp--get-solution-files-quickfix-response ()
+  "Return a QuickFixResponse containing a list of all locations of
+files in the current solution."
+  (omnisharp-post-message-curl-as-json
+   (concat omnisharp-host "gotofile")
+   nil))
+
+(defun omnisharp--get-solution-files-list-of-strings ()
+  "Returns all files in the current solution as a list of strings."
+  ;; This is just mapping functions one after another. Read from top
+  ;; to bottom.
+  (->> (omnisharp--get-solution-files-quickfix-response)
+    (assoc 'QuickFixes)
+    (cdr)
+    (omnisharp--vector-to-list)
+    (--map (cdr (assoc 'FileName it)))))
 
 (defun omnisharp-navigate-to-solution-file-then-file-member
   (&optional other-window)

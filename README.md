@@ -16,7 +16,8 @@ Lacks a better UI and a good default configuration.
       interface, with the possibility to fall back on all of ido's
       flexible matching power.
     * Also shows documentation like other IDEs
-* Show type of the current symbol in the minibuffer
+* Show type of the current symbol in the minibuffer. With prefix
+  argument, add it to kill ring.
 * Navigation helpers
     * Go to definition of a type/variable/method etc. With the prefix
   argument (C-u), use another window.
@@ -26,10 +27,13 @@ Lacks a better UI and a good default configuration.
       (fast).
     * Go to definition of a member in the current type with
       [ido-mode][] (likewise fast :)).
+    * Go to region / endregion in current file
     * Go to any member in the solution (property, method etc.)
     * Go to file, then go to member (type, property, method) in that
       file.
 * Rename the current symbol and all references to it
+    * Rename only semantic references ("smart" rename)
+    * Rename as verbatim text ("dumb" rename)
 * Solution manipulation
     * Add/remove the current file
     * Add/remove selected files in the dired directory editor
