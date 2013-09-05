@@ -1146,11 +1146,14 @@ messing with the ring."
        position-before-jumping)
       (omnisharp--show-last-buffer-position-saved-message))))
 
-(defun omnisharp--show-last-buffer-position-saved-message (buffer-file-name)
+(defun omnisharp--show-last-buffer-position-saved-message
+  (&optional file-name)
   "Notifies the user that the previous buffer position has been saved
-with a message in the minibuffer."
+with a message in the minibuffer. If FILE-NAME is given, shows that as
+the file. Otherwise uses the current file name."
   (message "Previous position in %s saved. Go back with (pop-tag-mark)."
-           buffer-file-name))
+           (or file-name
+               (buffer-file-name))))
 
 (defun omnisharp--save-position-to-find-tag-marker-ring
   (&optional marker)
