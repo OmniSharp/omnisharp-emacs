@@ -166,7 +166,8 @@ server backend."
      ["at point" omnisharp-auto-complete]
      ["Add . and complete members" omnisharp-add-dot-and-auto-complete]
      ["Override superclass member" omnisharp-auto-complete-overrides]
-     ["Show last result" omnisharp-show-last-auto-complete-result])
+     ["Show last result" omnisharp-show-last-auto-complete-result]
+     ["Show overloads at point" omnisharp-show-overloads-at-point])
 
     ("Navigate to.."
      ["Definition at point" omnisharp-go-to-definition]
