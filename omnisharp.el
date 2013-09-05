@@ -116,6 +116,19 @@ omnisharp--auto-complete-display-backends-alist.")
 See the documentation for the variable
 omnisharp--auto-complete-display-backend for more information.")
 
+(defvar omnisharp--show-last-auto-complete-result-frontend
+  'plain-buffer
+  "Defines the function that is used for displaying the last
+auto-complete result with various functions. Valid values are found in
+omnisharp--auto-complete-display-backends-alist.")
+
+(defvar omnisharp--show-last-auto-complete-result-frontends-alist
+  '((plain-buffer . omnisharp--show-last-auto-complete-result-in-plain-buffer))
+  "Holds an alist of all available frontends for displaying the last
+auto-complete result.  See the documentation for the variable
+omnisharp--show-last-auto-complete-result-frontend for more
+information.")
+
 (defvar omnisharp-code-format-expand-tab t
   "Whether to expand tabs to spaces in code format requests.")
 
@@ -735,6 +748,13 @@ handle inserting that result in the way it sees fit (e.g. in the
 current buffer)."
   (cdr (assoc omnisharp--auto-complete-display-backend
               omnisharp--auto-complete-display-backends-alist)))
+
+(defun omnisharp--get-last-auto-complete-result-display-function ()
+  "Returns a function that can be fed the output from
+omnisharp-auto-complete-worker (an AutoCompleteResponse). The function
+must take a single argument, the auto-complete result texts to show."
+  (cdr (assoc omnisharp--show-last-auto-complete-result-frontend
+              omnisharp--show-last-auto-complete-result-frontends-alist)))
 
 (defun omnisharp-auto-complete-worker (auto-complete-request)
   "Takes an AutoCompleteRequest and makes an autocomplete query with
