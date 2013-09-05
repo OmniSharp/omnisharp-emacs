@@ -1346,13 +1346,14 @@ type errors."
   ;; TODO this should be cleaned, but I can't get it to compile that
   ;; way.
   :error-parser (lambda (output checker buffer)
-                  (omnisharp--flycheck-error-parser
+                  (omnisharp--flycheck-error-parser-raw-json
                    output checker buffer))
   ;; TODO use only is csharp files - but there are a few different
   ;; extensions available for these!
   :predicate (lambda () t))
 
-(defun omnisharp--flycheck-error-parser (output checker buffer)
+(defun omnisharp--flycheck-error-parser-raw-json
+  (output checker buffer)
   (let* ((json-result
           (json-read-from-string output))
          (errors (omnisharp--vector-to-list
