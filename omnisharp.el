@@ -140,7 +140,7 @@ server backend."
   :global nil
   :keymap omnisharp-mode-map
   (when omnisharp-imenu-support
-    (if omnisharp-mode 
+    (if omnisharp-mode
         (progn
           (setq imenu-create-index-function 'omnisharp-imenu-create-index)
           (imenu-add-menubar-index))
@@ -600,7 +600,7 @@ triggers a completion immediately"
 (defun company-omnisharp (command &optional arg &rest ignored)
   "Company-mode integration"
   (case command
-    (prefix (and omnisharp-mode 
+    (prefix (and omnisharp-mode
                  (not (company-in-string-or-comment))
                  (omnisharp-company--prefix)))
 
@@ -613,13 +613,13 @@ triggers a completion immediately"
             (substring arg 0 (match-beginning 0))))
 
     (meta (omnisharp--get-company-candidate-meta arg))
-    
+
     (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg))))
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
-    
-    
+
+
     (post-completion (let* ((end (point-marker))
                             (beg (- (point) (length arg))))
                        (if omnisharp-company-do-template-completion
@@ -692,7 +692,7 @@ company-mode-friendly"
 
          (json-result-auto-complete-response
           (omnisharp-auto-complete-worker params))
-         (company-output (delq nil 
+         (company-output (delq nil
                                (mapcar
                                 (lambda (element)
                                   (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) element pre))
@@ -703,7 +703,7 @@ company-mode-friendly"
   "Given one of our completion candidate strings, find the
 element it matches and return the 'DisplayText"
   (interactive)
-  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
+  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
            (when (string-equal (omnisharp--make-company-completion-text element) pre)
              (cl-return (cdr (assoc 'DisplayText element))))))
 
@@ -711,7 +711,7 @@ element it matches and return the 'DisplayText"
   "Given one of our completion candidate strings, find the
 element it matches and return the 'Description"
   (interactive)
-  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do 
+  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
            (when (string-equal (omnisharp--make-company-completion-text element) pre)
              (cl-return (cdr (assoc 'Description element))))))
 
@@ -799,16 +799,21 @@ user is less likely to lose data."
          ;; CodeActions is a vector. Need to convert it to a list.
          (actions-list
           (omnisharp--vector-to-list
-           (cdr (assoc 'CodeActions actions-vector))))
-         (chosen-action (ido-completing-read
-                         "Run code action: "
-                         actions-list
-                         t))
-         (chosen-action-index
-          (position chosen-action actions-list)))
-    (when (not (= 0 (length chosen-action)))
-      (omnisharp-run-code-action-refactoring-worker
-       chosen-action-index))))
+           (cdr (assoc 'CodeActions actions-vector)))))
+    ;; Exit early if no refactorings are provided by the API.
+    (if (<= (length actions-list) 0)
+        (message "No refactorings available at this position.")
+
+      (progn
+        (let* ((chosen-action (ido-completing-read
+                               "Run code action: "
+                               actions-list
+                               t))
+               (chosen-action-index
+                (position chosen-action actions-list)))
+
+          (omnisharp-run-code-action-refactoring-worker
+           chosen-action-index))))))
 
 (defun omnisharp--get-code-actions-from-api ()
   "Fetches and returns a GetCodeActionsResponse: the runnable
@@ -1144,7 +1149,9 @@ messing with the ring."
     (unless dont-save-old-pos
       (omnisharp--save-position-to-find-tag-marker-ring
        position-before-jumping)
-      (omnisharp--show-last-buffer-position-saved-message))))
+      (omnisharp--show-last-buffer-position-saved-message
+       (buffer-file-name
+        (marker-buffer position-before-jumping))))))
 
 (defun omnisharp--show-last-buffer-position-saved-message
   (&optional file-name)
@@ -1351,27 +1358,32 @@ type errors."
                           column
                           " "
                           (message (one-or-more not-newline))))
-  ;; TODO this should be moved out, but I can't get it to compile that
+  ;; TODO this should be cleaned, but I can't get it to compile that
   ;; way.
   :error-parser (lambda (output checker buffer)
-                  (let* ((json-result
-                          (json-read-from-string output))
-                         (errors (omnisharp--vector-to-list
-                                  (cdr (assoc 'Errors json-result)))))
-                    (when (not (equal (length errors) 0))
-                      (mapcar (lambda (it)
-                                (flycheck-error-new
-                                 :buffer buffer
-                                 :checker checker
-                                 :filename (cdr (assoc 'FileName it))
-                                 :line (cdr (assoc 'Line it))
-                                 :column (cdr (assoc 'Column it))
-                                 :message (cdr (assoc 'Message it))
-                                 :level 'error))
-                              errors))))
+                  (omnisharp--flycheck-error-parser-raw-json
+                   output checker buffer))
   ;; TODO use only is csharp files - but there are a few different
   ;; extensions available for these!
   :predicate (lambda () t))
+
+(defun omnisharp--flycheck-error-parser-raw-json
+  (output checker buffer)
+  (let* ((json-result
+          (json-read-from-string output))
+         (errors (omnisharp--vector-to-list
+                  (cdr (assoc 'Errors json-result)))))
+    (when (not (equal (length errors) 0))
+      (mapcar (lambda (it)
+                (flycheck-error-new
+                 :buffer buffer
+                 :checker checker
+                 :filename (cdr (assoc 'FileName it))
+                 :line (cdr (assoc 'Line it))
+                 :column (cdr (assoc 'Column it))
+                 :message (cdr (assoc 'Message it))
+                 :level 'error))
+              errors))))
 
 (defun omnisharp--imenu-make-marker (element)
   "Takes a QuickCheck element and returns the position of the
@@ -1380,7 +1392,7 @@ cursor at that location"
          (element-column (cdr (assoc 'Column quickfix-alist)))
          (element-filename (cdr (assoc 'Filename quickfix-alist)))
          (use-buffer (current-buffer)))
-    (save-excursion 
+    (save-excursion
       (when (not (equal element-filename nil))
         (omnisharp-go-to-file-line-and-column-worker
          element-line
@@ -1392,7 +1404,7 @@ cursor at that location"
         (point-marker)))))
 
 (defun omnisharp-imenu-create-index ()
-  "Imenu callback function - returns an alist of ((member-name . position))" 
+  "Imenu callback function - returns an alist of ((member-name . position))"
   (interactive)
   (let* ((quickfixes (omnisharp-post-message-curl-as-json
                       (concat omnisharp-host "currentfilemembersasflat")
