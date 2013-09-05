@@ -1108,21 +1108,28 @@ If DONT-SAVE-OLD-POS is specified, will not save current position to
 find-tag-marker-ring. This is so this function may be used without
 messing with the ring."
 
-  (unless dont-save-old-pos
-    (ring-insert find-tag-marker-ring (point-marker)))
+  (let ((position-before-jumping (point-marker)))
+    (omnisharp--find-file-possibly-in-other-window filename
+                                                   other-window)
 
-  (omnisharp--find-file-possibly-in-other-window filename
-                                                 other-window)
+    ;; calling goto-line directly results in a compiler warning.
+    (with-no-warnings
+      (goto-line line))
 
-  ;; calling goto-line directly results in a compiler warning.
-  (with-no-warnings
-    (goto-line line))
+    (move-to-column column)
 
-  (move-to-column column)
+    (unless dont-save-old-pos
+      (omnisharp--save-position-to-find-tag-marker-ring
+       position-before-jumping)
+      (message "Previous position in %s saved. Go back with (pop-tag-mark)."
+               buffer-file-name))))
 
-  (unless dont-save-old-pos
-    (message "Previous position in %s saved. Go back with (pop-tag-mark)."
-             buffer-file-name)))
+(defun omnisharp--save-position-to-find-tag-marker-ring
+  (&optional marker)
+  "Record position in find-tag-marker-ring. If MARKER is non-nil,
+record that position. Otherwise record the current position."
+  (setq marker (or marker (point-marker)))
+  (ring-insert find-tag-marker-ring marker))
 
 (defun omnisharp--find-file-possibly-in-other-window
   (filename &optional other-window)
