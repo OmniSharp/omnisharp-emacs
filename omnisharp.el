@@ -787,16 +787,21 @@ user is less likely to lose data."
          ;; CodeActions is a vector. Need to convert it to a list.
          (actions-list
           (omnisharp--vector-to-list
-           (cdr (assoc 'CodeActions actions-vector))))
-         (chosen-action (ido-completing-read
-                         "Run code action: "
-                         actions-list
-                         t))
-         (chosen-action-index
-          (position chosen-action actions-list)))
-    (when (not (= 0 (length chosen-action)))
-      (omnisharp-run-code-action-refactoring-worker
-       chosen-action-index))))
+           (cdr (assoc 'CodeActions actions-vector)))))
+    ;; Exit early if no refactorings are provided by the API.
+    (if (<= (length actions-list) 0)
+        (message "No refactorings available at this position.")
+
+      (progn
+        (let* ((chosen-action (ido-completing-read
+                               "Run code action: "
+                               actions-list
+                               t))
+               (chosen-action-index
+                (position chosen-action actions-list)))
+
+          (omnisharp-run-code-action-refactoring-worker
+           chosen-action-index))))))
 
 (defun omnisharp--get-code-actions-from-api ()
   "Fetches and returns a GetCodeActionsResponse: the runnable
