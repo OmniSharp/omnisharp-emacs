@@ -148,7 +148,7 @@ server backend."
      ["Type in current file" omnisharp-navigate-to-type-in-current-file]
      ["Solution member" omnisharp-navigate-to-solution-member]
      ["File in solution" omnisharp-navigate-to-solution-file]
-     ["Navigate to region in current file" omnisharp-navigate-to-region])
+     ["Region in current file" omnisharp-navigate-to-region])
 
     ("OmniSharp server"
      ["Reload solution" omnisharp-reload-solution]
