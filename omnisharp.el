@@ -1137,7 +1137,9 @@ messing with the ring."
     (unless dont-save-old-pos
       (omnisharp--save-position-to-find-tag-marker-ring
        position-before-jumping)
-      (omnisharp--show-last-buffer-position-saved-message))))
+      (omnisharp--show-last-buffer-position-saved-message
+       (buffer-file-name
+        (marker-buffer position-before-jumping))))))
 
 (defun omnisharp--show-last-buffer-position-saved-message (buffer-file-name)
   "Notifies the user that the previous buffer position has been saved
