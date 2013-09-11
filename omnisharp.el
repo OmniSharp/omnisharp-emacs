@@ -627,9 +627,9 @@ triggers a completion immediately"
     (crop (when (string-match "(" arg)
             (substring arg 0 (match-beginning 0))))
 
-    (meta (omnisharp--get-company-candidate-meta arg))
-
-    (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg))))
+    (meta (omnisharp--get-company-candidate-data arg 'DisplayText))
+    
+    (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-data arg 'Description))))
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
@@ -649,8 +649,8 @@ triggers a completion immediately"
                          ;; or anything after the type separator, if we don't find that.
                          (if (string-match "(" arg)
                              (when (re-search-backward "(" beg t)
-                               (delete-region (match-end 0) end)
-                               (forward-char))
+                               (delete-region (match-beginning 0) end))
+                               ;; (forward-char))
                            (if (string-match omnisharp-company-type-separator arg)
                                (when (re-search-backward omnisharp-company-type-separator beg t)
                                  (delete-region (match-beginning 0) end)))))))))
@@ -714,22 +714,13 @@ company-mode-friendly"
                                 json-result-auto-complete-response))))
     company-output))
 
-(defun omnisharp--get-company-candidate-meta (pre)
+(defun omnisharp--get-company-candidate-data (pre datatype)
   "Given one of our completion candidate strings, find the
-element it matches and return the 'DisplayText"
+element it matches and return the datatype request (e.g. 'DisplayText"
   (interactive)
   (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
            (when (string-equal (omnisharp--make-company-completion-text element) pre)
-             (cl-return (cdr (assoc 'DisplayText element))))))
-
-(defun omnisharp--get-company-candidate-description (pre)
-  "Given one of our completion candidate strings, find the
-element it matches and return the 'Description"
-  (interactive)
-  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
-           (when (string-equal (omnisharp--make-company-completion-text element) pre)
-             (cl-return (cdr (assoc 'Description element))))))
-
+             (cl-return (cdr (assoc datatype element))))))
 
 ;;Add this completion backend to company-mode
 ;; (eval-after-load 'company
