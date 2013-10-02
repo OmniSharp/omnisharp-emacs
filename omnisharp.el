@@ -1305,11 +1305,7 @@ If not on windows, returns COMMAND unchanged."
 
   (if (equal system-type 'windows-nt)
       ;; Compiler path fix. C:\Path is interpreted as C:Path
-      (omnisharp--convert-backslashes-to-forward-slashes
-       ;; Compiler parameter fix. Emacs thinks "/m" refers to the path
-       ;; /m - that is, (root)/m
-       (omnisharp--convert-slashes-to-double-slashes
-        command))
+      (omnisharp--convert-backslashes-to-forward-slashes command)
 
     ;; Not on windows. Do not change.
     command))
@@ -1319,9 +1315,6 @@ If not on windows, returns COMMAND unchanged."
   "Converts the given STRING-TO-CONVERT's backslashes to forward
 slashes."
   (replace-regexp-in-string "\\\\" "/" string-to-convert))
-
-(defun omnisharp--convert-slashes-to-double-slashes (command)
-  (replace-regexp-in-string "/" "//" command))
 
 (defun omnisharp-code-format ()
   "Format the code in the current file. Replaces the file contents
