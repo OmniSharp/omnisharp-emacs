@@ -1594,9 +1594,8 @@ use another window."
   "Selects and starts the csharp-omnisharp-curl syntax checker for the
 current buffer. Use this in your csharp-mode hook."
   (interactive)
-  (flycheck-mode)
   (flycheck-select-checker 'csharp-omnisharp-curl)
-  (flycheck-start-checker  'csharp-omnisharp-curl))
+  (flycheck-mode))
 
 (defun omnisharp-navigate-to-region ()
   (interactive)
