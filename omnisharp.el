@@ -712,17 +712,19 @@ function description of 'void SomeMethod(int parameter)' to
   (let* ((case-fold-search nil)
          (completion (omnisharp--completion-result-item-get-completion-text item))
          (display (omnisharp--completion-result-item-get-display-text item))
-         (func-start-pos (string-match completion display))
+         (func-start-pos (string-match (concat " " completion) display))
          (output display))
     ;;If this candidate has a type, stick the return type on the end
     (if (and func-start-pos (> func-start-pos 0))
-        (let ((func-return (substring display 0 func-start-pos))
-              (func-body (substring display func-start-pos)))
-          (setq output (concat func-body omnisharp-company-type-separator func-return)))
-      (let ((brackets-start (string-match "()" display)))
-        (when brackets-start
-          (setq output (substring display 0 brackets-start)))))
-    output))
+        (progn
+          (setq func-start-pos (+ func-start-pos 1))
+          (let ((func-return (substring display 0 func-start-pos))
+                (func-body (substring display func-start-pos)))
+            (setq output (concat func-body omnisharp-company-type-separator func-return))))
+          (let ((brackets-start (string-match "()" display)))
+            (when brackets-start
+              (setq output (substring display 0 brackets-start)))))
+      output))
 
 (defun omnisharp--get-company-candidates (pre)
   "Returns completion results in company format.  Company-mode
@@ -1181,8 +1183,9 @@ find-tag-marker-ring. This is so this function may be used without
 messing with the ring."
 
   (let ((position-before-jumping (point-marker)))
-    (omnisharp--find-file-possibly-in-other-window filename
-                                                   other-window)
+    (when filename
+      (omnisharp--find-file-possibly-in-other-window filename
+                                                     other-window))
 
     ;; calling goto-line directly results in a compiler warning.
     (with-no-warnings
@@ -1437,7 +1440,6 @@ cursor at that location"
          (element-filename (cdr (assoc 'Filename quickfix-alist)))
          (use-buffer (current-buffer)))
     (save-excursion
-      (when (not (equal element-filename nil))
         (omnisharp-go-to-file-line-and-column-worker
          element-line
          element-column
@@ -1445,7 +1447,7 @@ cursor at that location"
          nil ; other-window
          ;; dont-save-old-pos
          t)
-        (point-marker)))))
+        (point-marker))))
 
 (defun omnisharp-imenu-create-index ()
   "Imenu callback function - returns an alist of ((member-name . position))"
