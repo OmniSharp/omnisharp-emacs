@@ -749,7 +749,7 @@ company-mode-friendly"
 
 (defun omnisharp--get-company-candidate-data (pre datatype)
   "Given one of our completion candidate strings, find the
-element it matches and return the datatype request (e.g. 'DisplayText"
+element it matches and return the datatype request (e.g. 'DisplayText)."
   (interactive)
   (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
            (when (string-equal (omnisharp--make-company-completion-text element) pre)
