@@ -658,9 +658,9 @@ triggers a completion immediately"
     (crop (when (string-match "(" arg)
             (substring arg 0 (match-beginning 0))))
 
-    (meta (omnisharp--get-company-candidate-meta arg))
-
-    (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-description arg))))
+    (meta (omnisharp--get-company-candidate-data arg 'DisplayText))
+    
+    (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-data arg 'Description))))
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
@@ -680,8 +680,8 @@ triggers a completion immediately"
                          ;; or anything after the type separator, if we don't find that.
                          (if (string-match "(" arg)
                              (when (re-search-backward "(" beg t)
-                               (delete-region (match-end 0) end)
-                               (forward-char))
+                               (delete-region (match-beginning 0) end))
+                               ;; (forward-char))
                            (if (string-match omnisharp-company-type-separator arg)
                                (when (re-search-backward omnisharp-company-type-separator beg t)
                                  (delete-region (match-beginning 0) end)))))))))
@@ -712,17 +712,19 @@ function description of 'void SomeMethod(int parameter)' to
   (let* ((case-fold-search nil)
          (completion (omnisharp--completion-result-item-get-completion-text item))
          (display (omnisharp--completion-result-item-get-display-text item))
-         (func-start-pos (string-match completion display))
+         (func-start-pos (string-match (concat " " completion) display))
          (output display))
     ;;If this candidate has a type, stick the return type on the end
     (if (and func-start-pos (> func-start-pos 0))
-        (let ((func-return (substring display 0 func-start-pos))
-              (func-body (substring display func-start-pos)))
-          (setq output (concat func-body omnisharp-company-type-separator func-return)))
-      (let ((brackets-start (string-match "()" display)))
-        (when brackets-start
-          (setq output (substring display 0 brackets-start)))))
-    output))
+        (progn
+          (setq func-start-pos (+ func-start-pos 1))
+          (let ((func-return (substring display 0 func-start-pos))
+                (func-body (substring display func-start-pos)))
+            (setq output (concat func-body omnisharp-company-type-separator func-return))))
+          (let ((brackets-start (string-match "()" display)))
+            (when brackets-start
+              (setq output (substring display 0 brackets-start)))))
+      output))
 
 (defun omnisharp--get-company-candidates (pre)
   "Returns completion results in company format.  Company-mode
@@ -745,22 +747,13 @@ company-mode-friendly"
                                 json-result-auto-complete-response))))
     company-output))
 
-(defun omnisharp--get-company-candidate-meta (pre)
+(defun omnisharp--get-company-candidate-data (pre datatype)
   "Given one of our completion candidate strings, find the
-element it matches and return the 'DisplayText"
+element it matches and return the datatype request (e.g. 'DisplayText"
   (interactive)
   (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
            (when (string-equal (omnisharp--make-company-completion-text element) pre)
-             (cl-return (cdr (assoc 'DisplayText element))))))
-
-(defun omnisharp--get-company-candidate-description (pre)
-  "Given one of our completion candidate strings, find the
-element it matches and return the 'Description"
-  (interactive)
-  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
-           (when (string-equal (omnisharp--make-company-completion-text element) pre)
-             (cl-return (cdr (assoc 'Description element))))))
-
+             (cl-return (cdr (assoc datatype element))))))
 
 ;;Add this completion backend to company-mode
 ;; (eval-after-load 'company
@@ -1190,8 +1183,9 @@ find-tag-marker-ring. This is so this function may be used without
 messing with the ring."
 
   (let ((position-before-jumping (point-marker)))
-    (omnisharp--find-file-possibly-in-other-window filename
-                                                   other-window)
+    (when filename
+      (omnisharp--find-file-possibly-in-other-window filename
+                                                     other-window))
 
     ;; calling goto-line directly results in a compiler warning.
     (with-no-warnings
@@ -1446,7 +1440,6 @@ cursor at that location"
          (element-filename (cdr (assoc 'Filename quickfix-alist)))
          (use-buffer (current-buffer)))
     (save-excursion
-      (when (not (equal element-filename nil))
         (omnisharp-go-to-file-line-and-column-worker
          element-line
          element-column
@@ -1454,7 +1447,7 @@ cursor at that location"
          nil ; other-window
          ;; dont-save-old-pos
          t)
-        (point-marker)))))
+        (point-marker))))
 
 (defun omnisharp-imenu-create-index ()
   "Imenu callback function - returns an alist of ((member-name . position))"
