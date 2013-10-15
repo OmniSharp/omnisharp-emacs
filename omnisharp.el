@@ -30,23 +30,24 @@
 (require 'auto-complete)
 
 (defgroup omnisharp ()
-	"Omnisharp-emacs is a port of the awesome OmniSharp server to the Emacs text editor. It
-	provides IDE-like features for editing files in C# solutions in Emacs, provided by an
-	OmniSharp server instance that works in the background."
-	:group 'external
-	:group 'csharp)
+  "Omnisharp-emacs is a port of the awesome OmniSharp server to
+the Emacs text editor. It provides IDE-like features for editing
+files in C# solutions in Emacs, provided by an OmniSharp server
+instance that works in the background."
+  :group 'external
+  :group 'csharp)
 
 ;;; Code:
 (defcustom omnisharp-host "http://localhost:2000/"
   "Currently expected to end with a / character."
-	:group 'omnisharp
-	:type 'string)
+  :group 'omnisharp
+  :type 'string)
 
 (defcustom omnisharp-timeout 1
   "Timeout, in seconds, after which to abort stalling queries to the
 OmniSharp server."
-	:group 'omnisharp
-	:type 'integer)
+  :group 'omnisharp
+  :type 'integer)
 
 (defvar omnisharp-auto-complete-popup-want-isearch t
   "Whether to automatically start isearch when auto-completing.")
@@ -75,17 +76,17 @@ results of an auto-complete call.")
   "The timeout after which the auto-complete popup will show its help
   popup. Disabled by default because the help is often scrambled and
   looks bad."
-	:group 'omnisharp
-	:type '(choice (const :tag "disabled" nil)
-								 integer))
+  :group 'omnisharp
+  :type '(choice (const :tag "disabled" nil)
+                 integer))
 
 (defcustom omnisharp-auto-complete-popup-persist-help t
   "Whether to keep the help window (accessed by pressing f1 while the
 popup window is active) open after any other key is
 pressed. Defaults to true."
-	:group 'omnisharp
-	:type '(choice (const :tag "Yes" t)
-								 (const :tag "No" nil)))
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
 (defvar-local
   omnisharp--last-buffer-specific-auto-complete-result
@@ -96,9 +97,9 @@ pressed. Defaults to true."
   "Whether to include auto-complete documentation for each and every
 response. This may be set to nil to get a speed boost for
 completions."
-	:group 'omnisharp
-	:type '(choice (const :tag "Yes" t)
-								 (const :tag "No" nil)))
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+		 (const :tag "No" nil)))
 
 (defvar omnisharp-auto-complete-popup-keymap
   (let ((keymap (make-sparse-keymap)))
@@ -149,9 +150,9 @@ information.")
 
 (defcustom omnisharp-code-format-expand-tab t
   "Whether to expand tabs to spaces in code format requests."
-	:group 'omnisharp
-	:type '(choice (const :tag "Yes" t)
-								 (const :tag "No" nil)))
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+		 (const :tag "No" nil)))
 
 (defvar omnisharp-mode-map
   (let ((map (make-sparse-keymap)))
@@ -167,8 +168,8 @@ information.")
   "The full file path where to save temporary stuff that gets sent to
 the OmniSharp API. Only used on Windows.
 Must be writable by the current user."
-	:group 'omnisharp
-	:type 'file)
+  :group 'omnisharp
+  :type 'file)
 
 ;;;###autoload
 (define-minor-mode omnisharp-mode
@@ -228,10 +229,10 @@ server backend."
     ))
 
 (defun omnisharp-get-host ()
-	"Makes sure omnisharp-host is ended by / "
-	(if (string= (substring omnisharp-host -1 ) "/")
-			omnisharp-host
-		(concat omnisharp-host "/")))
+  "Makes sure omnisharp-host is ended by / "
+  (if (string= (substring omnisharp-host -1 ) "/")
+      omnisharp-host
+    (concat omnisharp-host "/")))
 
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
