@@ -204,6 +204,7 @@ server backend."
      ["Region in current file" omnisharp-navigate-to-region])
 
     ("OmniSharp server"
+     ["Load solution" omnisharp-load-solution]
      ["Reload solution" omnisharp-reload-solution]
      ["Stop OmniSharp server" omnisharp-stop-server])
 
@@ -660,7 +661,7 @@ triggers a completion immediately"
             (substring arg 0 (match-beginning 0))))
 
     (meta (omnisharp--get-company-candidate-data arg 'DisplayText))
-    
+
     (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-data arg 'Description))))
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
@@ -1662,7 +1663,28 @@ result."
      (omnisharp--get-auto-complete-params))
     (omnisharp-show-last-auto-complete-result)))
 
+(defun omnisharp-get-solution-file ()
+  "Prompts user for solution file path"
+  (let ((solution-file (read-file-name "Enter solution: ")))
+    (if (equal system-type 'windows-nt)
+        (omnisharp--convert-slashes-to-double-backslashes solution-file)
+      solution-file)))
+
+(defun omnisharp-get-omnisharp-server-command ()
+  "Returns a shell command to start an OmniSharp server"
+  (let ((solution-file (omnisharp-get-solution-file)))
+    (concat "OmniSharp -s \"" solution-file "\"")))
+
+;;;###autoload
+(defun omnisharp-jack-in ()
+  (interactive)
+  (start-process-shell-command
+   "omnisharp-server"
+   (generate-new-buffer-name "*omnisharp-server*")
+   (omnisharp-get-omnisharp-server-command)))
+
+(defalias 'omnisharp-load-solution 'omnisharp-jack-in)
+
 (provide 'omnisharp)
 
 ;;; omnisharp.el ends here
-
