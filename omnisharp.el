@@ -1385,36 +1385,6 @@ with the formatted result. Saves the file before starting."
    (concat (omnisharp-get-host) "syntaxerrors")
    params))
 
-(flycheck-define-checker csharp-omnisharp-curl
-  "A csharp source syntax checker using curl to call an OmniSharp
-server process running in the background. Only checks the syntax - not
-type errors."
-  ;; This must be an external process. Currently flycheck does not
-  ;; support using elisp functions as checkers.
-  :command ((eval
-             (let ((command-plist
-                    (omnisharp--get-curl-command
-                     (concat (omnisharp-get-host) "syntaxerrors")
-                     (omnisharp--get-common-params))))
-               (cons
-                (plist-get command-plist :command)
-                (plist-get command-plist :arguments)))))
-
-  :error-patterns ((error line-start
-                          (file-name) ":"
-                          line ":"
-                          column
-                          " "
-                          (message (one-or-more not-newline))))
-  ;; TODO this should be cleaned, but I can't get it to compile that
-  ;; way.
-  :error-parser (lambda (output checker buffer)
-                  (omnisharp--flycheck-error-parser-raw-json
-                   output checker buffer))
-  ;; TODO use only is csharp files - but there are a few different
-  ;; extensions available for these!
-  :predicate (lambda () t))
-
 (defun omnisharp--flycheck-error-parser-raw-json
   (output checker buffer)
   (let* ((json-result
