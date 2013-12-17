@@ -1,7 +1,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 1.4
+;; Version: 1.5
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -226,7 +226,8 @@ server backend."
      ["Remove marked files in dired from solution" omnisharp-remove-from-project-current-file]
      ["Add reference to dll or project" omnisharp-add-reference]
      ["Build solution in emacs" omnisharp-build-in-emacs]
-     ["Start syntax check" omnisharp-start-flycheck])
+     ;;["Start syntax check" omnisharp-start-flycheck]
+     )
 
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
     ["Run code format on current buffer" omnisharp-code-format]
@@ -1407,36 +1408,6 @@ with the formatted result. Saves the file before starting."
   (omnisharp-post-message-curl-as-json
    (concat (omnisharp-get-host) "syntaxerrors")
    params))
-
-(flycheck-define-checker csharp-omnisharp-curl
-  "A csharp source syntax checker using curl to call an OmniSharp
-server process running in the background. Only checks the syntax - not
-type errors."
-  ;; This must be an external process. Currently flycheck does not
-  ;; support using elisp functions as checkers.
-  :command ((eval
-             (let ((command-plist
-                    (omnisharp--get-curl-command
-                     (concat (omnisharp-get-host) "syntaxerrors")
-                     (omnisharp--get-common-params))))
-               (cons
-                (plist-get command-plist :command)
-                (plist-get command-plist :arguments)))))
-
-  :error-patterns ((error line-start
-                          (file-name) ":"
-                          line ":"
-                          column
-                          " "
-                          (message (one-or-more not-newline))))
-  ;; TODO this should be cleaned, but I can't get it to compile that
-  ;; way.
-  :error-parser (lambda (output checker buffer)
-                  (omnisharp--flycheck-error-parser-raw-json
-                   output checker buffer))
-  ;; TODO use only is csharp files - but there are a few different
-  ;; extensions available for these!
-  :predicate (lambda () t))
 
 (defun omnisharp--flycheck-error-parser-raw-json
   (output checker buffer)
