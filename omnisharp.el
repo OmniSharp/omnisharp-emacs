@@ -1447,6 +1447,7 @@ cursor at that location"
 (defun omnisharp-imenu-create-index ()
   "Imenu callback function - returns an alist of ((member-name . position))"
   (interactive)
+  (condition-case nil
   (let* ((quickfixes (omnisharp-post-message-curl-as-json
                       (concat (omnisharp-get-host) "currentfilemembersasflat")
                       (omnisharp--get-common-params)))
@@ -1455,7 +1456,8 @@ cursor at that location"
                                (cons (cdr (assoc 'Text quickfix-alist))
                                      (omnisharp--imenu-make-marker quickfix-alist)))
                              list-quickfixes)))
-    imenu-list))
+        imenu-list)
+    (error nil)))
 
 
 (defun omnisharp-navigate-to-current-file-member
@@ -1659,10 +1661,12 @@ result."
 
 (defun omnisharp-eldoc-function ()
   "Returns a doc string appropriate for the current context, or nil."
+  (condition-case nil
   (let ((current-type-information
          (omnisharp-current-type-information-worker 'Type
           (omnisharp--get-common-params))))
-    current-type-information))
+        current-type-information)
+    (error nil)))
 
 
 (provide 'omnisharp)
