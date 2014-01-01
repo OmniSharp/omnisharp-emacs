@@ -183,7 +183,11 @@ server backend."
         (progn
           (setq imenu-create-index-function 'omnisharp-imenu-create-index)
           (imenu-add-menubar-index))
-      (setq imenu-create-index-function 'imenu-default-create-index-function))))
+      (setq imenu-create-index-function 'imenu-default-create-index-function)))
+  (when omnisharp-eldoc-support
+    (when omnisharp-mode
+      (make-local-variable 'eldoc-documentation-function)
+      (setq eldoc-documentation-function 'omnisharp-eldoc-function))))
 
 (easy-menu-define omnisharp-mode-menu omnisharp-mode-map
   "Menu for omnisharp-mode"
@@ -632,6 +636,10 @@ items."
 (defvar omnisharp-imenu-support nil
 "If t, activate imenu integration. Defaults to nil.")
 
+(defvar omnisharp-eldoc-support t
+"If t, activate eldoc integration - eldoc-mode must also be enabled for
+ this to work. Defaults to t.")
+
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
 triggers a completion immediately"
@@ -756,6 +764,7 @@ element it matches and return the datatype request (e.g. 'DisplayText)."
   (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
            (when (string-equal (omnisharp--make-company-completion-text element) pre)
              (cl-return (cdr (assoc datatype element))))))
+
 
 ;;Add this completion backend to company-mode
 ;; (eval-after-load 'company
@@ -1263,21 +1272,35 @@ argument, add the displayed result to the kill ring. This can be used
 to insert the result in code, for example."
   (interactive "P")
   (let ((current-type-information
-         (omnisharp-current-type-information-worker
+         (omnisharp-current-type-information-worker 'Type
           (omnisharp--get-common-params))))
 
     (message current-type-information)
     (when add-to-kill-ring
       (kill-new current-type-information))))
 
-(defun omnisharp-current-type-information-worker (params)
+(defun omnisharp-current-type-documentation (&optional add-to-kill-ring)
+  "Display documentation of the current type under point. With prefix
+argument, add the displayed result to the kill ring. This can be used
+to insert the result in code, for example."
+  (interactive "P")
+  (let ((current-type-information
+         (omnisharp-current-type-information-worker 'Documentation
+          (omnisharp--get-common-params))))
+
+    (message current-type-information)
+    (when add-to-kill-ring
+      (kill-new current-type-information))))
+
+(defun omnisharp-current-type-information-worker (datatype params)
   "Returns information about the type under the cursor in the given
 PARAMS as a single human-readable string."
   (let ((json-result
          (omnisharp-post-message-curl-as-json
           (concat (omnisharp-get-host) "typelookup")
           params)))
-    (cdr (assoc 'Type json-result))))
+    (cdr (assoc datatype json-result))))
+
 
 (defun omnisharp-current-type-information-to-kill-ring ()
   "Shows the information of the current type and adds it to the kill
@@ -1424,6 +1447,7 @@ cursor at that location"
 (defun omnisharp-imenu-create-index ()
   "Imenu callback function - returns an alist of ((member-name . position))"
   (interactive)
+  (condition-case nil
   (let* ((quickfixes (omnisharp-post-message-curl-as-json
                       (concat (omnisharp-get-host) "currentfilemembersasflat")
                       (omnisharp--get-common-params)))
@@ -1432,7 +1456,8 @@ cursor at that location"
                                (cons (cdr (assoc 'Text quickfix-alist))
                                      (omnisharp--imenu-make-marker quickfix-alist)))
                              list-quickfixes)))
-    imenu-list))
+        imenu-list)
+    (error nil)))
 
 
 (defun omnisharp-navigate-to-current-file-member
@@ -1632,6 +1657,17 @@ result."
     (omnisharp-auto-complete-worker
      (omnisharp--get-auto-complete-params))
     (omnisharp-show-last-auto-complete-result)))
+
+
+(defun omnisharp-eldoc-function ()
+  "Returns a doc string appropriate for the current context, or nil."
+  (condition-case nil
+  (let ((current-type-information
+         (omnisharp-current-type-information-worker 'Type
+          (omnisharp--get-common-params))))
+        current-type-information)
+    (error nil)))
+
 
 (provide 'omnisharp)
 
