@@ -1448,14 +1448,14 @@ cursor at that location"
   "Imenu callback function - returns an alist of ((member-name . position))"
   (interactive)
   (condition-case nil
-  (let* ((quickfixes (omnisharp-post-message-curl-as-json
-                      (concat (omnisharp-get-host) "currentfilemembersasflat")
-                      (omnisharp--get-common-params)))
-         (list-quickfixes (omnisharp--vector-to-list quickfixes))
-         (imenu-list (mapcar (lambda (quickfix-alist)
-                               (cons (cdr (assoc 'Text quickfix-alist))
-                                     (omnisharp--imenu-make-marker quickfix-alist)))
-                             list-quickfixes)))
+      (let* ((quickfixes (omnisharp-post-message-curl-as-json
+                          (concat (omnisharp-get-host) "currentfilemembersasflat")
+                          (omnisharp--get-common-params)))
+             (list-quickfixes (omnisharp--vector-to-list quickfixes))
+             (imenu-list (mapcar (lambda (quickfix-alist)
+                                   (cons (cdr (assoc 'Text quickfix-alist))
+                                         (omnisharp--imenu-make-marker quickfix-alist)))
+                                 list-quickfixes)))
         imenu-list)
     (error nil)))
 
@@ -1662,9 +1662,10 @@ result."
 (defun omnisharp-eldoc-function ()
   "Returns a doc string appropriate for the current context, or nil."
   (condition-case nil
-  (let ((current-type-information
-         (omnisharp-current-type-information-worker 'Type
-          (omnisharp--get-common-params))))
+      (let ((current-type-information
+             (omnisharp-current-type-information-worker
+              'Type
+              (omnisharp--get-common-params))))
         current-type-information)
     (error nil)))
 
