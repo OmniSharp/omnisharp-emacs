@@ -1143,8 +1143,7 @@ is a more sophisticated matching framework than what popup.el offers."
   (let* ((line-number (number-to-string (line-number-at-pos)))
          (column-number (number-to-string (+ 1 (omnisharp--current-column))))
          (buffer-contents (omnisharp--get-current-buffer-contents))
-         (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
-                        (or buffer-file-name "")))
+         (filename-tmp (or buffer-file-name ""))
          (params `((Line     . ,line-number)
                    (Column   . ,column-number)
                    (Buffer   . ,buffer-contents))))
