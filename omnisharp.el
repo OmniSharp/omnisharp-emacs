@@ -1,7 +1,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 1.5
+;; Version: 1.6
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -1149,8 +1149,7 @@ is a more sophisticated matching framework than what popup.el offers."
   (let* ((line-number (number-to-string (line-number-at-pos)))
          (column-number (number-to-string (+ 1 (omnisharp--current-column))))
          (buffer-contents (omnisharp--get-current-buffer-contents))
-         (filename-tmp (omnisharp--convert-slashes-to-double-backslashes
-                        (or buffer-file-name "")))
+         (filename-tmp (or buffer-file-name ""))
          (params `((Line     . ,line-number)
                    (Column   . ,column-number)
                    (Buffer   . ,buffer-contents))))
@@ -1669,8 +1668,9 @@ result."
   "Returns a doc string appropriate for the current context, or nil."
   (condition-case nil
       (let ((current-type-information
-             (omnisharp-current-type-information-worker 'Type
-                                                        (omnisharp--get-common-params))))
+             (omnisharp-current-type-information-worker
+              'Type
+              (omnisharp--get-common-params))))
         current-type-information)
     (error nil)))
 
