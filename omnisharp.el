@@ -629,6 +629,9 @@ items."
   "The string used to visually seperate functions/variables from
   their types")
 
+(defvar omnisharp-company-ignore-case nil
+  "If t, case is ignored in completion matches")
+
 (defvar omnisharp-company-begin-after-member-access t
   "If t, begin completion when pressing '.' after a class, object
   or namespace")
@@ -663,7 +666,9 @@ triggers a completion immediately"
     (candidates (omnisharp--get-company-candidates arg))
 
     ;; because "" doesn't return everything
-    (no-cache (equal arg ""))
+    (no-cache (if omnisharp-company-ignore-case
+                  t
+                (equal arg "")))
 
     (crop (when (string-match "(" arg)
             (substring arg 0 (match-beginning 0))))
@@ -675,6 +680,7 @@ triggers a completion immediately"
                     (visual-line-mode))
                   doc-buffer))
 
+    (ignore-case omnisharp-company-ignore-case)
 
     (post-completion (let* ((end (point-marker))
                             (beg (- (point) (length arg))))
@@ -701,7 +707,7 @@ triggers a completion immediately"
 (defun omnisharp--string-starts-with (s arg)
   "Returns non-nil if string S starts with ARG, else nil."
   (cond ((>= (length s) (length arg))
-         (string-equal (substring s 0 (length arg)) arg))
+         (string-prefix-p arg s 'omnisharp-company-ignore-case))
         (t nil)))
 
 (defun omnisharp--filter-company-candidate (candidate-string element prefix)
@@ -1448,14 +1454,14 @@ cursor at that location"
   "Imenu callback function - returns an alist of ((member-name . position))"
   (interactive)
   (condition-case nil
-  (let* ((quickfixes (omnisharp-post-message-curl-as-json
-                      (concat (omnisharp-get-host) "currentfilemembersasflat")
-                      (omnisharp--get-common-params)))
-         (list-quickfixes (omnisharp--vector-to-list quickfixes))
-         (imenu-list (mapcar (lambda (quickfix-alist)
-                               (cons (cdr (assoc 'Text quickfix-alist))
-                                     (omnisharp--imenu-make-marker quickfix-alist)))
-                             list-quickfixes)))
+      (let* ((quickfixes (omnisharp-post-message-curl-as-json
+                          (concat (omnisharp-get-host) "currentfilemembersasflat")
+                          (omnisharp--get-common-params)))
+             (list-quickfixes (omnisharp--vector-to-list quickfixes))
+             (imenu-list (mapcar (lambda (quickfix-alist)
+                                   (cons (cdr (assoc 'Text quickfix-alist))
+                                         (omnisharp--imenu-make-marker quickfix-alist)))
+                                 list-quickfixes)))
         imenu-list)
     (error nil)))
 
@@ -1662,9 +1668,9 @@ result."
 (defun omnisharp-eldoc-function ()
   "Returns a doc string appropriate for the current context, or nil."
   (condition-case nil
-  (let ((current-type-information
-         (omnisharp-current-type-information-worker 'Type
-          (omnisharp--get-common-params))))
+      (let ((current-type-information
+             (omnisharp-current-type-information-worker 'Type
+                                                        (omnisharp--get-common-params))))
         current-type-information)
     (error nil)))
 
