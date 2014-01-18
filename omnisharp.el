@@ -629,8 +629,8 @@ items."
   "The string used to visually seperate functions/variables from
   their types")
 
-(defvar omnisharp-company-ignore-case nil
-  "If t, case is ignored in completion matches")
+(defvar omnisharp-company-ignore-case t
+  "If t, case is ignored in completion matches. ")
 
 (defvar omnisharp-company-begin-after-member-access t
   "If t, begin completion when pressing '.' after a class, object
@@ -666,9 +666,7 @@ triggers a completion immediately"
     (candidates (omnisharp--get-company-candidates arg))
 
     ;; because "" doesn't return everything
-    (no-cache (if omnisharp-company-ignore-case
-                  t
-                (equal arg "")))
+    (no-cache (equal arg ""))
 
     (crop (when (string-match "(" arg)
             (substring arg 0 (match-beginning 0))))
@@ -707,7 +705,7 @@ triggers a completion immediately"
 (defun omnisharp--string-starts-with (s arg)
   "Returns non-nil if string S starts with ARG, else nil."
   (cond ((>= (length s) (length arg))
-         (string-prefix-p arg s 'omnisharp-company-ignore-case))
+         (string-prefix-p arg s omnisharp-company-ignore-case))
         (t nil)))
 
 (defun omnisharp--filter-company-candidate (candidate-string element prefix)
