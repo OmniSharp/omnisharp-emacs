@@ -169,7 +169,7 @@ To switch it off, set omnisharp-eldoc-support to nil
 
 ![](pics/eldoc.png)
 
-### iMenu integration
+### Imenu integration
 Omnisharp's Imenu support allows you to quickly view and jump to
 function and variable definitions within your file. This can be used
 either natively or in combination with helm-imenu
