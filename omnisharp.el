@@ -629,6 +629,9 @@ items."
   "The string used to visually seperate functions/variables from
   their types")
 
+(defvar omnisharp-company-ignore-case t
+  "If t, case is ignored in completion matches. ")
+
 (defvar omnisharp-company-begin-after-member-access t
   "If t, begin completion when pressing '.' after a class, object
   or namespace")
@@ -675,6 +678,7 @@ triggers a completion immediately"
                     (visual-line-mode))
                   doc-buffer))
 
+    (ignore-case omnisharp-company-ignore-case)
 
     (post-completion (let* ((end (point-marker))
                             (beg (- (point) (length arg))))
@@ -701,7 +705,7 @@ triggers a completion immediately"
 (defun omnisharp--string-starts-with (s arg)
   "Returns non-nil if string S starts with ARG, else nil."
   (cond ((>= (length s) (length arg))
-         (string-equal (substring s 0 (length arg)) arg))
+         (string-prefix-p arg s omnisharp-company-ignore-case))
         (t nil)))
 
 (defun omnisharp--filter-company-candidate (candidate-string element prefix)
