@@ -1,7 +1,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 1.6
+;; Version: 1.7
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -629,6 +629,9 @@ items."
   "The string used to visually seperate functions/variables from
   their types")
 
+(defvar omnisharp-company-ignore-case t
+  "If t, case is ignored in completion matches.")
+
 (defvar omnisharp-company-begin-after-member-access t
   "If t, begin completion when pressing '.' after a class, object
   or namespace")
@@ -675,6 +678,7 @@ triggers a completion immediately"
                     (visual-line-mode))
                   doc-buffer))
 
+    (ignore-case omnisharp-company-ignore-case)
 
     (post-completion (let* ((end (point-marker))
                             (beg (- (point) (length arg))))
@@ -691,7 +695,6 @@ triggers a completion immediately"
                          (if (string-match "(" arg)
                              (when (re-search-backward "(" beg t)
                                (delete-region (match-beginning 0) end))
-                               ;; (forward-char))
                            (if (string-match omnisharp-company-type-separator arg)
                                (when (re-search-backward omnisharp-company-type-separator beg t)
                                  (delete-region (match-beginning 0) end)))))))))
@@ -701,7 +704,7 @@ triggers a completion immediately"
 (defun omnisharp--string-starts-with (s arg)
   "Returns non-nil if string S starts with ARG, else nil."
   (cond ((>= (length s) (length arg))
-         (string-equal (substring s 0 (length arg)) arg))
+         (string-prefix-p arg s omnisharp-company-ignore-case))
         (t nil)))
 
 (defun omnisharp--filter-company-candidate (candidate-string element prefix)

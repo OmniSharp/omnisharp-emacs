@@ -78,6 +78,8 @@ shows a buffer with documentation.
 
 ![](pics/company-mode-doc-buffer.png)
 
+Omnisharp's company-mode support ignores case by default, but can be
+made case sensitive by setting omnisharp-company-ignore-case to nil
 
 #### popup.el interface
 
@@ -160,6 +162,23 @@ To make syntax checking start sooner/later, use:
 (setq flycheck-idle-change-delay 2) ; in seconds
 ```
 
+### ElDoc integration
+ElDoc support is switched on by default. This shows type information
+for the symbol at point in the echo area.
+To switch it off, set omnisharp-eldoc-support to nil
+
+![](pics/eldoc.png)
+
+### Imenu integration
+Omnisharp's Imenu support allows you to quickly view and jump to
+function and variable definitions within your file. This can be used
+either natively or in combination with helm-imenu
+Imenu support is off by default, but can be turned on by setting
+omnisharp-imenu-support to t
+
+![](pics/helm-imenu.png)
+
+
 ## Installation
 
 This supports Emacs 24.3 and above at least. It has been tested on
@@ -190,7 +209,7 @@ create a custom configuration for accessing them in your normal
 coding sessions.
 
 To enable company-mode autocompletion, omnisharp requires at least
-version 0.6.11 of company-mode to be installed. Then add the following
+version 0.6.13 of company-mode to be installed. Then add the following
 to your dotemacs:
 
 ```
