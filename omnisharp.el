@@ -630,7 +630,7 @@ items."
   their types")
 
 (defvar omnisharp-company-ignore-case t
-  "If t, case is ignored in completion matches. ")
+  "If t, case is ignored in completion matches.")
 
 (defvar omnisharp-company-begin-after-member-access t
   "If t, begin completion when pressing '.' after a class, object
