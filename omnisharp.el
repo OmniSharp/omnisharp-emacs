@@ -695,7 +695,6 @@ triggers a completion immediately"
                          (if (string-match "(" arg)
                              (when (re-search-backward "(" beg t)
                                (delete-region (match-beginning 0) end))
-                               ;; (forward-char))
                            (if (string-match omnisharp-company-type-separator arg)
                                (when (re-search-backward omnisharp-company-type-separator beg t)
                                  (delete-region (match-beginning 0) end)))))))))
