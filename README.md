@@ -204,9 +204,11 @@ something like this to your csharp-mode-hook:
 ```
 
 Start an OmniSharp server process on a solution, and you should have
-access to all of this program's functions. You probably need to
-create a custom configuration for accessing them in your normal
-coding sessions.
+access to all of this program's functions. To do this, see the
+instructions at [OmniSharp].
+You probably need to create a custom configuration for accessing them
+in your normal coding sessions. There is an example configuration for
+evil-mode included in the project.
 
 To enable company-mode autocompletion, omnisharp requires at least
 version 0.6.13 of company-mode to be installed. Then add the following
