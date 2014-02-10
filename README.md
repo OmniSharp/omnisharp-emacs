@@ -194,7 +194,8 @@ to install.
 
 omnisharp-emacs depends on the external program `curl` for accessing
 the background OmniSharp server process. You need to ensure this is
-installed and can be found by Emacs.
+installed and can be found by Emacs. On Windows you should install the
+native curl program from [the curl website].
 
 To automatically load omnisharp-emacs when editing csharp files, add
 something like this to your csharp-mode-hook:
@@ -231,3 +232,4 @@ Pull requests welcome!
 [ido-mode]: http://www.emacswiki.org/emacs/InteractivelyDoThings
 [Flycheck]: https://github.com/lunaryorn/flycheck
 [MELPA]: http://melpa.milkbox.net/#installing
+[the curl website]: http://curl.haxx.se/download.html
