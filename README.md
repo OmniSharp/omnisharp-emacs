@@ -211,6 +211,12 @@ You probably need to create a custom configuration for accessing them
 in your normal coding sessions. There is an example configuration for
 evil-mode included in the project.
 
+### Using Cygwin on Windows?
+Cygwin paths need to be converted on the server side for the OmniSharp
+server to handle them correctly. See the server side configuration
+file [config.json][] that has example configuration for Cygwin
+environments and comment out the example path replacements.
+
 To enable company-mode autocompletion, omnisharp requires at least
 version 0.6.13 of company-mode to be installed. Then add the following
 to your dotemacs:
@@ -233,3 +239,4 @@ Pull requests welcome!
 [Flycheck]: https://github.com/lunaryorn/flycheck
 [MELPA]: http://melpa.milkbox.net/#installing
 [the curl website]: http://curl.haxx.se/download.html
+[config.json]: https://github.com/nosami/OmniSharpServer/blob/master/OmniSharp/config.json
