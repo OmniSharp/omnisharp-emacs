@@ -643,6 +643,10 @@ items."
 "If t, activate eldoc integration - eldoc-mode must also be enabled for
  this to work. Defaults to t.")
 
+;; Path to the server
+(defvar omnisharp-server nil
+"Path to omnisharp Servers .exe file. If it\'s value is nil, search for omnisharp in the exec-path")
+
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
 triggers a completion immediately"
@@ -1671,6 +1675,34 @@ result."
         current-type-information)
     (error nil)))
 
+;; define a method to nicely start the server
+(defun startOmniServer (solution)
+  "Starts an omni-server for a given solution"
+  (setq BufferName "*Omni-Server*")
+  (interactive "f")
+  (findOmnisharp)
+  (if (equal nil omnisharp-server)
+      (error "Could not find the OmniSharp Server. Please set the variable omnisharp-server to a valid path")
+  (if (string= (file-name-extension solution) "sln")
+      (progn 
+	(message (format "Starting OmniServer for Soluten file: %s" solution))
+	(if (not (eq nil (get-buffer BufferName)))
+	    (kill-buffer BufferName))
+	(start-process-shell-command "Omni-Server" (get-buffer-create BufferName)(concat omnisharp-server  " -s " solution))
+	)
+    (error (format "Path does not lead to a solution file: %s" solution))
+    )
+  )
+)
+
+(defun findOmnisharp ()
+"Tries to find OmniSharp.exe in exec-path, if omnisharp-server is not set"
+  (if (equal nil omnisharp-server) 
+      (progn 
+	(setq omnisharp-server (executable-find "OmniSharp"))
+	)
+    )
+)
 
 (provide 'omnisharp)
 
