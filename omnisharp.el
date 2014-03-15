@@ -644,8 +644,8 @@ items."
  this to work. Defaults to t.")
 
 ;; Path to the server
-(defvar omnisharp-server nil
-"Path to omnisharp Servers .exe file. If it\'s value is nil, search for omnisharp in the exec-path")
+(defcustom omnisharp-server-executable-path nil
+"Path to OmniSharpServer. If its value is nil, search for the server in the exec-path")
 
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
@@ -1676,33 +1676,28 @@ result."
     (error nil)))
 
 ;; define a method to nicely start the server
-(defun startOmniServer (solution)
-  "Starts an omni-server for a given solution"
+;;;###autoload
+(defun omnisharp-start-omnisharp-server (solution)
+  "Starts an OmniSharpServer for a given solution"
   (setq BufferName "*Omni-Server*")
   (interactive "f")
-  (findOmnisharp)
-  (if (equal nil omnisharp-server)
-      (error "Could not find the OmniSharp Server. Please set the variable omnisharp-server to a valid path")
+  (omnisharp--find-and-cache-omnisharp-server-executable-path)
+  (if (equal nil omnisharp-server-executable-path)
+      (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
   (if (string= (file-name-extension solution) "sln")
       (progn 
-	(message (format "Starting OmniServer for Soluten file: %s" solution))
+	(message (format "Starting OmniSharpServer for Solution file: %s" solution))
 	(if (not (eq nil (get-buffer BufferName)))
 	    (kill-buffer BufferName))
-	(start-process-shell-command "Omni-Server" (get-buffer-create BufferName)(concat omnisharp-server  " -s " solution))
+	(start-process-shell-command "Omni-Server" (get-buffer-create BufferName)(concat omnisharp-server-executable-path  " -s " solution))
 	)
-    (error (format "Path does not lead to a solution file: %s" solution))
-    )
-  )
-)
+    (error (format "Path does not lead to a solution file: %s" solution)))))
 
-(defun findOmnisharp ()
-"Tries to find OmniSharp.exe in exec-path, if omnisharp-server is not set"
-  (if (equal nil omnisharp-server) 
+(defun omnisharp--find-and-cache-omnisharp-server-executable-path ()
+"Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
+  (if (equal nil omnisharp-server-executable-path) 
       (progn 
-	(setq omnisharp-server (executable-find "OmniSharp"))
-	)
-    )
-)
+	(setq omnisharp-server (executable-find "OmniSharp")))))
 
 (provide 'omnisharp)
 
