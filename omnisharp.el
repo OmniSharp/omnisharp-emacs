@@ -1680,7 +1680,7 @@ result."
 (defun omnisharp-start-omnisharp-server (solution)
   "Starts an OmniSharpServer for a given solution"
   (setq BufferName "*Omni-Server*")
-  (interactive "f")
+  (interactive "fStart OmniSharpServer.exe for solution: ")
   (omnisharp--find-and-cache-omnisharp-server-executable-path)
   (if (equal nil omnisharp-server-executable-path)
       (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
