@@ -53,6 +53,7 @@ Lacks a better UI and a good default configuration.
 * Syntax checker for parse errors
     * Runs using the provided [Flycheck][] checker in the background.
 * OmniSharp server instance manipulation
+    * Start server
     * Reload solution
     * Stop server
 
@@ -205,11 +206,17 @@ something like this to your csharp-mode-hook:
 ```
 
 Start an OmniSharp server process on a solution, and you should have
-access to all of this program's functions. To do this, see the
-instructions at [OmniSharp].
-You probably need to create a custom configuration for accessing them
-in your normal coding sessions. There is an example configuration for
-evil-mode included in the project.
+access to all of this program's functions. To do this, you can use
+`M-x omnisharp-start-omnisharp-server` and navigate to a solution
+file. This will start the server and let emacs handle the server
+process's life.
+
+If you want to start the process externally so it's not killed when
+emacs is closed, see the instructions at [OmniSharp].
+
+You probably need to create a custom configuration for accessing
+omnisharp-emacs in your normal coding sessions. There is an example
+configuration for evil-mode included in the project.
 
 ### Using Cygwin on Windows?
 Cygwin paths need to be converted on the server side for the OmniSharp
