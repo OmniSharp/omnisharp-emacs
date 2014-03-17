@@ -1687,7 +1687,7 @@ result."
       (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
     (if (string= (file-name-extension solution) "sln")
         (progn
-          (message (format "Starting OmniSharpServer for Solution file: %s" solution))
+          (message (format "Starting OmniSharpServer for solution file: %s" solution))
           (if (not (eq nil (get-buffer BufferName)))
               (kill-buffer BufferName))
           (start-process-shell-command
