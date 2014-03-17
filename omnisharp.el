@@ -1685,14 +1685,17 @@ result."
   (omnisharp--find-and-cache-omnisharp-server-executable-path)
   (if (equal nil omnisharp-server-executable-path)
       (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
-  (if (string= (file-name-extension solution) "sln")
-      (progn 
-	(message (format "Starting OmniSharpServer for Solution file: %s" solution))
-	(if (not (eq nil (get-buffer BufferName)))
-	    (kill-buffer BufferName))
-	(start-process-shell-command "Omni-Server" (get-buffer-create BufferName)(concat omnisharp-server-executable-path  " -s " solution))
-	)
-    (error (format "Path does not lead to a solution file: %s" solution)))))
+    (if (string= (file-name-extension solution) "sln")
+        (progn
+          (message (format "Starting OmniSharpServer for Solution file: %s" solution))
+          (if (not (eq nil (get-buffer BufferName)))
+              (kill-buffer BufferName))
+          (start-process-shell-command
+           "Omni-Server"
+           (get-buffer-create BufferName)
+           (concat omnisharp-server-executable-path  " -s " solution)))
+
+      (error (format "Path does not lead to a solution file: %s" solution)))))
 
 (defun omnisharp--find-and-cache-omnisharp-server-executable-path ()
 "Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
