@@ -208,6 +208,7 @@ server backend."
      ["Region in current file" omnisharp-navigate-to-region])
 
     ("OmniSharp server"
+     ["Start OmniSharp server with solution (.sln) file" omnisharp-start-omnisharp-server]
      ["Reload solution" omnisharp-reload-solution]
      ["Stop OmniSharp server" omnisharp-stop-server])
 
