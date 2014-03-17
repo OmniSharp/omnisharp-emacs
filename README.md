@@ -178,6 +178,18 @@ omnisharp-imenu-support to t
 
 ![](pics/helm-imenu.png)
 
+### company-mode integration
+
+To enable company-mode autocompletion, omnisharp requires at least
+version 0.7 of company-mode to be installed. Then add the following to
+your init file:
+
+```
+(eval-after-load 'company
+  '(add-to-list 'company-backends 'company-omnisharp))
+```
+
+company-mode completion will only trigger when omnisharp-mode is active.
 
 ## Installation
 
@@ -216,17 +228,6 @@ Cygwin paths need to be converted on the server side for the OmniSharp
 server to handle them correctly. See the server side configuration
 file [config.json][] that has example configuration for Cygwin
 environments and comment out the example path replacements.
-
-To enable company-mode autocompletion, omnisharp requires at least
-version 0.6.13 of company-mode to be installed. Then add the following
-to your dotemacs:
-
-```
-(eval-after-load 'company
-  '(add-to-list 'company-backends 'company-omnisharp))
-```
-
-company-mode completion will only trigger when omnisharp-mode is active.
 
 * * * * *
 
