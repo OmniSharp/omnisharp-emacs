@@ -657,7 +657,7 @@ triggers a completion immediately"
       'stop)))
 
 (defun company-omnisharp (command &optional arg &rest ignored)
-  "Company-mode integration"
+  "`company-mode' completion back-end using OmniSharp."
   (case command
     (prefix (and omnisharp-mode
                  (not (company-in-string-or-comment))
@@ -672,7 +672,8 @@ triggers a completion immediately"
 
     (meta (omnisharp--get-company-candidate-data arg 'DisplayText))
 
-    (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-data arg 'Description))))
+    (doc-buffer (let ((doc-buffer (company-doc-buffer
+                                   (omnisharp--get-company-candidate-data arg 'Description))))
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
@@ -687,7 +688,7 @@ triggers a completion immediately"
                          (company-template-c-like-templatify ann))))))
 
 (defun omnisharp--make-company-completion (item)
-  "company-mode expects the beginning of the candidate to be the
+  "`company-mode' expects the beginning of the candidate to be the
 same as the characters being completed.  This method converts a
 function description of 'void SomeMethod(int parameter)' to
 string 'SomeMethod' propertized with annotation '(int parameter) : void'
