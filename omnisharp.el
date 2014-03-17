@@ -3,7 +3,7 @@
 ;; Author: Mika Vilpas
 ;; Version: 1.7
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
-;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
+;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (flycheck "0.13"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
 
 ;;; Commentary:
@@ -27,7 +27,6 @@
 (require 'popup)
 (require 'etags)
 (require 'flycheck)
-(require 'auto-complete)
 
 (defgroup omnisharp ()
   "Omnisharp-emacs is a port of the awesome OmniSharp server to
@@ -605,8 +604,12 @@ and complete members."
 
 ;; The library only seems to accept completions that have the same
 ;; leading characters as results. Oh well.
-(ac-define-source omnisharp
+(defvar ac-source-omnisharp
   '((candidates . omnisharp--get-auto-complete-result-in-popup-format)))
+
+(defun ac-complete-omnisharp nil
+  (interactive)
+  (auto-complete '(ac-source-omnisharp)))
 
 (defun omnisharp--get-auto-complete-result-in-popup-format ()
   "Returns /autocomplete API results \(autocompletions\) as popup
