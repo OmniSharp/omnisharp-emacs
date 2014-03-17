@@ -699,24 +699,6 @@ triggers a completion immediately"
                                (when (re-search-backward omnisharp-company-type-separator beg t)
                                  (delete-region (match-beginning 0) end)))))))))
 
-
-
-(defun omnisharp--string-starts-with (s arg)
-  "Returns non-nil if string S starts with ARG, else nil."
-  (cond ((>= (length s) (length arg))
-         (string-prefix-p arg s omnisharp-company-ignore-case))
-        (t nil)))
-
-(defun omnisharp--filter-company-candidate (candidate-string element prefix)
-  "Since company-mode expects the candidates to begin with the
-completion prefix, filter items that don't begin with the
-completion prefix. Also filter out completions that just match
-the prefix exactly, as they just confuse things"
-  (if (and (not (string= (omnisharp--completion-result-item-get-completion-text element) prefix))
-           (omnisharp--string-starts-with candidate-string prefix))
-      candidate-string
-    nil))
-
 (defun omnisharp--make-company-completion-text (item)
   "company-mode expects the beginning of the candidate to be the
 same as the characters being completed.  This method converts a
@@ -750,15 +732,10 @@ company-mode-friendly"
          ;; json. This is an emacs limitation.
          (params
           (omnisharp--get-auto-complete-params))
-
          (json-result-auto-complete-response
-          (omnisharp-auto-complete-worker params))
-         (company-output (delq nil
-                               (mapcar
-                                (lambda (element)
-                                  (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) element pre))
-                                json-result-auto-complete-response))))
-    company-output))
+          (omnisharp-auto-complete-worker params)))
+    (all-completions pre (mapcar #'omnisharp--make-company-completion-text
+                                 json-result-auto-complete-response))))
 
 (defun omnisharp--get-company-candidate-data (pre datatype)
   "Given one of our completion candidate strings, find the
