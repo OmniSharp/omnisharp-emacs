@@ -53,6 +53,7 @@ Lacks a better UI and a good default configuration.
 * Syntax checker for parse errors
     * Runs using the provided [Flycheck][] checker in the background.
 * OmniSharp server instance manipulation
+    * Start server
     * Reload solution
     * Stop server
 
@@ -205,11 +206,23 @@ something like this to your csharp-mode-hook:
 ```
 
 Start an OmniSharp server process on a solution, and you should have
-access to all of this program's functions. To do this, see the
-instructions at [OmniSharp].
-You probably need to create a custom configuration for accessing them
-in your normal coding sessions. There is an example configuration for
-evil-mode included in the project.
+access to all of this program's functions. To do this, you can use
+`M-x omnisharp-start-omnisharp-server` and navigate to a solution
+file. This will start the server and let emacs handle the server
+process's life.
+
+If you want to start the process externally so it's not killed when
+emacs is closed, see the instructions at [OmniSharp].
+
+You probably need to create a custom configuration for accessing
+omnisharp-emacs in your normal coding sessions. There is an example
+configuration for evil-mode included in the project.
+
+### Using Cygwin on Windows?
+Cygwin paths need to be converted on the server side for the OmniSharp
+server to handle them correctly. See the server side configuration
+file [config.json][] that has example configuration for Cygwin
+environments and comment out the example path replacements.
 
 To enable company-mode autocompletion, omnisharp requires at least
 version 0.6.13 of company-mode to be installed. Then add the following
@@ -233,3 +246,4 @@ Pull requests welcome!
 [Flycheck]: https://github.com/lunaryorn/flycheck
 [MELPA]: http://melpa.milkbox.net/#installing
 [the curl website]: http://curl.haxx.se/download.html
+[config.json]: https://github.com/nosami/OmniSharpServer/blob/master/OmniSharp/config.json
