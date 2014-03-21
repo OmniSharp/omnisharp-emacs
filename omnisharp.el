@@ -1700,8 +1700,8 @@ result."
 (defun omnisharp--find-and-cache-omnisharp-server-executable-path ()
 "Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
   (if (equal nil omnisharp-server-executable-path) 
-      (progn 
-	(setq omnisharp-server (executable-find "OmniSharp")))))
+      (progn
+        (setq omnisharp-server-executable-path (executable-find "OmniSharp")))))
 
 (provide 'omnisharp)
 
