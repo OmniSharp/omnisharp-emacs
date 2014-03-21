@@ -1698,10 +1698,9 @@ result."
       (error (format "Path does not lead to a solution file: %s" solution)))))
 
 (defun omnisharp--find-and-cache-omnisharp-server-executable-path ()
-"Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
-  (if (equal nil omnisharp-server-executable-path) 
-      (progn
-        (setq omnisharp-server-executable-path (executable-find "OmniSharp")))))
+  "Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
+  (when (equal nil omnisharp-server-executable-path)
+    (setq omnisharp-server-executable-path (executable-find "OmniSharp"))))
 
 (provide 'omnisharp)
 
