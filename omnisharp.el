@@ -1702,6 +1702,20 @@ result."
   (when (equal nil omnisharp-server-executable-path)
     (setq omnisharp-server-executable-path (executable-find "OmniSharp"))))
 
+(defun omnisharp--get-omnisharp-server-executable-command
+  (solution-file-path &optional server-exe-file-path)
+  (when (eq nil server-exe-file-path)
+    (setq server-exe-file-path
+          omnisharp-server-executable-path))
+  (cond
+   ((equal system-type 'windows-nt)
+    (concat server-exe-file-path " -s " solution-file-path " > NUL"))
+
+   (t ; some kind of unix: linux or osx
+    (concat "mono " server-exe-file-path
+            " -s " solution-file-path
+            " > /dev/null"))))
+
 (provide 'omnisharp)
 
 ;;; omnisharp.el ends here
