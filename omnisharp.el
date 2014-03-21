@@ -1693,7 +1693,7 @@ result."
           (start-process-shell-command
            "Omni-Server"
            (get-buffer-create BufferName)
-           (concat omnisharp-server-executable-path  " -s " solution)))
+           (omnisharp--get-omnisharp-server-executable-command solution)))
 
       (error (format "Path does not lead to a solution file: %s" solution)))))
 
