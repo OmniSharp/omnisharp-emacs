@@ -1,7 +1,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 1.7
+;; Version: 1.8
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -208,6 +208,7 @@ server backend."
      ["Region in current file" omnisharp-navigate-to-region])
 
     ("OmniSharp server"
+     ["Start OmniSharp server with solution (.sln) file" omnisharp-start-omnisharp-server]
      ["Reload solution" omnisharp-reload-solution]
      ["Stop OmniSharp server" omnisharp-stop-server])
 
@@ -642,6 +643,10 @@ items."
 (defvar omnisharp-eldoc-support t
 "If t, activate eldoc integration - eldoc-mode must also be enabled for
  this to work. Defaults to t.")
+
+;; Path to the server
+(defcustom omnisharp-server-executable-path nil
+"Path to OmniSharpServer. If its value is nil, search for the server in the exec-path")
 
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
@@ -1671,6 +1676,45 @@ result."
         current-type-information)
     (error nil)))
 
+;; define a method to nicely start the server
+;;;###autoload
+(defun omnisharp-start-omnisharp-server (solution)
+  "Starts an OmniSharpServer for a given solution"
+  (setq BufferName "*Omni-Server*")
+  (interactive "fStart OmniSharpServer.exe for solution: ")
+  (omnisharp--find-and-cache-omnisharp-server-executable-path)
+  (if (equal nil omnisharp-server-executable-path)
+      (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
+    (if (string= (file-name-extension solution) "sln")
+        (progn
+          (message (format "Starting OmniSharpServer for solution file: %s" solution))
+          (if (not (eq nil (get-buffer BufferName)))
+              (kill-buffer BufferName))
+          (start-process-shell-command
+           "Omni-Server"
+           (get-buffer-create BufferName)
+           (omnisharp--get-omnisharp-server-executable-command solution)))
+
+      (error (format "Path does not lead to a solution file: %s" solution)))))
+
+(defun omnisharp--find-and-cache-omnisharp-server-executable-path ()
+  "Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
+  (when (equal nil omnisharp-server-executable-path)
+    (setq omnisharp-server-executable-path (executable-find "OmniSharp"))))
+
+(defun omnisharp--get-omnisharp-server-executable-command
+  (solution-file-path &optional server-exe-file-path)
+  (when (eq nil server-exe-file-path)
+    (setq server-exe-file-path
+          omnisharp-server-executable-path))
+  (cond
+   ((equal system-type 'windows-nt)
+    (concat server-exe-file-path " -s " solution-file-path " > NUL"))
+
+   (t ; some kind of unix: linux or osx
+    (concat "mono " server-exe-file-path
+            " -s " solution-file-path
+            " > /dev/null"))))
 
 (provide 'omnisharp)
 

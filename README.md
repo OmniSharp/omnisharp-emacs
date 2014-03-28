@@ -50,9 +50,8 @@ Lacks a better UI and a good default configuration.
     * Jump to errors like in normal `*compilation*` output
 * Format the current buffer
     * Currently only one formatting style supported, easy to add more.
-* Syntax checker for parse errors
-    * Runs using the provided [Flycheck][] checker in the background.
 * OmniSharp server instance manipulation
+    * Start server
     * Reload solution
     * Stop server
 
@@ -144,24 +143,6 @@ compilation buffer.
 
 ![](pics/build-solution-in-compilation-buffer.png)
 
-### Syntax errors checking
-It is possible to check the current buffer for syntax errors using the
-flycheck library. This is done asynchronously, and errors are shown
-when found. Note that this is not a type checker, only syntax is
-currently checked.
-
-![](pics/syntax-error-flycheck.png)
-
-To start the check, use (omnisharp-start-flycheck) or select it in the
-menu. The check will then be performed after the current buffer has
-been idle for a certain number of seconds. Currently the default is
-0.5 seconds.
-
-To make syntax checking start sooner/later, use:
-```
-(setq flycheck-idle-change-delay 2) ; in seconds
-```
-
 ### ElDoc integration
 ElDoc support is switched on by default. This shows type information
 for the symbol at point in the echo area.
@@ -205,11 +186,17 @@ something like this to your csharp-mode-hook:
 ```
 
 Start an OmniSharp server process on a solution, and you should have
-access to all of this program's functions. To do this, see the
-instructions at [OmniSharp].
-You probably need to create a custom configuration for accessing them
-in your normal coding sessions. There is an example configuration for
-evil-mode included in the project.
+access to all of this program's functions. To do this, you can use
+`M-x omnisharp-start-omnisharp-server` and navigate to a solution
+file. This will start the server and let emacs handle the server
+process's life.
+
+If you want to start the process externally so it's not killed when
+emacs is closed, see the instructions at [OmniSharp].
+
+You probably need to create a custom configuration for accessing
+omnisharp-emacs in your normal coding sessions. There is an example
+configuration for evil-mode included in the project.
 
 ### Using Cygwin on Windows?
 Cygwin paths need to be converted on the server side for the OmniSharp
