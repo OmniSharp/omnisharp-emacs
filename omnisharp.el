@@ -171,6 +171,10 @@ Must be writable by the current user."
   :group 'omnisharp
   :type 'file)
 
+(defcustom omnisharp--curl-executable-path
+  "curl"
+  "The absolute or relative path to the curl executable.")
+
 ;;;###autoload
 (define-minor-mode omnisharp-mode
   "Omnicompletion (intellisense) and more for C# using an OmniSharp
@@ -989,7 +993,7 @@ the curl program. Depends on the operating system."
 (defun omnisharp--get-curl-command-unix (url params)
   "Returns a command using plain curl that can be executed to
 communicate with the API."
-  `(:command "curl"
+  `(:command omnisharp--curl-executable-path
              :arguments
              ("--silent" "-H" "Content-type: application/json"
               "--data"
@@ -1007,7 +1011,7 @@ api at URL using that file as the parameters."
   (let ((path-with-curl-prefix
          (concat "@"
                  omnisharp--windows-curl-tmp-file-path)))
-    `(:command "curl"
+    `(:command omnisharp--curl-executable-path
                :arguments
                ("--silent" "-H" "Content-type: application/json"
                 "--data-binary"
