@@ -178,6 +178,12 @@ the background OmniSharp server process. You need to ensure this is
 installed and can be found by Emacs. On Windows you should install the
 native curl program from [the curl website].
 
+To make sure omnisharp-emacs can find your curl, make your PATH
+environment variable contain the directory for curl, or set the
+`omnisharp--curl-executable-path` variable to the full path to the
+curl executable. The path may be e.g. `"C:\Program Files
+(x86)\Git\bin\curl.exe"` or `/usr/bin/curl`.
+
 To automatically load omnisharp-emacs when editing csharp files, add
 something like this to your csharp-mode-hook:
 
