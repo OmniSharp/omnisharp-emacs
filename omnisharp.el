@@ -3,7 +3,7 @@
 ;; Author: Mika Vilpas
 ;; Version: 1.9
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
-;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
+;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13") (csharp-mode "0.8.6"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
 
 ;;; Commentary:
@@ -647,6 +647,9 @@ items."
 (defvar omnisharp-eldoc-support t
 "If t, activate eldoc integration - eldoc-mode must also be enabled for
  this to work. Defaults to t.")
+
+(defvar omnisharp--eldoc-fontification-buffer-name " * OmniSharp : Eldoc Fontification *"
+  "The name of the buffer that is used to fontify eldoc strings.")
 
 ;; Path to the server
 (defcustom omnisharp-server-executable-path nil
@@ -1669,6 +1672,21 @@ result."
      (omnisharp--get-auto-complete-params))
     (omnisharp-show-last-auto-complete-result)))
 
+(defun omnisharp--get-eldoc-fontification-buffer ()
+  (let ((buffer (get-buffer omnisharp--eldoc-fontification-buffer-name)))
+    (if (buffer-live-p buffer)
+        buffer
+      (with-current-buffer (generate-new-buffer omnisharp--eldoc-fontification-buffer-name)
+        (ignore-errors
+          (let ((csharp-mode-hook nil))
+            (csharp-mode)))
+        (current-buffer)))))
+
+(defun omnisharp--eldoc-fontify-string (str)
+  (with-current-buffer (omnisharp--get-eldoc-fontification-buffer)
+    (delete-region (point-min) (point-max))
+    (font-lock-fontify-region (point) (progn (insert str ";") (point)))
+    (buffer-substring (point-min) (1- (point-max)))))
 
 (defun omnisharp-eldoc-function ()
   "Returns a doc string appropriate for the current context, or nil."
@@ -1677,7 +1695,7 @@ result."
              (omnisharp-current-type-information-worker
               'Type
               (omnisharp--get-common-params))))
-        current-type-information)
+        (omnisharp--eldoc-fontify-string current-type-information))
     (error nil)))
 
 ;; define a method to nicely start the server
