@@ -286,7 +286,9 @@ argument, use another window."
       omnisharp-find-usages-header))))
 
 (defun omnisharp-find-usages-worker (request callback)
-  ;; TODO make this asyncronic like all other compilation processes!
+  "Gets a list of QuickFix lisp objects from a findusages api call
+asynchronously. On completions, CALLBACK is run with the quickfixes as its only argument."
+  (declare (indent defun))
   (omnisharp-post-message-curl-as-json-async
    (concat (omnisharp-get-host) "findusages")
    request
@@ -311,8 +313,9 @@ to select one (or more) to jump to."
       omnisharp-find-implementations-header))))
 
 (defun omnisharp-find-implementations-worker (request callback)
-  "Returns a list of QuickFix lisp objects from a findimplementations
-api call made with the given Request."
+  "Gets a list of QuickFix lisp objects from a findimplementations api call
+asynchronously. On completions, CALLBACK is run with the quickfixes as its only argument."
+  (declare (indent defun))
   (omnisharp-post-message-curl-as-json-async
    (concat (omnisharp-get-host) "findimplementations")
    request
@@ -987,8 +990,10 @@ result."
       (buffer-string))))
 
 (defun omnisharp-post-message-curl-async (url params callback)
-  "Post json stuff to url with --data set to given params. Return
-result."
+  "Post json stuff to url asynchronously with --data set to given params.
+On completion, CALLBACK is run with the result as it's only parameter.
+
+Returns the curl process"
   (declare (indent defun))
   (let* ((curl-command-plist
           (omnisharp--get-curl-command url params))
@@ -1006,7 +1011,8 @@ result."
          (apply callback
                 (list (progn (let ((output (with-current-buffer process-buffer (buffer-string))))
                                (kill-buffer process-buffer)
-                               output)))))))))
+                               output)))))))
+    process))
 
 (defun omnisharp--get-curl-command (url params)
   "Returns a command that may be used to communicate with the API via
@@ -1018,7 +1024,7 @@ the curl program. Depends on the operating system."
 (defun omnisharp--get-curl-command-unix (url params)
   "Returns a command using plain curl that can be executed to
 communicate with the API."
-  `(:command omnisharp--curl-executable-path
+  `(:command ,omnisharp--curl-executable-path
              :arguments
              ("--silent" "-H" "Content-type: application/json"
               "--data"
@@ -1036,7 +1042,7 @@ api at URL using that file as the parameters."
   (let ((path-with-curl-prefix
          (concat "@"
                  omnisharp--windows-curl-tmp-file-path)))
-    `(:command omnisharp--curl-executable-path
+    `(:command ,omnisharp--curl-executable-path
                :arguments
                ("--silent" "-H" "Content-type: application/json"
                 "--data-binary"
@@ -1055,6 +1061,8 @@ api at URL using that file as the parameters."
    (omnisharp-post-message-curl url params)))
 
 (defun omnisharp-post-message-curl-as-json-async (url params callback)
+  "Posts message to curl at URL with PARAMS asynchronously.
+On completion, the curl output is parsed as json and passed into CALLBACK."
   (omnisharp-post-message-curl-async url params
     (lambda (str)
       (apply callback (list (json-read-from-string str))))))
