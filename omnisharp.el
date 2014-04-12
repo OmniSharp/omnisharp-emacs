@@ -216,7 +216,8 @@ server backend."
      ["Start OmniSharp server with solution (.sln) file" omnisharp-start-omnisharp-server]
      ["Reload solution" omnisharp-reload-solution]
      ["Stop OmniSharp server" omnisharp-stop-server]
-     ["Check alive status" omnisharp-check-alive-status])
+     ["Check alive status" omnisharp-check-alive-status]
+     ["Check ready status" omnisharp-check-ready-status])
 
     ("Current symbol"
      ["Show type" omnisharp-current-type-information]
@@ -1803,6 +1804,20 @@ port specified."
 (defun omnisharp--check-alive-status-worker ()
   (omnisharp-post-message-curl-as-json
    (concat (omnisharp-get-host) "checkalivestatus")))
+
+;;;###autoload
+(defun omnisharp-check-ready-status ()
+  "Shows a message to the user describing whether the
+OmniSharpServer process specified in the current configuration has
+finished loading the solution."
+  (interactive)
+  (if (omnisharp--check-ready-status-worker)
+      (message "Server is ready")
+    (message "Server is not ready yet")))
+
+(defun omnisharp--check-ready-status-worker ()
+  (omnisharp-post-message-curl-as-json
+   (concat (omnisharp-get-host) "checkreadystatus")))
 
 (provide 'omnisharp)
 
