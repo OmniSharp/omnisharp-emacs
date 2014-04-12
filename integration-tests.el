@@ -52,3 +52,9 @@ default message 'json-readtable-error'"
   (reports-communication-error-with-broken-server-configuration
    (omnisharp--check-alive-status-worker)))
 
+(ert-deftest check-ready-worker-should-return-server-result ()
+  (with-working-server-configuration
+   (should (equal t (omnisharp--check-ready-status-worker))))
+
+  (reports-communication-error-with-broken-server-configuration
+   (omnisharp--check-ready-status-worker)))
