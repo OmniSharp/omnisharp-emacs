@@ -4,7 +4,7 @@
 ;; Author: Mika Vilpas
 ;; Version: 1.9
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
-;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13") (csharp-mode "0.8.6"))
+;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.19") (csharp-mode "0.8.6"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
 
 ;;; Commentary:
@@ -1472,6 +1472,44 @@ with the formatted result. Saves the file before starting."
   (omnisharp-post-message-curl-as-json
    (concat (omnisharp-get-host) "syntaxerrors")
    params))
+
+;; Flycheck interns this variable and uses it as the program to get
+;; the errors with.
+(setq flycheck-csharp-omnisharp-curl-executable
+      omnisharp--curl-executable-path)
+
+(flycheck-define-checker csharp-omnisharp-curl
+  "A csharp source syntax checker using curl to call an OmniSharp
+server process running in the background. Only checks the syntax - not
+type errors."
+  ;; This must be an external process. Currently flycheck does not
+  ;; support using elisp functions as checkers.
+  :command ("curl" ; this is overridden by
+                   ; flycheck-csharp-omnisharp-curl-executable if it
+                   ; is set
+            (eval
+             (let ((command-plist
+                    (omnisharp--get-curl-command
+                     (concat (omnisharp-get-host) "syntaxerrors")
+                     (omnisharp--get-common-params))))
+               (cons
+                (plist-get command-plist :command)
+                (plist-get command-plist :arguments)))))
+
+  :error-patterns ((error line-start
+                          (file-name) ":"
+                          line ":"
+                          column
+                          " "
+                          (message (one-or-more not-newline))))
+  ;; TODO this should be cleaned, but I can't get it to compile that
+  ;; way.
+  :error-parser (lambda (output checker buffer)
+                  (omnisharp--flycheck-error-parser-raw-json
+                   output checker buffer))
+  ;; TODO use only is csharp files - but there are a few different
+  ;; extensions available for these!
+  :predicate (lambda () t))
 
 (defun omnisharp--flycheck-error-parser-raw-json
   (output checker buffer)
