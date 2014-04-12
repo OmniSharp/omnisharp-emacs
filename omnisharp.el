@@ -977,7 +977,7 @@ the OmniSharp server understands."
 (defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
 
-(defun omnisharp-post-message-curl (url params)
+(defun omnisharp-post-message-curl (url &optional params)
   "Post json stuff to url with --data set to given params. Return
 result."
   (let ((curl-command-plist
@@ -1059,8 +1059,18 @@ api at URL using that file as the parameters."
   (with-temp-file target-path
     (insert stuff-to-write-to-file)))
 
-(defun omnisharp-post-message-curl-as-json (url params)
-  (json-read-from-string
+(defun omnisharp--json-read-from-string (json-string
+                                         &optional error-message)
+  "Deserialize the given JSON-STRING to a lisp object. If
+something goes wrong, return a human-readable warning."
+  (condition-case nil
+      (json-read-from-string json-string)
+    (error
+     (or error-message
+         "Error communicating to the OmniSharpServer instance"))))
+
+(defun omnisharp-post-message-curl-as-json (url &optional params)
+  (omnisharp--json-read-from-string
    (omnisharp-post-message-curl url params)))
 
 (defun omnisharp-post-message-curl-as-json-async (url params callback)
@@ -1068,7 +1078,7 @@ api at URL using that file as the parameters."
 On completion, the curl output is parsed as json and passed into CALLBACK."
   (omnisharp-post-message-curl-async url params
     (lambda (str)
-      (apply callback (list (json-read-from-string str))))))
+      (apply callback (list (omnisharp--json-read-from-string str))))))
 
 (defun omnisharp--auto-complete-display-function-popup
   (json-result-alist)
@@ -1464,7 +1474,7 @@ with the formatted result. Saves the file before starting."
 (defun omnisharp--flycheck-error-parser-raw-json
   (output checker buffer)
   (let* ((json-result
-          (json-read-from-string output))
+          (omnisharp--json-read-from-string output))
          (errors (omnisharp--vector-to-list
                   (cdr (assoc 'Errors json-result)))))
     (when (not (equal (length errors) 0))
