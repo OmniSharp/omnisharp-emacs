@@ -215,7 +215,8 @@ server backend."
     ("OmniSharp server"
      ["Start OmniSharp server with solution (.sln) file" omnisharp-start-omnisharp-server]
      ["Reload solution" omnisharp-reload-solution]
-     ["Stop OmniSharp server" omnisharp-stop-server])
+     ["Stop OmniSharp server" omnisharp-stop-server]
+     ["Check alive status" omnisharp-check-alive-status])
 
     ("Current symbol"
      ["Show type" omnisharp-current-type-information]
@@ -977,7 +978,7 @@ the OmniSharp server understands."
 (defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
 
-(defun omnisharp-post-message-curl (url params)
+(defun omnisharp-post-message-curl (url &optional params)
   "Post json stuff to url with --data set to given params. Return
 result."
   (let ((curl-command-plist
@@ -1059,8 +1060,18 @@ api at URL using that file as the parameters."
   (with-temp-file target-path
     (insert stuff-to-write-to-file)))
 
-(defun omnisharp-post-message-curl-as-json (url params)
-  (json-read-from-string
+(defun omnisharp--json-read-from-string (json-string
+                                         &optional error-message)
+  "Deserialize the given JSON-STRING to a lisp object. If
+something goes wrong, return a human-readable warning."
+  (condition-case nil
+      (json-read-from-string json-string)
+    (error
+     (or error-message
+         "Error communicating to the OmniSharpServer instance"))))
+
+(defun omnisharp-post-message-curl-as-json (url &optional params)
+  (omnisharp--json-read-from-string
    (omnisharp-post-message-curl url params)))
 
 (defun omnisharp-post-message-curl-as-json-async (url params callback)
@@ -1068,7 +1079,7 @@ api at URL using that file as the parameters."
 On completion, the curl output is parsed as json and passed into CALLBACK."
   (omnisharp-post-message-curl-async url params
     (lambda (str)
-      (apply callback (list (json-read-from-string str))))))
+      (apply callback (list (omnisharp--json-read-from-string str))))))
 
 (defun omnisharp--auto-complete-display-function-popup
   (json-result-alist)
@@ -1464,7 +1475,7 @@ with the formatted result. Saves the file before starting."
 (defun omnisharp--flycheck-error-parser-raw-json
   (output checker buffer)
   (let* ((json-result
-          (json-read-from-string output))
+          (omnisharp--json-read-from-string output))
          (errors (omnisharp--vector-to-list
                   (cdr (assoc 'Errors json-result)))))
     (when (not (equal (length errors) 0))
@@ -1775,6 +1786,23 @@ result."
     (concat "mono " server-exe-file-path
             " -s " solution-file-path
             " > /dev/null"))))
+
+;;;###autoload
+(defun omnisharp-check-alive-status ()
+  "Shows a message to the user describing whether the
+OmniSharpServer process specified in the current configuration is
+alive.
+\"Alive\" means it is running and not stuck. It also means the connection
+to the server is functional - I.e. The user has the correct host and
+port specified."
+  (interactive)
+  (if (omnisharp--check-alive-status-worker)
+      (message "Server is alive and well. Happy coding!")
+    (messge "Server is not alive")))
+
+(defun omnisharp--check-alive-status-worker ()
+  (omnisharp-post-message-curl-as-json
+   (concat (omnisharp-get-host) "checkalivestatus")))
 
 (provide 'omnisharp)
 
