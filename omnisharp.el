@@ -215,7 +215,8 @@ server backend."
     ("OmniSharp server"
      ["Start OmniSharp server with solution (.sln) file" omnisharp-start-omnisharp-server]
      ["Reload solution" omnisharp-reload-solution]
-     ["Stop OmniSharp server" omnisharp-stop-server])
+     ["Stop OmniSharp server" omnisharp-stop-server]
+     ["Check alive status" omnisharp-check-alive-status])
 
     ("Current symbol"
      ["Show type" omnisharp-current-type-information]
@@ -1785,6 +1786,23 @@ result."
     (concat "mono " server-exe-file-path
             " -s " solution-file-path
             " > /dev/null"))))
+
+;;;###autoload
+(defun omnisharp-check-alive-status ()
+  "Shows a message to the user describing whether the
+OmniSharpServer process specified in the current configuration is
+alive.
+\"Alive\" means it is running and not stuck. It also means the connection
+to the server is functional - I.e. The user has the correct host and
+port specified."
+  (interactive)
+  (if (omnisharp--check-alive-status-worker)
+      (message "Server is alive and well. Happy coding!")
+    (messge "Server is not alive")))
+
+(defun omnisharp--check-alive-status-worker ()
+  (omnisharp-post-message-curl-as-json
+   (concat (omnisharp-get-host) "checkalivestatus")))
 
 (provide 'omnisharp)
 
