@@ -45,10 +45,10 @@ default message 'json-readtable-error'"
     (lambda (response-json-string)
       (reports-communication-error response-json-string)))))
 
-
 (ert-deftest check-alive-status-worker-should-return-server-result ()
-  "The correct server path must be returned on windows and unix systems"
   (with-working-server-configuration
    (should (equal t (omnisharp--check-alive-status-worker))))
 
-  (reports-communication-error (omnisharp--check-alive-status-worker)))
+  (reports-communication-error-with-broken-server-configuration
+   (omnisharp--check-alive-status-worker)))
+
