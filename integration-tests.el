@@ -23,8 +23,8 @@ purposefully invalid configuration to test connection errors."
   "Asserts the given code reports a human-readable error
 communication error message when there is no working connection
 to the OmniSharpServer instance."
-  (with-broken-server-configuration
-   `(should (equal "Error communicating to the OmniSharpServer instance"
+  `(with-broken-server-configuration
+    (should (equal "Error communicating to the OmniSharpServer instance"
                    ,code))))
 
 
