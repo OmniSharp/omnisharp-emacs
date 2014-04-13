@@ -234,7 +234,7 @@ server backend."
      ["Remove marked files in dired from solution" omnisharp-remove-from-project-current-file]
      ["Add reference to dll or project" omnisharp-add-reference]
      ["Build solution in emacs" omnisharp-build-in-emacs]
-     ;;["Start syntax check" omnisharp-start-flycheck]
+     ["Start syntax check" omnisharp-start-flycheck]
      )
 
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
