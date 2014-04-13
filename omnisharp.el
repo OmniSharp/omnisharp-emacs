@@ -1509,6 +1509,28 @@ type errors."
                    output checker buffer))
   ;; TODO use only is csharp files - but there are a few different
   ;; extensions available for these!
+(flycheck-define-checker csharp-omnisharp-curl-code-issues
+  "Reports code issues (refactoring suggestions) that the user can
+then accept and have fixed automatically."
+  :command ("curl"
+            (eval
+             (let ((command-plist
+                    (omnisharp--get-curl-command
+                     (concat (omnisharp-get-host) "getcodeissues")
+                     (omnisharp--get-common-params))))
+               (cons
+                (plist-get command-plist :command)
+                (plist-get command-plist :arguments)))))
+
+  :error-patterns ((warning line-start
+                            (file-name) ":"
+                            line ":"
+                            column
+                            " "
+                            (message (one-or-more not-newline))))
+  :error-parser (lambda (output checker buffer)
+                  (omnisharp--flycheck-error-parser-raw-json
+                   output checker buffer 'info))
   :predicate (lambda () t))
 
 (defun omnisharp--flycheck-error-parser-raw-json
