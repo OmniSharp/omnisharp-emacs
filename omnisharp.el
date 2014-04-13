@@ -1512,13 +1512,13 @@ type errors."
                           column
                           " "
                           (message (one-or-more not-newline))))
-  ;; TODO this should be cleaned, but I can't get it to compile that
-  ;; way.
   :error-parser (lambda (output checker buffer)
                   (omnisharp--flycheck-error-parser-raw-json
                    output checker buffer))
-  ;; TODO use only is csharp files - but there are a few different
-  ;; extensions available for these!
+
+  :predicate (lambda () omnisharp-mode)
+  :next-checkers (csharp-omnisharp-curl-code-issues))
+
 (flycheck-define-checker csharp-omnisharp-curl-code-issues
   "Reports code issues (refactoring suggestions) that the user can
 then accept and have fixed automatically."
@@ -1537,7 +1537,7 @@ then accept and have fixed automatically."
   :error-parser (lambda (output checker buffer)
                   (omnisharp--flycheck-error-parser-raw-json
                    output checker buffer 'info))
-  :predicate (lambda () t))
+  :predicate (lambda () omnisharp-mode))
 
 (defun omnisharp--flycheck-error-parser-raw-json
   (output checker buffer &optional error-level)
