@@ -1512,11 +1512,19 @@ type errors."
   :predicate (lambda () t))
 
 (defun omnisharp--flycheck-error-parser-raw-json
-  (output checker buffer)
+  (output checker buffer &optional error-level)
+  "Takes either a QuickFixResponse or a SyntaxErrorsResponse as a
+json string. Returns flycheck errors created based on the locations in
+the json."
   (let* ((json-result
           (omnisharp--json-read-from-string output))
          (errors (omnisharp--vector-to-list
-                  (cdr (assoc 'Errors json-result)))))
+                  ;; Support both a SyntaxErrorsResponse and a
+                  ;; QuickFixResponse. they are essentially the same,
+                  ;; but have the quickfixes (buffer locations) under
+                  ;; different property names.
+                  (cdr (or (assoc 'QuickFixes json-result)
+                           (assoc 'Errors json-result))))))
     (when (not (equal (length errors) 0))
       (mapcar (lambda (it)
                 (flycheck-error-new
@@ -1525,8 +1533,10 @@ type errors."
                  :filename (cdr (assoc 'FileName it))
                  :line (cdr (assoc 'Line it))
                  :column (cdr (assoc 'Column it))
-                 :message (cdr (assoc 'Message it))
-                 :level 'error))
+                 ;; A CodeIssues response has Text instead of Message
+                 :message (cdr (or (assoc 'Message it)
+                                   (assoc 'Text it)))
+                 :level (or error-level 'error)))
               errors))))
 
 (defun omnisharp--imenu-make-marker (element)
