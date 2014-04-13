@@ -1026,6 +1026,20 @@ the curl program. Depends on the operating system."
       (omnisharp--get-curl-command-windows-with-tmp-file url params)
     (omnisharp--get-curl-command-unix url params)))
 
+(defun omnisharp--get-curl-command-executable-string-for-api-name
+  (params api-name)
+  "Returns the full command to call curl with PARAMS for the api API-NAME.
+Example: when called with \"getcodeactions\", returns
+\"curl (stuff) http://localhost:2000/getcodeactions (stuff)\"
+with \"stuff\" set to sensible values."
+  (let ((command-plist
+         (omnisharp--get-curl-command
+          (concat (omnisharp-get-host) api-name)
+          params)))
+    (cons
+     (plist-get command-plist :command)
+     (plist-get command-plist :arguments))))
+
 (defun omnisharp--get-curl-command-unix (url params)
   "Returns a command using plain curl that can be executed to
 communicate with the API."
@@ -1488,13 +1502,9 @@ type errors."
                    ; flycheck-csharp-omnisharp-curl-executable if it
                    ; is set
             (eval
-             (let ((command-plist
-                    (omnisharp--get-curl-command
-                     (concat (omnisharp-get-host) "syntaxerrors")
-                     (omnisharp--get-common-params))))
-               (cons
-                (plist-get command-plist :command)
-                (plist-get command-plist :arguments)))))
+             (omnisharp--get-curl-command-executable-string-for-api-name
+              (omnisharp--get-common-params)
+              "syntaxerrors")))
 
   :error-patterns ((error line-start
                           (file-name) ":"
@@ -1514,13 +1524,9 @@ type errors."
 then accept and have fixed automatically."
   :command ("curl"
             (eval
-             (let ((command-plist
-                    (omnisharp--get-curl-command
-                     (concat (omnisharp-get-host) "getcodeissues")
-                     (omnisharp--get-common-params))))
-               (cons
-                (plist-get command-plist :command)
-                (plist-get command-plist :arguments)))))
+             (omnisharp--get-curl-command-executable-string-for-api-name
+              (omnisharp--get-common-params)
+              "getcodeissues")))
 
   :error-patterns ((warning line-start
                             (file-name) ":"
