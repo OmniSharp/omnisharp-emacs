@@ -192,7 +192,11 @@ server backend."
   (when omnisharp-eldoc-support
     (when omnisharp-mode
       (make-local-variable 'eldoc-documentation-function)
-      (setq eldoc-documentation-function 'omnisharp-eldoc-function))))
+      (setq eldoc-documentation-function 'omnisharp-eldoc-function)))
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl)
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl-code-issues))
 
 (easy-menu-define omnisharp-mode-menu omnisharp-mode-map
   "Menu for omnisharp-mode"
@@ -1517,7 +1521,7 @@ type errors."
                    output checker buffer))
 
   :predicate (lambda () omnisharp-mode)
-  :next-checkers (csharp-omnisharp-curl-code-issues))
+  :next-checkers ((no-errors . csharp-omnisharp-curl-code-issues)))
 
 (flycheck-define-checker csharp-omnisharp-curl-code-issues
   "Reports code issues (refactoring suggestions) that the user can
