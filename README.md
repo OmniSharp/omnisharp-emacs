@@ -157,10 +157,10 @@ currently checked.
 
 ![](pics/syntax-error-flycheck.png)
 
-To start the check, use (omnisharp-start-flycheck) or select it in the
+To start the check, use (flycheck-mode) or select it in the
 menu. The check will then be performed after the current buffer has
-been idle for a certain number of seconds. Currently the default is
-0.5 seconds.
+been idle for a certain number of seconds or when it is saved,
+depending on your flycheck configuration.
 
 To make syntax checking start sooner/later, use:
 ```
