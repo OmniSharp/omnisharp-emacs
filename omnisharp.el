@@ -193,6 +193,8 @@ server backend."
     (when omnisharp-mode
       (make-local-variable 'eldoc-documentation-function)
       (setq eldoc-documentation-function 'omnisharp-eldoc-function)))
+
+  ;; These are selected automatically when flycheck is enabled
   (add-to-list 'flycheck-checkers
                'csharp-omnisharp-curl)
   (add-to-list 'flycheck-checkers
@@ -238,7 +240,7 @@ server backend."
      ["Remove marked files in dired from solution" omnisharp-remove-from-project-current-file]
      ["Add reference to dll or project" omnisharp-add-reference]
      ["Build solution in emacs" omnisharp-build-in-emacs]
-     ["Start syntax check" omnisharp-start-flycheck]
+     ["Start syntax check" flycheck-mode]
      ["Fix code issue at point" omnisharp-fix-code-issue-at-point]
      )
 
@@ -1755,13 +1757,6 @@ use another window."
 
 (defun omnisharp-navigate-to-region-other-window ()
   (interactive) (omnisharp-navigate-to-region t))
-
-(defun omnisharp-start-flycheck ()
-  "Selects and starts the csharp-omnisharp-curl syntax checker for the
-current buffer. Use this in your csharp-mode hook."
-  (interactive)
-  (flycheck-select-checker 'csharp-omnisharp-curl)
-  (flycheck-mode))
 
 (defun omnisharp-navigate-to-region ()
   (interactive)
