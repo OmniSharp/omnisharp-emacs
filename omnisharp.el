@@ -192,7 +192,13 @@ server backend."
   (when omnisharp-eldoc-support
     (when omnisharp-mode
       (make-local-variable 'eldoc-documentation-function)
-      (setq eldoc-documentation-function 'omnisharp-eldoc-function))))
+      (setq eldoc-documentation-function 'omnisharp-eldoc-function)))
+
+  ;; These are selected automatically when flycheck is enabled
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl)
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl-code-issues))
 
 (easy-menu-define omnisharp-mode-menu omnisharp-mode-map
   "Menu for omnisharp-mode"
@@ -234,7 +240,8 @@ server backend."
      ["Remove marked files in dired from solution" omnisharp-remove-from-project-current-file]
      ["Add reference to dll or project" omnisharp-add-reference]
      ["Build solution in emacs" omnisharp-build-in-emacs]
-     ;;["Start syntax check" omnisharp-start-flycheck]
+     ["Start syntax check" flycheck-mode]
+     ["Fix code issue at point" omnisharp-fix-code-issue-at-point]
      )
 
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
@@ -972,10 +979,6 @@ the OmniSharp server understands."
     (--any? (string-equal file-name it)
            all-open-buffers-list)))
 
-(defun omnisharp--convert-slashes-to-double-backslashes (str)
-  "This might be useful. A direct port from OmniSharp.py."
-  (replace-regexp-in-string "/" "\\\\" str))
-
 (defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
 
@@ -1025,6 +1028,20 @@ the curl program. Depends on the operating system."
   (if (equal system-type 'windows-nt)
       (omnisharp--get-curl-command-windows-with-tmp-file url params)
     (omnisharp--get-curl-command-unix url params)))
+
+(defun omnisharp--get-curl-command-executable-string-for-api-name
+  (params api-name)
+  "Returns the full command to call curl with PARAMS for the api API-NAME.
+Example: when called with \"getcodeactions\", returns
+\"curl (stuff) http://localhost:2000/getcodeactions (stuff)\"
+with \"stuff\" set to sensible values."
+  (let ((command-plist
+         (omnisharp--get-curl-command
+          (concat (omnisharp-get-host) api-name)
+          params)))
+    (cons
+     (plist-get command-plist :command)
+     (plist-get command-plist :arguments))))
 
 (defun omnisharp--get-curl-command-unix (url params)
   "Returns a command using plain curl that can be executed to
@@ -1488,13 +1505,9 @@ type errors."
                    ; flycheck-csharp-omnisharp-curl-executable if it
                    ; is set
             (eval
-             (let ((command-plist
-                    (omnisharp--get-curl-command
-                     (concat (omnisharp-get-host) "syntaxerrors")
-                     (omnisharp--get-common-params))))
-               (cons
-                (plist-get command-plist :command)
-                (plist-get command-plist :arguments)))))
+             (omnisharp--get-curl-command-executable-string-for-api-name
+              (omnisharp--get-common-params)
+              "syntaxerrors")))
 
   :error-patterns ((error line-start
                           (file-name) ":"
@@ -1502,14 +1515,32 @@ type errors."
                           column
                           " "
                           (message (one-or-more not-newline))))
-  ;; TODO this should be cleaned, but I can't get it to compile that
-  ;; way.
   :error-parser (lambda (output checker buffer)
                   (omnisharp--flycheck-error-parser-raw-json
                    output checker buffer))
-  ;; TODO use only is csharp files - but there are a few different
-  ;; extensions available for these!
-  :predicate (lambda () t))
+
+  :predicate (lambda () omnisharp-mode)
+  :next-checkers ((no-errors . csharp-omnisharp-curl-code-issues)))
+
+(flycheck-define-checker csharp-omnisharp-curl-code-issues
+  "Reports code issues (refactoring suggestions) that the user can
+then accept and have fixed automatically."
+  :command ("curl"
+            (eval
+             (omnisharp--get-curl-command-executable-string-for-api-name
+              (omnisharp--get-common-params)
+              "getcodeissues")))
+
+  :error-patterns ((warning line-start
+                            (file-name) ":"
+                            line ":"
+                            column
+                            " "
+                            (message (one-or-more not-newline))))
+  :error-parser (lambda (output checker buffer)
+                  (omnisharp--flycheck-error-parser-raw-json
+                   output checker buffer 'info))
+  :predicate (lambda () omnisharp-mode))
 
 (defun omnisharp--flycheck-error-parser-raw-json
   (output checker buffer &optional error-level)
@@ -1723,13 +1754,6 @@ use another window."
 (defun omnisharp-navigate-to-region-other-window ()
   (interactive) (omnisharp-navigate-to-region t))
 
-(defun omnisharp-start-flycheck ()
-  "Selects and starts the csharp-omnisharp-curl syntax checker for the
-current buffer. Use this in your csharp-mode hook."
-  (interactive)
-  (flycheck-select-checker 'csharp-omnisharp-curl)
-  (flycheck-mode))
-
 (defun omnisharp-navigate-to-region ()
   (interactive)
   (let ((quickfix-response
@@ -1866,6 +1890,31 @@ finished loading the solution."
 (defun omnisharp--check-ready-status-worker ()
   (omnisharp-post-message-curl-as-json
    (concat (omnisharp-get-host) "checkreadystatus")))
+
+;;;###autoload
+(defun omnisharp-fix-code-issue-at-point ()
+  (interactive)
+  (let ((run-code-action-result
+         (omnisharp--fix-code-issue-at-point-worker
+          (omnisharp--get-common-params))))
+    (omnisharp--set-buffer-contents-to
+     (buffer-name)
+     (cdr (assoc 'Text run-code-action-result))
+     (line-number-at-pos)
+     (omnisharp--current-column))))
+
+(defun omnisharp--fix-code-issue-at-point-worker (request)
+  "Takes a Request in lisp format. Calls the api and returns a
+RunCodeIssuesResponse that contains Text - the new buffer
+contents with the issue at point fixed."
+  ;; The api uses a RunCodeActionRequest but currently ignores the
+  ;; CodeAction property in that class
+  (let ((run-code-action-request
+         (cons `(CodeAction . 0) request)))
+    (omnisharp-post-message-curl-as-json
+     (concat (omnisharp-get-host)
+             "fixcodeissue")
+     run-code-action-request)))
 
 (provide 'omnisharp)
 

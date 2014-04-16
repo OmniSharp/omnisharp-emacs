@@ -16,6 +16,9 @@
   (kbd "g r") 'omnisharp-run-code-action-refactoring)
 
 (evil-define-key 'normal omnisharp-mode-map
+  (kbd "g f") 'omnisharp-fix-code-issue-at-point)
+
+(evil-define-key 'normal omnisharp-mode-map
   (kbd "g R") 'omnisharp-rename)
 
 (evil-define-key 'normal omnisharp-mode-map
