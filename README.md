@@ -52,6 +52,10 @@ Lacks a better UI and a good default configuration.
     * Currently only one formatting style supported, easy to add more.
 * Syntax checker for parse errors
     * Runs using the provided [Flycheck][] checker in the background.
+* Syntax checker for code issues (refactoring suggestions)
+    * This automatically runs when there are no syntax errors
+    * Fix the first suggested error on the current line with
+      `omnisharp-fix-code-issue-at-point`
 * OmniSharp server instance manipulation
     * Start server
     * Reload solution
