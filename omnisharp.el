@@ -239,6 +239,7 @@ server backend."
      ["Add reference to dll or project" omnisharp-add-reference]
      ["Build solution in emacs" omnisharp-build-in-emacs]
      ["Start syntax check" omnisharp-start-flycheck]
+     ["Fix code issue at point" omnisharp-fix-code-issue-at-point]
      )
 
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
@@ -1898,6 +1899,31 @@ finished loading the solution."
 (defun omnisharp--check-ready-status-worker ()
   (omnisharp-post-message-curl-as-json
    (concat (omnisharp-get-host) "checkreadystatus")))
+
+;;;###autoload
+(defun omnisharp-fix-code-issue-at-point ()
+  (interactive)
+  (let ((run-code-action-result
+         (omnisharp--fix-code-issue-at-point-worker
+          (omnisharp--get-common-params))))
+    (omnisharp--set-buffer-contents-to
+     (buffer-name)
+     (cdr (assoc 'Text run-code-action-result))
+     (line-number-at-pos)
+     (omnisharp--current-column))))
+
+(defun omnisharp--fix-code-issue-at-point-worker (request)
+  "Takes a Request in lisp format. Calls the api and returns a
+RunCodeIssuesResponse that contains Text - the new buffer
+contents with the issue at point fixed."
+  ;; The api uses a RunCodeActionRequest but currently ignores the
+  ;; CodeAction property in that class
+  (let ((run-code-action-request
+         (cons `(CodeAction . 0) request)))
+    (omnisharp-post-message-curl-as-json
+     (concat (omnisharp-get-host)
+             "fixcodeissue")
+     run-code-action-request)))
 
 (provide 'omnisharp)
 
