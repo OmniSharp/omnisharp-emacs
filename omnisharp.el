@@ -979,10 +979,6 @@ the OmniSharp server understands."
     (--any? (string-equal file-name it)
            all-open-buffers-list)))
 
-(defun omnisharp--convert-slashes-to-double-backslashes (str)
-  "This might be useful. A direct port from OmniSharp.py."
-  (replace-regexp-in-string "/" "\\\\" str))
-
 (defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
 
