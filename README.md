@@ -50,6 +50,12 @@ Lacks a better UI and a good default configuration.
     * Jump to errors like in normal `*compilation*` output
 * Format the current buffer
     * Currently only one formatting style supported, easy to add more.
+* Syntax checker for parse errors
+    * Runs using the provided [Flycheck][] checker in the background.
+* Syntax checker for code issues (refactoring suggestions)
+    * This automatically runs when there are no syntax errors
+    * Fix the first suggested error on the current line with
+      `omnisharp-fix-code-issue-at-point`
 * OmniSharp server instance manipulation
     * Start server
     * Reload solution
@@ -143,6 +149,24 @@ compilation buffer.
 
 ![](pics/build-solution-in-compilation-buffer.png)
 
+### Syntax errors checking
+It is possible to check the current buffer for syntax errors using the
+flycheck library. This is done asynchronously, and errors are shown
+when found. Note that this is not a type checker, only syntax is
+currently checked.
+
+![](pics/syntax-error-flycheck.png)
+
+To start the check, use (flycheck-mode) or select it in the
+menu. The check will then be performed after the current buffer has
+been idle for a certain number of seconds or when it is saved,
+depending on your flycheck configuration.
+
+To make syntax checking start sooner/later, use:
+```
+(setq flycheck-idle-change-delay 2) ; in seconds
+```
+
 ### ElDoc integration
 ElDoc support is switched on by default. This shows type information
 for the symbol at point in the echo area.
@@ -177,6 +201,12 @@ omnisharp-emacs depends on the external program `curl` for accessing
 the background OmniSharp server process. You need to ensure this is
 installed and can be found by Emacs. On Windows you should install the
 native curl program from [the curl website].
+
+To make sure omnisharp-emacs can find your curl, make your PATH
+environment variable contain the directory for curl, or set the
+`omnisharp--curl-executable-path` variable to the full path to the
+curl executable. The path may be e.g. `"C:\Program Files
+(x86)\Git\bin\curl.exe"` or `/usr/bin/curl`.
 
 To automatically load omnisharp-emacs when editing csharp files, add
 something like this to your csharp-mode-hook:

@@ -1,9 +1,10 @@
+;; -*- mode: Emacs-Lisp; lexical-binding: t; -*-
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 1.8
+;; Version: 1.9
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
-;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.13"))
+;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.19") (csharp-mode "0.8.6"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
 
 ;;; Commentary:
@@ -171,6 +172,10 @@ Must be writable by the current user."
   :group 'omnisharp
   :type 'file)
 
+(defcustom omnisharp--curl-executable-path
+  "curl"
+  "The absolute or relative path to the curl executable.")
+
 ;;;###autoload
 (define-minor-mode omnisharp-mode
   "Omnicompletion (intellisense) and more for C# using an OmniSharp
@@ -187,7 +192,13 @@ server backend."
   (when omnisharp-eldoc-support
     (when omnisharp-mode
       (make-local-variable 'eldoc-documentation-function)
-      (setq eldoc-documentation-function 'omnisharp-eldoc-function))))
+      (setq eldoc-documentation-function 'omnisharp-eldoc-function)))
+
+  ;; These are selected automatically when flycheck is enabled
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl)
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl-code-issues))
 
 (easy-menu-define omnisharp-mode-menu omnisharp-mode-map
   "Menu for omnisharp-mode"
@@ -210,7 +221,9 @@ server backend."
     ("OmniSharp server"
      ["Start OmniSharp server with solution (.sln) file" omnisharp-start-omnisharp-server]
      ["Reload solution" omnisharp-reload-solution]
-     ["Stop OmniSharp server" omnisharp-stop-server])
+     ["Stop OmniSharp server" omnisharp-stop-server]
+     ["Check alive status" omnisharp-check-alive-status]
+     ["Check ready status" omnisharp-check-ready-status])
 
     ("Current symbol"
      ["Show type" omnisharp-current-type-information]
@@ -227,7 +240,8 @@ server backend."
      ["Remove marked files in dired from solution" omnisharp-remove-from-project-current-file]
      ["Add reference to dll or project" omnisharp-add-reference]
      ["Build solution in emacs" omnisharp-build-in-emacs]
-     ;;["Start syntax check" omnisharp-start-flycheck]
+     ["Start syntax check" flycheck-mode]
+     ["Fix code issue at point" omnisharp-fix-code-issue-at-point]
      )
 
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
@@ -269,49 +283,54 @@ argument, use another window."
 (defun omnisharp-find-usages ()
   "Find usages for the symbol under point"
   (interactive)
-  (let ((quickfixes (omnisharp-find-usages-worker
-                     (omnisharp--get-common-params))))
+  (message "Finding usages...")
+  (omnisharp-find-usages-worker
+   (omnisharp--get-common-params)
+   (lambda (quickfixes)
+     (if (equal 0 (length quickfixes))
+         (message "No usages found."))
+     (omnisharp--write-quickfixes-to-compilation-buffer
+      quickfixes
+      omnisharp--find-usages-buffer-name
+      omnisharp-find-usages-header))))
 
-    (if (equal 0 (length quickfixes))
-        (message "No usages found.")
-
-      (omnisharp--write-quickfixes-to-compilation-buffer
-       quickfixes
-       omnisharp--find-usages-buffer-name
-       omnisharp-find-usages-header))))
-
-(defun omnisharp-find-usages-worker (request)
-  ;; TODO make this asyncronic like all other compilation processes!
-  (let* ((quickfix-response (omnisharp-post-message-curl-as-json
-                             (concat (omnisharp-get-host) "findusages")
-                             request))
-         (quickfixes (omnisharp--vector-to-list
-                      (cdr (assoc 'QuickFixes quickfix-response)))))
-    quickfixes))
+(defun omnisharp-find-usages-worker (request callback)
+  "Gets a list of QuickFix lisp objects from a findusages api call
+asynchronously. On completions, CALLBACK is run with the quickfixes as its only argument."
+  (declare (indent defun))
+  (omnisharp-post-message-curl-as-json-async
+   (concat (omnisharp-get-host) "findusages")
+   request
+   (lambda (quickfix-response)
+     (apply callback (list (omnisharp--vector-to-list
+                            (cdr (assoc 'QuickFixes quickfix-response))))))))
 
 (defun omnisharp-find-implementations ()
   "Show a buffer containing all implementations of the interface under
 point, or classes derived from the class under point. Allow the user
 to select one (or more) to jump to."
   (interactive)
-  (let ((quickfixes
-         (omnisharp-find-implementations-worker
-          (omnisharp--get-common-params))))
+  (message "Finding implementations...")
+  (omnisharp-find-implementations-worker
+   (omnisharp--get-common-params)
+   (lambda (quickfixes)
+     (if (equal 0 (length quickfixes))
+         (message "No implementations found."))
+     (omnisharp--write-quickfixes-to-compilation-buffer
+      quickfixes
+      omnisharp--find-implementations-buffer-name
+      omnisharp-find-implementations-header))))
 
-    (omnisharp--write-quickfixes-to-compilation-buffer
-     quickfixes
-     omnisharp--find-implementations-buffer-name
-     omnisharp-find-implementations-header)))
-
-(defun omnisharp-find-implementations-worker (request)
-  "Returns a list of QuickFix lisp objects from a findimplementations
-api call made with the given Request."
-  (let* ((quickfix-response (omnisharp-post-message-curl-as-json
-                             (concat (omnisharp-get-host) "findimplementations")
-                             request))
-         (quickfixes (omnisharp--vector-to-list
-                      (cdr (assoc 'QuickFixes quickfix-response)))))
-    quickfixes))
+(defun omnisharp-find-implementations-worker (request callback)
+  "Gets a list of QuickFix lisp objects from a findimplementations api call
+asynchronously. On completions, CALLBACK is run with the quickfixes as its only argument."
+  (declare (indent defun))
+  (omnisharp-post-message-curl-as-json-async
+   (concat (omnisharp-get-host) "findimplementations")
+   request
+   (lambda (quickfix-response)
+     (apply callback (list (omnisharp--vector-to-list
+                            (cdr (assoc 'QuickFixes quickfix-response))))))))
 
 (defun omnisharp-navigate-to-region
   (&optional other-window)
@@ -644,6 +663,9 @@ items."
 "If t, activate eldoc integration - eldoc-mode must also be enabled for
  this to work. Defaults to t.")
 
+(defvar omnisharp--eldoc-fontification-buffer-name " * OmniSharp : Eldoc Fontification *"
+  "The name of the buffer that is used to fontify eldoc strings.")
+
 ;; Path to the server
 (defcustom omnisharp-server-executable-path nil
 "Path to OmniSharpServer. If its value is nil, search for the server in the exec-path")
@@ -957,14 +979,10 @@ the OmniSharp server understands."
     (--any? (string-equal file-name it)
            all-open-buffers-list)))
 
-(defun omnisharp--convert-slashes-to-double-backslashes (str)
-  "This might be useful. A direct port from OmniSharp.py."
-  (replace-regexp-in-string "/" "\\\\" str))
-
 (defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
 
-(defun omnisharp-post-message-curl (url params)
+(defun omnisharp-post-message-curl (url &optional params)
   "Post json stuff to url with --data set to given params. Return
 result."
   (let ((curl-command-plist
@@ -979,6 +997,31 @@ result."
              (plist-get curl-command-plist :arguments))
       (buffer-string))))
 
+(defun omnisharp-post-message-curl-async (url params callback)
+  "Post json stuff to url asynchronously with --data set to given params.
+On completion, CALLBACK is run with the result as it's only parameter.
+
+Returns the curl process"
+  (declare (indent defun))
+  (let* ((curl-command-plist
+          (omnisharp--get-curl-command url params))
+         (process-name (concat "* Omnisharp curl : " url "*"))
+         (process-buffer (generate-new-buffer process-name))
+         (process (apply 'start-process
+                         process-name
+                         process-buffer
+                         (plist-get curl-command-plist :command)
+                         (plist-get curl-command-plist :arguments))))
+    (set-process-sentinel
+     process
+     (lambda (proc status)
+       (unless (process-live-p proc)
+         (apply callback
+                (list (progn (let ((output (with-current-buffer process-buffer (buffer-string))))
+                               (kill-buffer process-buffer)
+                               output)))))))
+    process))
+
 (defun omnisharp--get-curl-command (url params)
   "Returns a command that may be used to communicate with the API via
 the curl program. Depends on the operating system."
@@ -986,10 +1029,24 @@ the curl program. Depends on the operating system."
       (omnisharp--get-curl-command-windows-with-tmp-file url params)
     (omnisharp--get-curl-command-unix url params)))
 
+(defun omnisharp--get-curl-command-executable-string-for-api-name
+  (params api-name)
+  "Returns the full command to call curl with PARAMS for the api API-NAME.
+Example: when called with \"getcodeactions\", returns
+\"curl (stuff) http://localhost:2000/getcodeactions (stuff)\"
+with \"stuff\" set to sensible values."
+  (let ((command-plist
+         (omnisharp--get-curl-command
+          (concat (omnisharp-get-host) api-name)
+          params)))
+    (cons
+     (plist-get command-plist :command)
+     (plist-get command-plist :arguments))))
+
 (defun omnisharp--get-curl-command-unix (url params)
   "Returns a command using plain curl that can be executed to
 communicate with the API."
-  `(:command "curl"
+  `(:command ,omnisharp--curl-executable-path
              :arguments
              ("--silent" "-H" "Content-type: application/json"
               "--data"
@@ -1007,7 +1064,7 @@ api at URL using that file as the parameters."
   (let ((path-with-curl-prefix
          (concat "@"
                  omnisharp--windows-curl-tmp-file-path)))
-    `(:command "curl"
+    `(:command ,omnisharp--curl-executable-path
                :arguments
                ("--silent" "-H" "Content-type: application/json"
                 "--data-binary"
@@ -1021,9 +1078,26 @@ api at URL using that file as the parameters."
   (with-temp-file target-path
     (insert stuff-to-write-to-file)))
 
-(defun omnisharp-post-message-curl-as-json (url params)
-  (json-read-from-string
+(defun omnisharp--json-read-from-string (json-string
+                                         &optional error-message)
+  "Deserialize the given JSON-STRING to a lisp object. If
+something goes wrong, return a human-readable warning."
+  (condition-case nil
+      (json-read-from-string json-string)
+    (error
+     (or error-message
+         "Error communicating to the OmniSharpServer instance"))))
+
+(defun omnisharp-post-message-curl-as-json (url &optional params)
+  (omnisharp--json-read-from-string
    (omnisharp-post-message-curl url params)))
+
+(defun omnisharp-post-message-curl-as-json-async (url params callback)
+  "Posts message to curl at URL with PARAMS asynchronously.
+On completion, the curl output is parsed as json and passed into CALLBACK."
+  (omnisharp-post-message-curl-async url params
+    (lambda (str)
+      (apply callback (list (omnisharp--json-read-from-string str))))))
 
 (defun omnisharp--auto-complete-display-function-popup
   (json-result-alist)
@@ -1416,12 +1490,72 @@ with the formatted result. Saves the file before starting."
    (concat (omnisharp-get-host) "syntaxerrors")
    params))
 
+;; Flycheck interns this variable and uses it as the program to get
+;; the errors with.
+(setq flycheck-csharp-omnisharp-curl-executable
+      omnisharp--curl-executable-path)
+
+(flycheck-define-checker csharp-omnisharp-curl
+  "A csharp source syntax checker using curl to call an OmniSharp
+server process running in the background. Only checks the syntax - not
+type errors."
+  ;; This must be an external process. Currently flycheck does not
+  ;; support using elisp functions as checkers.
+  :command ("curl" ; this is overridden by
+                   ; flycheck-csharp-omnisharp-curl-executable if it
+                   ; is set
+            (eval
+             (omnisharp--get-curl-command-executable-string-for-api-name
+              (omnisharp--get-common-params)
+              "syntaxerrors")))
+
+  :error-patterns ((error line-start
+                          (file-name) ":"
+                          line ":"
+                          column
+                          " "
+                          (message (one-or-more not-newline))))
+  :error-parser (lambda (output checker buffer)
+                  (omnisharp--flycheck-error-parser-raw-json
+                   output checker buffer))
+
+  :predicate (lambda () omnisharp-mode)
+  :next-checkers ((no-errors . csharp-omnisharp-curl-code-issues)))
+
+(flycheck-define-checker csharp-omnisharp-curl-code-issues
+  "Reports code issues (refactoring suggestions) that the user can
+then accept and have fixed automatically."
+  :command ("curl"
+            (eval
+             (omnisharp--get-curl-command-executable-string-for-api-name
+              (omnisharp--get-common-params)
+              "getcodeissues")))
+
+  :error-patterns ((warning line-start
+                            (file-name) ":"
+                            line ":"
+                            column
+                            " "
+                            (message (one-or-more not-newline))))
+  :error-parser (lambda (output checker buffer)
+                  (omnisharp--flycheck-error-parser-raw-json
+                   output checker buffer 'info))
+  :predicate (lambda () omnisharp-mode))
+
 (defun omnisharp--flycheck-error-parser-raw-json
-  (output checker buffer)
+  (output checker buffer &optional error-level)
+  "Takes either a QuickFixResponse or a SyntaxErrorsResponse as a
+json string. Returns flycheck errors created based on the locations in
+the json."
   (let* ((json-result
-          (json-read-from-string output))
+          (omnisharp--json-read-from-string output))
          (errors (omnisharp--vector-to-list
-                  (cdr (assoc 'Errors json-result)))))
+                  ;; Support both a SyntaxErrorsResponse and a
+                  ;; QuickFixResponse. they are essentially the same,
+                  ;; but have the quickfixes (buffer locations) under
+                  ;; different property names.
+                  (cdr (or (assoc 'QuickFixes json-result)
+                           (assoc 'Errors json-result))))))
     (when (not (equal (length errors) 0))
       (mapcar (lambda (it)
                 (flycheck-error-new
@@ -1430,8 +1564,10 @@ with the formatted result. Saves the file before starting."
                  :filename (cdr (assoc 'FileName it))
                  :line (cdr (assoc 'Line it))
                  :column (cdr (assoc 'Column it))
-                 :message (cdr (assoc 'Message it))
-                 :level 'error))
+                 ;; A CodeIssues response has Text instead of Message
+                 :message (cdr (or (assoc 'Message it)
+                                   (assoc 'Text it)))
+                 :level (or error-level 'error)))
               errors))))
 
 (defun omnisharp--imenu-make-marker (element)
@@ -1618,13 +1754,6 @@ use another window."
 (defun omnisharp-navigate-to-region-other-window ()
   (interactive) (omnisharp-navigate-to-region t))
 
-(defun omnisharp-start-flycheck ()
-  "Selects and starts the csharp-omnisharp-curl syntax checker for the
-current buffer. Use this in your csharp-mode hook."
-  (interactive)
-  (flycheck-select-checker 'csharp-omnisharp-curl)
-  (flycheck-mode))
-
 (defun omnisharp-navigate-to-region ()
   (interactive)
   (let ((quickfix-response
@@ -1665,6 +1794,21 @@ result."
      (omnisharp--get-auto-complete-params))
     (omnisharp-show-last-auto-complete-result)))
 
+(defun omnisharp--get-eldoc-fontification-buffer ()
+  (let ((buffer (get-buffer omnisharp--eldoc-fontification-buffer-name)))
+    (if (buffer-live-p buffer)
+        buffer
+      (with-current-buffer (generate-new-buffer omnisharp--eldoc-fontification-buffer-name)
+        (ignore-errors
+          (let ((csharp-mode-hook nil))
+            (csharp-mode)))
+        (current-buffer)))))
+
+(defun omnisharp--eldoc-fontify-string (str)
+  (with-current-buffer (omnisharp--get-eldoc-fontification-buffer)
+    (delete-region (point-min) (point-max))
+    (font-lock-fontify-region (point) (progn (insert str ";") (point)))
+    (buffer-substring (point-min) (1- (point-max)))))
 
 (defun omnisharp-eldoc-function ()
   "Returns a doc string appropriate for the current context, or nil."
@@ -1673,7 +1817,7 @@ result."
              (omnisharp-current-type-information-worker
               'Type
               (omnisharp--get-common-params))))
-        current-type-information)
+        (omnisharp--eldoc-fontify-string current-type-information))
     (error nil)))
 
 ;; define a method to nicely start the server
@@ -1715,6 +1859,62 @@ result."
     (concat "mono " server-exe-file-path
             " -s " solution-file-path
             " > /dev/null"))))
+
+;;;###autoload
+(defun omnisharp-check-alive-status ()
+  "Shows a message to the user describing whether the
+OmniSharpServer process specified in the current configuration is
+alive.
+\"Alive\" means it is running and not stuck. It also means the connection
+to the server is functional - I.e. The user has the correct host and
+port specified."
+  (interactive)
+  (if (omnisharp--check-alive-status-worker)
+      (message "Server is alive and well. Happy coding!")
+    (messge "Server is not alive")))
+
+(defun omnisharp--check-alive-status-worker ()
+  (omnisharp-post-message-curl-as-json
+   (concat (omnisharp-get-host) "checkalivestatus")))
+
+;;;###autoload
+(defun omnisharp-check-ready-status ()
+  "Shows a message to the user describing whether the
+OmniSharpServer process specified in the current configuration has
+finished loading the solution."
+  (interactive)
+  (if (omnisharp--check-ready-status-worker)
+      (message "Server is ready")
+    (message "Server is not ready yet")))
+
+(defun omnisharp--check-ready-status-worker ()
+  (omnisharp-post-message-curl-as-json
+   (concat (omnisharp-get-host) "checkreadystatus")))
+
+;;;###autoload
+(defun omnisharp-fix-code-issue-at-point ()
+  (interactive)
+  (let ((run-code-action-result
+         (omnisharp--fix-code-issue-at-point-worker
+          (omnisharp--get-common-params))))
+    (omnisharp--set-buffer-contents-to
+     (buffer-name)
+     (cdr (assoc 'Text run-code-action-result))
+     (line-number-at-pos)
+     (omnisharp--current-column))))
+
+(defun omnisharp--fix-code-issue-at-point-worker (request)
+  "Takes a Request in lisp format. Calls the api and returns a
+RunCodeIssuesResponse that contains Text - the new buffer
+contents with the issue at point fixed."
+  ;; The api uses a RunCodeActionRequest but currently ignores the
+  ;; CodeAction property in that class
+  (let ((run-code-action-request
+         (cons `(CodeAction . 0) request)))
+    (omnisharp-post-message-curl-as-json
+     (concat (omnisharp-get-host)
+             "fixcodeissue")
+     run-code-action-request)))
 
 (provide 'omnisharp)
 
