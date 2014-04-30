@@ -28,7 +28,6 @@
 (require 'popup)
 (require 'etags)
 (require 'flycheck)
-(require 'auto-complete)
 
 (defgroup omnisharp ()
   "Omnisharp-emacs is a port of the awesome OmniSharp server to
@@ -625,8 +624,12 @@ and complete members."
 
 ;; The library only seems to accept completions that have the same
 ;; leading characters as results. Oh well.
-(ac-define-source omnisharp
+(defvar ac-source-omnisharp
   '((candidates . omnisharp--get-auto-complete-result-in-popup-format)))
+
+(defun ac-complete-omnisharp nil
+  (interactive)
+  (auto-complete '(ac-source-omnisharp)))
 
 (defun omnisharp--get-auto-complete-result-in-popup-format ()
   "Returns /autocomplete API results \(autocompletions\) as popup
@@ -684,7 +687,7 @@ triggers a completion immediately"
       'stop)))
 
 (defun company-omnisharp (command &optional arg &rest ignored)
-  "Company-mode integration"
+  "`company-mode' completion back-end using OmniSharp."
   (case command
     (prefix (and omnisharp-mode
                  (not (company-in-string-or-comment))
@@ -695,76 +698,57 @@ triggers a completion immediately"
     ;; because "" doesn't return everything
     (no-cache (equal arg ""))
 
-    (crop (when (string-match "(" arg)
-            (substring arg 0 (match-beginning 0))))
+    (annotation (omnisharp--company-annotation arg))
 
     (meta (omnisharp--get-company-candidate-data arg 'DisplayText))
-    
-    (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-data arg 'Description))))
+
+    (doc-buffer (let ((doc-buffer (company-doc-buffer
+                                   (omnisharp--get-company-candidate-data arg 'Description))))
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
 
     (ignore-case omnisharp-company-ignore-case)
 
-    (post-completion (let* ((end (point-marker))
-                            (beg (- (point) (length arg))))
-                       (if omnisharp-company-do-template-completion
-                           ;;If this was a function match, do templating
-                           (if (string-match "([^)]" arg)
-                               (company-template-c-like-templatify arg)
-                             ;;Otherwise, look for the type seperator and strip that off the end
-                             (if (string-match omnisharp-company-type-separator arg)
-                                 (when (re-search-backward omnisharp-company-type-separator beg t)
-                                   (delete-region (match-beginning 0) end))))
-                         ;;If we aren't doing templating, string away anything after the (
-                         ;; or anything after the type separator, if we don't find that.
-                         (if (string-match "(" arg)
-                             (when (re-search-backward "(" beg t)
-                               (delete-region (match-beginning 0) end))
-                           (if (string-match omnisharp-company-type-separator arg)
-                               (when (re-search-backward omnisharp-company-type-separator beg t)
-                                 (delete-region (match-beginning 0) end)))))))))
+    (post-completion (let ((ann (omnisharp--company-annotation arg)))
+                       (when (and omnisharp-company-do-template-completion
+                                  ann (string-match-p "([^)]" ann))
+                         ;; This was a function match, do templating.
+                         (insert ann)
+                         (company-template-c-like-templatify ann))))))
 
-
-
-(defun omnisharp--string-starts-with (s arg)
-  "Returns non-nil if string S starts with ARG, else nil."
-  (cond ((>= (length s) (length arg))
-         (string-prefix-p arg s omnisharp-company-ignore-case))
-        (t nil)))
-
-(defun omnisharp--filter-company-candidate (candidate-string element prefix)
-  "Since company-mode expects the candidates to begin with the
-completion prefix, filter items that don't begin with the
-completion prefix. Also filter out completions that just match
-the prefix exactly, as they just confuse things"
-  (if (and (not (string= (omnisharp--completion-result-item-get-completion-text element) prefix))
-           (omnisharp--string-starts-with candidate-string prefix))
-      candidate-string
-    nil))
-
-(defun omnisharp--make-company-completion-text (item)
-  "company-mode expects the beginning of the candidate to be the
+(defun omnisharp--make-company-completion (item)
+  "`company-mode' expects the beginning of the candidate to be the
 same as the characters being completed.  This method converts a
 function description of 'void SomeMethod(int parameter)' to
-'SomeMethod(int parameter) : void'."
+string 'SomeMethod' propertized with annotation '(int parameter) : void'
+and the original value ITEM."
   (let* ((case-fold-search nil)
          (completion (omnisharp--completion-result-item-get-completion-text item))
          (display (omnisharp--completion-result-item-get-display-text item))
          (func-start-pos (string-match (concat " " completion) display))
-         (output display))
-    ;;If this candidate has a type, stick the return type on the end
+         (output display)
+         annotation)
+    ;; If this candidate has a type, stick the return type on the end
     (if (and func-start-pos (> func-start-pos 0))
         (progn
           (setq func-start-pos (+ func-start-pos 1))
-          (let ((func-return (substring display 0 func-start-pos))
-                (func-body (substring display func-start-pos)))
-            (setq output (concat func-body omnisharp-company-type-separator func-return))))
-          (let ((brackets-start (string-match "()" display)))
-            (when brackets-start
-              (setq output (substring display 0 brackets-start)))))
-      output))
+          (setq output (substring display func-start-pos))
+          (setq annotation (concat omnisharp-company-type-separator
+                                   (substring display 0 func-start-pos))))
+      (let ((brackets-start (string-match "()" display)))
+        (setq output
+              ;; Create a new string either way, so that
+              ;; `add-text-properties' below never modifies the
+              ;; original `display' string.
+              (substring display 0 brackets-start))))
+    (when (string-match "(" output)
+      (setq annotation (concat (substring output (match-beginning 0)) annotation))
+      (setq output (substring output 0 (match-beginning 0))))
+    (add-text-properties 0 (length output)
+                         (list 'omnisharp-item item 'omnisharp-ann annotation)
+                         output)
+    output))
 
 (defun omnisharp--get-company-candidates (pre)
   "Returns completion results in company format.  Company-mode
@@ -777,24 +761,18 @@ company-mode-friendly"
          ;; json. This is an emacs limitation.
          (params
           (omnisharp--get-auto-complete-params))
-
          (json-result-auto-complete-response
-          (omnisharp-auto-complete-worker params))
-         (company-output (delq nil
-                               (mapcar
-                                (lambda (element)
-                                  (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) element pre))
-                                json-result-auto-complete-response))))
-    company-output))
+          (omnisharp-auto-complete-worker params)))
+    (all-completions pre (mapcar #'omnisharp--make-company-completion
+                                 json-result-auto-complete-response))))
 
-(defun omnisharp--get-company-candidate-data (pre datatype)
-  "Given one of our completion candidate strings, find the
-element it matches and return the datatype request (e.g. 'DisplayText)."
-  (interactive)
-  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
-           (when (string-equal (omnisharp--make-company-completion-text element) pre)
-             (cl-return (cdr (assoc datatype element))))))
+(defun omnisharp--company-annotation (candidate)
+  (get-text-property 0 'omnisharp-ann candidate))
 
+(defun omnisharp--get-company-candidate-data (candidate datatype)
+  "Return the DATATYPE request (e.g. 'DisplayText) for CANDIDATE."
+  (let ((item (get-text-property 0 'omnisharp-item candidate)))
+    (cdr (assoc datatype item))))
 
 ;;Add this completion backend to company-mode
 ;; (eval-after-load 'company
