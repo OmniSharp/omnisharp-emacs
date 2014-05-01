@@ -644,9 +644,9 @@ items."
 
 
 ;; company-mode integration
-(defvar omnisharp-company-do-template-completion t
+(defvar omnisharp-company-do-template-completion nil
   "Set to t if you want in-line parameter completion, nil
-  otherwise")
+  otherwise. CURRENTLY UNSUPPORTED.")
 
 (defvar omnisharp-company-type-separator " : "
   "The string used to visually seperate functions/variables from
