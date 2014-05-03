@@ -872,7 +872,54 @@ user is less likely to lose data."
 refactoring code actions for the current file and position."
   (omnisharp-post-message-curl-as-json
    (concat (omnisharp-get-host) "getcodeactions")
-   (omnisharp--get-common-params)))
+   (concat
+    `((SelectionStartColumn . ,(omnisharp--region-start-column))
+      (SelectionStartLine   . ,(omnisharp--region-start-line))
+      (SelectionEndColumn   . ,(omnisharp--region-end-column))
+      (SelectionEndLine     . ,(omnisharp--region-end-line)))
+    (omnisharp--get-common-params))))
+
+(defun omnisharp--with-minimum-value (min-number actual-number)
+  "If ACTUAL-NUMBER is less than MIN-NUMBER, return MIN-NUMBER.
+Otherwise return ACTUAL-NUMBER."
+  (if (< actual-number min-number)
+      min-number
+    actual-number))
+
+(defun omnisharp--region-start-line ()
+  (when (region-active-p)
+    (save-excursion
+      (goto-char (region-beginning))
+      (line-number-at-pos))))
+
+(defun omnisharp--region-end-line ()
+  (when (region-active-p)
+    (save-excursion
+      (goto-char (region-end))
+      (line-number-at-pos))))
+
+(defun omnisharp--region-start-column ()
+  (when (region-active-p)
+    (save-excursion
+      (goto-char (region-beginning))
+      (omnisharp--with-minimum-value 1
+                                     (omnisharp--current-column)))))
+
+(defun omnisharp--region-end-column ()
+  (when (region-active-p)
+    (save-excursion
+      ;; evil-mode has its own Vim-like concept of the region. A
+      ;; visual line selection in evil-mode reports the end column to
+      ;; be 0 in some cases. Work around this.
+      (if (and (boundp 'evil-visual-end) evil-visual-end)
+          (progn
+            (goto-char evil-visual-end)
+            ;; Point moves to the next line for some reason. So move
+            ;; it back
+            (backward-char))
+        (goto-char (region-end)))
+      (omnisharp--with-minimum-value 1
+                                     (omnisharp--current-column)))))
 
 (defun omnisharp-run-code-action-refactoring-worker
   (chosen-action-index)
