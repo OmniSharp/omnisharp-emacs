@@ -43,6 +43,8 @@ Lacks a better UI and a good default configuration.
 * Run a refactoring on the current position
     * Uses the refactorings from the NRefactory library, which is also
       used by the MonoDevelop and SharpDevelop IDEs
+    * When used with a selection, prompts to extract a method from the
+      selection where possible
 * Solution building
     * The user may choose whether they want to build in the emacs
       `*compilation*` buffer or at OmniSharp's end (non-asynchronous,
