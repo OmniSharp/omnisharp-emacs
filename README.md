@@ -5,6 +5,16 @@ Emacs text editor. It provides IDE-like features for editing files in
 C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
+## This requires the Omnisharp Server program
+The server must be at least the following version:
+
+```
+8355b92f30ac6f9b5f62bfbb618b7b4f45db7915
+Date:   Fri Apr 18 10:44:05 2014 +0100
+```
+
+If you haven't updated your server copy since that, you must upgrade.
+
 ## Project maturity
 Lacks a better UI and a good default configuration.
 
