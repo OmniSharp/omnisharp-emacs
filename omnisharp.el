@@ -2,7 +2,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 2.1
+;; Version: 2.3
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.19") (csharp-mode "0.8.6"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -644,9 +644,9 @@ items."
 
 
 ;; company-mode integration
-(defvar omnisharp-company-do-template-completion t
+(defvar omnisharp-company-do-template-completion nil
   "Set to t if you want in-line parameter completion, nil
-  otherwise")
+  otherwise. CURRENTLY UNSUPPORTED.")
 
 (defvar omnisharp-company-type-separator " : "
   "The string used to visually seperate functions/variables from
@@ -718,33 +718,20 @@ triggers a completion immediately"
                          (company-template-c-like-templatify ann))))))
 
 (defun omnisharp--make-company-completion (item)
-  "`company-mode' expects the beginning of the candidate to be the
-same as the characters being completed.  This method converts a
-function description of 'void SomeMethod(int parameter)' to
-string 'SomeMethod' propertized with annotation '(int parameter) : void'
-and the original value ITEM."
+  "`company-mode' expects the beginning of the candidate to be
+the same as the characters being completed.  This method converts
+a function description of 'void SomeMethod(int parameter)' to
+string 'SomeMethod' propertized with annotation 'void
+SomeMethod(int parameter)' and the original value ITEM."
   (let* ((case-fold-search nil)
          (completion (omnisharp--completion-result-item-get-completion-text item))
          (display (omnisharp--completion-result-item-get-display-text item))
-         (func-start-pos (string-match (concat " " completion) display))
-         (output display)
+         output
          annotation)
-    ;; If this candidate has a type, stick the return type on the end
-    (if (and func-start-pos (> func-start-pos 0))
-        (progn
-          (setq func-start-pos (+ func-start-pos 1))
-          (setq output (substring display func-start-pos))
-          (setq annotation (concat omnisharp-company-type-separator
-                                   (substring display 0 func-start-pos))))
-      (let ((brackets-start (string-match "()" display)))
-        (setq output
-              ;; Create a new string either way, so that
-              ;; `add-text-properties' below never modifies the
-              ;; original `display' string.
-              (substring display 0 brackets-start))))
-    (when (string-match "(" output)
-      (setq annotation (concat (substring output (match-beginning 0)) annotation))
-      (setq output (substring output 0 (match-beginning 0))))
+    
+    ;; Remove any trailing brackets from the completion string
+    (setq output (car (split-string completion "(")))
+    (setq annotation (concat omnisharp-company-type-separator display))
     (add-text-properties 0 (length output)
                          (list 'omnisharp-item item 'omnisharp-ann annotation)
                          output)
@@ -1879,6 +1866,10 @@ result."
   (when (eq nil server-exe-file-path)
     (setq server-exe-file-path
           omnisharp-server-executable-path))
+  (setq server-exe-file-path (shell-quote-argument
+                              (expand-file-name server-exe-file-path)))
+  (setq solution-file-path (shell-quote-argument
+                              (expand-file-name solution-file-path)))
   (cond
    ((equal system-type 'windows-nt)
     (concat server-exe-file-path " -s " solution-file-path " > NUL"))
