@@ -152,3 +152,16 @@ line (0) and end being the length of the line."
                    (omnisharp--region-end-column)))))
 
 
+(ert-deftest omnisharp--get-code-actions-from-api-works-with-a-region ()
+  "It should not crash on the emacs side of things when composing the
+request. This test doesn't care what the server thinks is correct
+data."
+  (with-active-region-in-buffer
+   '("line 1"
+     "lin(region-starts-here)e 2"
+     "line 3"
+     "line 4"
+     "(region-ends-here)line 5")
+   (with-stub
+     (stub omnisharp-post-message-curl-as-json)
+     (omnisharp--get-code-actions-from-api))))

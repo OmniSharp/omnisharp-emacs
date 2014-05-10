@@ -872,12 +872,11 @@ user is less likely to lose data."
 refactoring code actions for the current file and position."
   (omnisharp-post-message-curl-as-json
    (concat (omnisharp-get-host) "getcodeactions")
-   (concat
-    `((SelectionStartColumn . ,(omnisharp--region-start-column))
-      (SelectionStartLine   . ,(omnisharp--region-start-line))
-      (SelectionEndColumn   . ,(omnisharp--region-end-column))
-      (SelectionEndLine     . ,(omnisharp--region-end-line)))
-    (omnisharp--get-common-params))))
+   (->> (omnisharp--get-common-params)
+     (cons `(SelectionStartColumn . ,(omnisharp--region-start-column)))
+     (cons `(SelectionStartLine   . ,(omnisharp--region-start-line)))
+     (cons `(SelectionEndColumn   . ,(omnisharp--region-end-column)))
+     (cons `(SelectionEndLine     . ,(omnisharp--region-end-line))))))
 
 (defun omnisharp--with-minimum-value (min-number actual-number)
   "If ACTUAL-NUMBER is less than MIN-NUMBER, return MIN-NUMBER.
@@ -925,8 +924,12 @@ Otherwise return ACTUAL-NUMBER."
   (chosen-action-index)
 
   (let* ((run-action-params
-          (cons `(CodeAction . ,chosen-action-index)
-                (omnisharp--get-common-params)))
+          (->> (omnisharp--get-common-params)
+            (cons `(CodeAction . ,chosen-action-index))
+            (cons `(SelectionStartColumn . ,(omnisharp--region-start-column)))
+            (cons `(SelectionStartLine   . ,(omnisharp--region-start-line)))
+            (cons `(SelectionEndColumn   . ,(omnisharp--region-end-column)))
+            (cons `(SelectionEndLine     . ,(omnisharp--region-end-line)))))
          (json-run-action-result ; RunCodeActionsResponse
           (omnisharp-post-message-curl-as-json
            (concat (omnisharp-get-host) "runcodeaction")
