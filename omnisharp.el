@@ -1871,8 +1871,9 @@ port specified."
     (message "Server is not alive")))
 
 (defun omnisharp--check-alive-status-worker ()
-  (omnisharp-post-message-curl-as-json
-   (concat (omnisharp-get-host) "checkalivestatus")))
+  (let ((result (omnisharp-post-message-curl-as-json
+		 (concat (omnisharp-get-host) "checkalivestatus"))))
+    (eq result t)))
 
 ;;;###autoload
 (defun omnisharp-check-ready-status ()
@@ -1885,8 +1886,9 @@ finished loading the solution."
     (message "Server is not ready yet")))
 
 (defun omnisharp--check-ready-status-worker ()
-  (omnisharp-post-message-curl-as-json
-   (concat (omnisharp-get-host) "checkreadystatus")))
+  (let ((result (omnisharp-post-message-curl-as-json
+		 (concat (omnisharp-get-host) "checkreadystatus"))))
+    (eq result t)))
 
 ;;;###autoload
 (defun omnisharp-fix-code-issue-at-point ()
