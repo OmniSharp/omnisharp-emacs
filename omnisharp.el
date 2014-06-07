@@ -2,7 +2,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 2.3
+;; Version: 2.4
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.19") (csharp-mode "0.8.6"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -562,8 +562,8 @@ solution."
                               ;; dll and csproj files
                               ))
          (tmp-params (omnisharp--get-common-params))
-         (params (add-to-list 'tmp-params
-                              `(Reference . ,path-to-ref-file-to-add))))
+         (params (cl-pushnew `(Reference . ,path-to-ref-file-to-add)
+			     tmp-params)))
     (omnisharp-add-reference-worker params)))
 
 (defun omnisharp-add-reference-worker (params)
@@ -1709,7 +1709,7 @@ ido-completing-read. Returns the chosen element."
       (cdr (assoc 'QuickFixes quickfix-response)))
      other-window)))
 
-(defun omnisharp-navigate-to-solution-member-other-window
+(defun omnisharp-navigate-to-solution-member-other-window ()
   (omnisharp-navigate-to-solution-member t))
 
 (defun omnisharp-navigate-to-solution-file
@@ -1753,30 +1753,8 @@ file. With prefix argument uses another window."
   (&optional other-window)
   (omnisharp-navigate-to-solution-file-then-file-member t))
 
-(defun omnisharp-navigate-to-region
-  (&optional other-window)
-  "Navigate to region in current file. If OTHER-WINDOW is given and t,
-use another window."
-  (interactive "P")
-  (let ((quickfix-response
-         (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "gotoregion")
-          (omnisharp--get-common-params))))
-    (omnisharp--choose-and-go-to-quickfix-ido
-     (cdr (assoc 'QuickFixes quickfix-response))
-     other-window)))
-
 (defun omnisharp-navigate-to-region-other-window ()
   (interactive) (omnisharp-navigate-to-region t))
-
-(defun omnisharp-navigate-to-region ()
-  (interactive)
-  (let ((quickfix-response
-         (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "gotoregion")
-          (omnisharp--get-common-params))))
-    (omnisharp--choose-and-go-to-quickfix-ido
-     (cdr (assoc 'QuickFixes quickfix-response)))))
 
 (defun omnisharp-show-last-auto-complete-result ()
   (interactive)
@@ -1839,8 +1817,8 @@ result."
 ;;;###autoload
 (defun omnisharp-start-omnisharp-server (solution)
   "Starts an OmniSharpServer for a given solution"
-  (setq BufferName "*Omni-Server*")
   (interactive "fStart OmniSharpServer.exe for solution: ")
+  (setq BufferName "*Omni-Server*")
   (omnisharp--find-and-cache-omnisharp-server-executable-path)
   (if (equal nil omnisharp-server-executable-path)
       (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
@@ -1890,11 +1868,12 @@ port specified."
   (interactive)
   (if (omnisharp--check-alive-status-worker)
       (message "Server is alive and well. Happy coding!")
-    (messge "Server is not alive")))
+    (message "Server is not alive")))
 
 (defun omnisharp--check-alive-status-worker ()
-  (omnisharp-post-message-curl-as-json
-   (concat (omnisharp-get-host) "checkalivestatus")))
+  (let ((result (omnisharp-post-message-curl-as-json
+		 (concat (omnisharp-get-host) "checkalivestatus"))))
+    (eq result t)))
 
 ;;;###autoload
 (defun omnisharp-check-ready-status ()
@@ -1907,8 +1886,9 @@ finished loading the solution."
     (message "Server is not ready yet")))
 
 (defun omnisharp--check-ready-status-worker ()
-  (omnisharp-post-message-curl-as-json
-   (concat (omnisharp-get-host) "checkreadystatus")))
+  (let ((result (omnisharp-post-message-curl-as-json
+		 (concat (omnisharp-get-host) "checkreadystatus"))))
+    (eq result t)))
 
 ;;;###autoload
 (defun omnisharp-fix-code-issue-at-point ()
