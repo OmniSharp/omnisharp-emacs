@@ -746,6 +746,7 @@ company-mode-friendly"
   (let* ((json-false :json-false)
          ;; json-false helps distinguish between null and false in
          ;; json. This is an emacs limitation.
+         (completion-ignore-case omnisharp-company-ignore-case)
          (params
           (omnisharp--get-auto-complete-params))
          (json-result-auto-complete-response
