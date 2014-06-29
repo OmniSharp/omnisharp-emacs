@@ -655,6 +655,9 @@ items."
 (defvar omnisharp-company-ignore-case t
   "If t, case is ignored in completion matches.")
 
+(defvar omnisharp-company-strip-trailing-brackets nil
+  "If t, strips trailing <> and () from completions.")
+
 (defvar omnisharp-company-begin-after-member-access t
   "If t, begin completion when pressing '.' after a class, object
   or namespace")
@@ -726,11 +729,14 @@ SomeMethod(int parameter)' and the original value ITEM."
   (let* ((case-fold-search nil)
          (completion (omnisharp--completion-result-item-get-completion-text item))
          (display (omnisharp--completion-result-item-get-display-text item))
-         output
+         (output completion)
          annotation)
     
     ;; Remove any trailing brackets from the completion string
-    (setq output (car (split-string completion "(")))
+    
+    (when omnisharp-company-strip-trailing-brackets
+      (setq output (car (split-string completion "(\\|<"))))
+
     (setq annotation (concat omnisharp-company-type-separator display))
     (add-text-properties 0 (length output)
                          (list 'omnisharp-item item 'omnisharp-ann annotation)
