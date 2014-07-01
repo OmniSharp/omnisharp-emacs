@@ -662,6 +662,9 @@ items."
   "If t, begin completion when pressing '.' after a class, object
   or namespace")
 
+(defvar omnisharp-company-sort-results t
+  "If t, autocompletion results are sorted alphabetically")
+
 (defvar omnisharp-imenu-support nil
 "If t, activate imenu integration. Defaults to nil.")
 
@@ -712,6 +715,8 @@ triggers a completion immediately"
                   doc-buffer))
 
     (ignore-case omnisharp-company-ignore-case)
+
+    (sorted omnisharp-company-sort-results)
 
     (post-completion (let ((ann (omnisharp--company-annotation arg)))
                        (when (and omnisharp-company-do-template-completion
