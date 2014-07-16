@@ -1848,6 +1848,7 @@ result."
                               (expand-file-name server-exe-file-path)))
   (setq solution-file-path (shell-quote-argument
                               (expand-file-name solution-file-path)))
+  (setq omnisharp-solution-file-path solution-file-path)
   (cond
    ((equal system-type 'windows-nt)
     (concat server-exe-file-path " -s " solution-file-path " > NUL"))
