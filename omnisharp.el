@@ -2,7 +2,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 2.0
+;; Version: 2.4
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.19") (csharp-mode "0.8.6"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -28,7 +28,6 @@
 (require 'popup)
 (require 'etags)
 (require 'flycheck)
-(require 'auto-complete)
 
 (defgroup omnisharp ()
   "Omnisharp-emacs is a port of the awesome OmniSharp server to
@@ -563,8 +562,8 @@ solution."
                               ;; dll and csproj files
                               ))
          (tmp-params (omnisharp--get-common-params))
-         (params (add-to-list 'tmp-params
-                              `(Reference . ,path-to-ref-file-to-add))))
+         (params (cl-pushnew `(Reference . ,path-to-ref-file-to-add)
+			     tmp-params)))
     (omnisharp-add-reference-worker params)))
 
 (defun omnisharp-add-reference-worker (params)
@@ -625,8 +624,12 @@ and complete members."
 
 ;; The library only seems to accept completions that have the same
 ;; leading characters as results. Oh well.
-(ac-define-source omnisharp
+(defvar ac-source-omnisharp
   '((candidates . omnisharp--get-auto-complete-result-in-popup-format)))
+
+(defun ac-complete-omnisharp nil
+  (interactive)
+  (auto-complete '(ac-source-omnisharp)))
 
 (defun omnisharp--get-auto-complete-result-in-popup-format ()
   "Returns /autocomplete API results \(autocompletions\) as popup
@@ -641,9 +644,9 @@ items."
 
 
 ;; company-mode integration
-(defvar omnisharp-company-do-template-completion t
+(defvar omnisharp-company-do-template-completion nil
   "Set to t if you want in-line parameter completion, nil
-  otherwise")
+  otherwise. CURRENTLY UNSUPPORTED.")
 
 (defvar omnisharp-company-type-separator " : "
   "The string used to visually seperate functions/variables from
@@ -684,7 +687,7 @@ triggers a completion immediately"
       'stop)))
 
 (defun company-omnisharp (command &optional arg &rest ignored)
-  "Company-mode integration"
+  "`company-mode' completion back-end using OmniSharp."
   (case command
     (prefix (and omnisharp-mode
                  (not (company-in-string-or-comment))
@@ -695,76 +698,44 @@ triggers a completion immediately"
     ;; because "" doesn't return everything
     (no-cache (equal arg ""))
 
-    (crop (when (string-match "(" arg)
-            (substring arg 0 (match-beginning 0))))
+    (annotation (omnisharp--company-annotation arg))
 
     (meta (omnisharp--get-company-candidate-data arg 'DisplayText))
-    
-    (doc-buffer (let((doc-buffer (company-doc-buffer (omnisharp--get-company-candidate-data arg 'Description))))
+
+    (doc-buffer (let ((doc-buffer (company-doc-buffer
+                                   (omnisharp--get-company-candidate-data arg 'Description))))
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
 
     (ignore-case omnisharp-company-ignore-case)
 
-    (post-completion (let* ((end (point-marker))
-                            (beg (- (point) (length arg))))
-                       (if omnisharp-company-do-template-completion
-                           ;;If this was a function match, do templating
-                           (if (string-match "([^)]" arg)
-                               (company-template-c-like-templatify arg)
-                             ;;Otherwise, look for the type seperator and strip that off the end
-                             (if (string-match omnisharp-company-type-separator arg)
-                                 (when (re-search-backward omnisharp-company-type-separator beg t)
-                                   (delete-region (match-beginning 0) end))))
-                         ;;If we aren't doing templating, string away anything after the (
-                         ;; or anything after the type separator, if we don't find that.
-                         (if (string-match "(" arg)
-                             (when (re-search-backward "(" beg t)
-                               (delete-region (match-beginning 0) end))
-                           (if (string-match omnisharp-company-type-separator arg)
-                               (when (re-search-backward omnisharp-company-type-separator beg t)
-                                 (delete-region (match-beginning 0) end)))))))))
+    (post-completion (let ((ann (omnisharp--company-annotation arg)))
+                       (when (and omnisharp-company-do-template-completion
+                                  ann (string-match-p "([^)]" ann))
+                         ;; This was a function match, do templating.
+                         (insert ann)
+                         (company-template-c-like-templatify ann))))))
 
-
-
-(defun omnisharp--string-starts-with (s arg)
-  "Returns non-nil if string S starts with ARG, else nil."
-  (cond ((>= (length s) (length arg))
-         (string-prefix-p arg s omnisharp-company-ignore-case))
-        (t nil)))
-
-(defun omnisharp--filter-company-candidate (candidate-string element prefix)
-  "Since company-mode expects the candidates to begin with the
-completion prefix, filter items that don't begin with the
-completion prefix. Also filter out completions that just match
-the prefix exactly, as they just confuse things"
-  (if (and (not (string= (omnisharp--completion-result-item-get-completion-text element) prefix))
-           (omnisharp--string-starts-with candidate-string prefix))
-      candidate-string
-    nil))
-
-(defun omnisharp--make-company-completion-text (item)
-  "company-mode expects the beginning of the candidate to be the
-same as the characters being completed.  This method converts a
-function description of 'void SomeMethod(int parameter)' to
-'SomeMethod(int parameter) : void'."
+(defun omnisharp--make-company-completion (item)
+  "`company-mode' expects the beginning of the candidate to be
+the same as the characters being completed.  This method converts
+a function description of 'void SomeMethod(int parameter)' to
+string 'SomeMethod' propertized with annotation 'void
+SomeMethod(int parameter)' and the original value ITEM."
   (let* ((case-fold-search nil)
          (completion (omnisharp--completion-result-item-get-completion-text item))
          (display (omnisharp--completion-result-item-get-display-text item))
-         (func-start-pos (string-match (concat " " completion) display))
-         (output display))
-    ;;If this candidate has a type, stick the return type on the end
-    (if (and func-start-pos (> func-start-pos 0))
-        (progn
-          (setq func-start-pos (+ func-start-pos 1))
-          (let ((func-return (substring display 0 func-start-pos))
-                (func-body (substring display func-start-pos)))
-            (setq output (concat func-body omnisharp-company-type-separator func-return))))
-          (let ((brackets-start (string-match "()" display)))
-            (when brackets-start
-              (setq output (substring display 0 brackets-start)))))
-      output))
+         output
+         annotation)
+    
+    ;; Remove any trailing brackets from the completion string
+    (setq output (car (split-string completion "(")))
+    (setq annotation (concat omnisharp-company-type-separator display))
+    (add-text-properties 0 (length output)
+                         (list 'omnisharp-item item 'omnisharp-ann annotation)
+                         output)
+    output))
 
 (defun omnisharp--get-company-candidates (pre)
   "Returns completion results in company format.  Company-mode
@@ -777,24 +748,18 @@ company-mode-friendly"
          ;; json. This is an emacs limitation.
          (params
           (omnisharp--get-auto-complete-params))
-
          (json-result-auto-complete-response
-          (omnisharp-auto-complete-worker params))
-         (company-output (delq nil
-                               (mapcar
-                                (lambda (element)
-                                  (omnisharp--filter-company-candidate (omnisharp--make-company-completion-text element) element pre))
-                                json-result-auto-complete-response))))
-    company-output))
+          (omnisharp-auto-complete-worker params)))
+    (all-completions pre (mapcar #'omnisharp--make-company-completion
+                                 json-result-auto-complete-response))))
 
-(defun omnisharp--get-company-candidate-data (pre datatype)
-  "Given one of our completion candidate strings, find the
-element it matches and return the datatype request (e.g. 'DisplayText)."
-  (interactive)
-  (cl-loop for element across omnisharp--last-buffer-specific-auto-complete-result do
-           (when (string-equal (omnisharp--make-company-completion-text element) pre)
-             (cl-return (cdr (assoc datatype element))))))
+(defun omnisharp--company-annotation (candidate)
+  (get-text-property 0 'omnisharp-ann candidate))
 
+(defun omnisharp--get-company-candidate-data (candidate datatype)
+  "Return the DATATYPE request (e.g. 'DisplayText) for CANDIDATE."
+  (let ((item (get-text-property 0 'omnisharp-item candidate)))
+    (cdr (assoc datatype item))))
 
 ;;Add this completion backend to company-mode
 ;; (eval-after-load 'company
@@ -907,14 +872,64 @@ user is less likely to lose data."
 refactoring code actions for the current file and position."
   (omnisharp-post-message-curl-as-json
    (concat (omnisharp-get-host) "getcodeactions")
-   (omnisharp--get-common-params)))
+   (->> (omnisharp--get-common-params)
+     (cons `(SelectionStartColumn . ,(omnisharp--region-start-column)))
+     (cons `(SelectionStartLine   . ,(omnisharp--region-start-line)))
+     (cons `(SelectionEndColumn   . ,(omnisharp--region-end-column)))
+     (cons `(SelectionEndLine     . ,(omnisharp--region-end-line))))))
+
+(defun omnisharp--with-minimum-value (min-number actual-number)
+  "If ACTUAL-NUMBER is less than MIN-NUMBER, return MIN-NUMBER.
+Otherwise return ACTUAL-NUMBER."
+  (if (< actual-number min-number)
+      min-number
+    actual-number))
+
+(defun omnisharp--region-start-line ()
+  (when (region-active-p)
+    (save-excursion
+      (goto-char (region-beginning))
+      (line-number-at-pos))))
+
+(defun omnisharp--region-end-line ()
+  (when (region-active-p)
+    (save-excursion
+      (goto-char (region-end))
+      (line-number-at-pos))))
+
+(defun omnisharp--region-start-column ()
+  (when (region-active-p)
+    (save-excursion
+      (goto-char (region-beginning))
+      (omnisharp--with-minimum-value 1
+                                     (omnisharp--current-column)))))
+
+(defun omnisharp--region-end-column ()
+  (when (region-active-p)
+    (save-excursion
+      ;; evil-mode has its own Vim-like concept of the region. A
+      ;; visual line selection in evil-mode reports the end column to
+      ;; be 0 in some cases. Work around this.
+      (if (and (boundp 'evil-visual-end) evil-visual-end)
+          (progn
+            (goto-char evil-visual-end)
+            ;; Point moves to the next line for some reason. So move
+            ;; it back
+            (backward-char))
+        (goto-char (region-end)))
+      (omnisharp--with-minimum-value 1
+                                     (omnisharp--current-column)))))
 
 (defun omnisharp-run-code-action-refactoring-worker
   (chosen-action-index)
 
   (let* ((run-action-params
-          (cons `(CodeAction . ,chosen-action-index)
-                (omnisharp--get-common-params)))
+          (->> (omnisharp--get-common-params)
+            (cons `(CodeAction . ,chosen-action-index))
+            (cons `(SelectionStartColumn . ,(omnisharp--region-start-column)))
+            (cons `(SelectionStartLine   . ,(omnisharp--region-start-line)))
+            (cons `(SelectionEndColumn   . ,(omnisharp--region-end-column)))
+            (cons `(SelectionEndLine     . ,(omnisharp--region-end-line)))))
          (json-run-action-result ; RunCodeActionsResponse
           (omnisharp-post-message-curl-as-json
            (concat (omnisharp-get-host) "runcodeaction")
@@ -1694,7 +1709,7 @@ ido-completing-read. Returns the chosen element."
       (cdr (assoc 'QuickFixes quickfix-response)))
      other-window)))
 
-(defun omnisharp-navigate-to-solution-member-other-window
+(defun omnisharp-navigate-to-solution-member-other-window ()
   (omnisharp-navigate-to-solution-member t))
 
 (defun omnisharp-navigate-to-solution-file
@@ -1738,30 +1753,8 @@ file. With prefix argument uses another window."
   (&optional other-window)
   (omnisharp-navigate-to-solution-file-then-file-member t))
 
-(defun omnisharp-navigate-to-region
-  (&optional other-window)
-  "Navigate to region in current file. If OTHER-WINDOW is given and t,
-use another window."
-  (interactive "P")
-  (let ((quickfix-response
-         (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "gotoregion")
-          (omnisharp--get-common-params))))
-    (omnisharp--choose-and-go-to-quickfix-ido
-     (cdr (assoc 'QuickFixes quickfix-response))
-     other-window)))
-
 (defun omnisharp-navigate-to-region-other-window ()
   (interactive) (omnisharp-navigate-to-region t))
-
-(defun omnisharp-navigate-to-region ()
-  (interactive)
-  (let ((quickfix-response
-         (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "gotoregion")
-          (omnisharp--get-common-params))))
-    (omnisharp--choose-and-go-to-quickfix-ido
-     (cdr (assoc 'QuickFixes quickfix-response)))))
 
 (defun omnisharp-show-last-auto-complete-result ()
   (interactive)
@@ -1824,8 +1817,8 @@ result."
 ;;;###autoload
 (defun omnisharp-start-omnisharp-server (solution)
   "Starts an OmniSharpServer for a given solution"
-  (setq BufferName "*Omni-Server*")
   (interactive "fStart OmniSharpServer.exe for solution: ")
+  (setq BufferName "*Omni-Server*")
   (omnisharp--find-and-cache-omnisharp-server-executable-path)
   (if (equal nil omnisharp-server-executable-path)
       (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
@@ -1851,6 +1844,10 @@ result."
   (when (eq nil server-exe-file-path)
     (setq server-exe-file-path
           omnisharp-server-executable-path))
+  (setq server-exe-file-path (shell-quote-argument
+                              (expand-file-name server-exe-file-path)))
+  (setq solution-file-path (shell-quote-argument
+                              (expand-file-name solution-file-path)))
   (cond
    ((equal system-type 'windows-nt)
     (concat server-exe-file-path " -s " solution-file-path " > NUL"))
@@ -1871,11 +1868,12 @@ port specified."
   (interactive)
   (if (omnisharp--check-alive-status-worker)
       (message "Server is alive and well. Happy coding!")
-    (messge "Server is not alive")))
+    (message "Server is not alive")))
 
 (defun omnisharp--check-alive-status-worker ()
-  (omnisharp-post-message-curl-as-json
-   (concat (omnisharp-get-host) "checkalivestatus")))
+  (let ((result (omnisharp-post-message-curl-as-json
+		 (concat (omnisharp-get-host) "checkalivestatus"))))
+    (eq result t)))
 
 ;;;###autoload
 (defun omnisharp-check-ready-status ()
@@ -1888,8 +1886,9 @@ finished loading the solution."
     (message "Server is not ready yet")))
 
 (defun omnisharp--check-ready-status-worker ()
-  (omnisharp-post-message-curl-as-json
-   (concat (omnisharp-get-host) "checkreadystatus")))
+  (let ((result (omnisharp-post-message-curl-as-json
+		 (concat (omnisharp-get-host) "checkreadystatus"))))
+    (eq result t)))
 
 ;;;###autoload
 (defun omnisharp-fix-code-issue-at-point ()

@@ -5,6 +5,16 @@ Emacs text editor. It provides IDE-like features for editing files in
 C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
+## This requires the Omnisharp Server program
+The server must be at least the following version:
+
+```
+8355b92f30ac6f9b5f62bfbb618b7b4f45db7915
+Date:   Fri Apr 18 10:44:05 2014 +0100
+```
+
+If you haven't updated your server copy since that, you must upgrade.
+
 ## Project maturity
 Lacks a better UI and a good default configuration.
 
@@ -43,6 +53,8 @@ Lacks a better UI and a good default configuration.
 * Run a refactoring on the current position
     * Uses the refactorings from the NRefactory library, which is also
       used by the MonoDevelop and SharpDevelop IDEs
+    * When used with a selection, prompts to extract a method from the
+      selection where possible
 * Solution building
     * The user may choose whether they want to build in the emacs
       `*compilation*` buffer or at OmniSharp's end (non-asynchronous,
@@ -183,6 +195,18 @@ omnisharp-imenu-support to t
 
 ![](pics/helm-imenu.png)
 
+### company-mode integration
+
+To enable company-mode autocompletion, omnisharp requires at least
+version 0.7 of company-mode to be installed. Then add the following to
+your init file:
+
+```
+(eval-after-load 'company
+  '(add-to-list 'company-backends 'company-omnisharp))
+```
+
+company-mode completion will only trigger when omnisharp-mode is active.
 
 ## Installation
 
@@ -231,19 +255,9 @@ configuration for evil-mode included in the project.
 ### Using Cygwin on Windows?
 Cygwin paths need to be converted on the server side for the OmniSharp
 server to handle them correctly. See the server side configuration
-file [config.json][] that has example configuration for Cygwin
-environments and comment out the example path replacements.
-
-To enable company-mode autocompletion, omnisharp requires at least
-version 0.6.13 of company-mode to be installed. Then add the following
-to your dotemacs:
-
-```
-(eval-after-load 'company
-  '(add-to-list 'company-backends 'company-omnisharp))
-```
-
-company-mode completion will only trigger when omnisharp-mode is active.
+file [config-cygwin.json][] that has example configuration for Cygwin
+environments and use the example path replacements by renaming that
+file to `config.json`.
 
 * * * * *
 
@@ -256,4 +270,4 @@ Pull requests welcome!
 [Flycheck]: https://github.com/lunaryorn/flycheck
 [MELPA]: http://melpa.milkbox.net/#installing
 [the curl website]: http://curl.haxx.se/download.html
-[config.json]: https://github.com/nosami/OmniSharpServer/blob/master/OmniSharp/config.json
+[config-cygwin.json]: https://github.com/nosami/OmniSharpServer/blob/master/OmniSharp/config-cygwin.json
