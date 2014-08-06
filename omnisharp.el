@@ -243,6 +243,12 @@ server backend."
      ["Fix code issue at point" omnisharp-fix-code-issue-at-point]
      )
 
+    ("Unit tests"
+     ["Run test at point" (lambda() (interactive) (omnisharp-unit-test "single"))]
+     ["Run test fixture" (lambda() (interactive) (omnisharp-unit-test "fixture"))]
+     ["Run all tests in project" (lambda() (interactive) (omnisharp-unit-test "all"))]
+     )
+
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
     ["Run code format on current buffer" omnisharp-code-format]
     ))
@@ -1914,6 +1920,24 @@ contents with the issue at point fixed."
      (concat (omnisharp-get-host)
              "fixcodeissue")
      run-code-action-request)))
+
+(add-to-list 'compilation-error-regexp-alist
+		 '(" in \\(.+\\):\\([1-9][0-9]+\\)" 1 2))
+
+(defun omnisharp-unit-test (mode)
+  "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'" 
+  (interactive)
+  (let ((build-command
+	 (omnisharp-post-message-curl
+	  (concat (omnisharp-get-host) "buildcommand") (omnisharp--get-common-params)))
+
+	(test-command
+	 (cdr (assoc 'TestCommand
+		     (omnisharp-post-message-curl-as-json
+		      (concat (omnisharp-get-host) "gettestcontext") 
+		      (cons `("Type" . ,mode) (omnisharp--get-common-params)))))))
+    
+    (compile (concat build-command " && " test-command))))
 
 (provide 'omnisharp)
 
