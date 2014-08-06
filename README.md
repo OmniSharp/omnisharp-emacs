@@ -84,7 +84,7 @@ shows a buffer with documentation.
 ![](pics/company-mode-doc-buffer.png)
 
 Omnisharp's company-mode support ignores case by default, but can be
-made case sensitive by setting omnisharp-company-ignore-case to nil
+made case sensitive by setting `omnisharp-company-ignore-case` to nil.
 
 #### popup.el interface
 
@@ -170,7 +170,7 @@ To make syntax checking start sooner/later, use:
 ### ElDoc integration
 ElDoc support is switched on by default. This shows type information
 for the symbol at point in the echo area.
-To switch it off, set omnisharp-eldoc-support to nil
+To switch it off, set `omnisharp-eldoc-support` to nil.
 
 ![](pics/eldoc.png)
 
