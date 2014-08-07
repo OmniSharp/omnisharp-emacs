@@ -661,9 +661,15 @@ items."
 (defvar omnisharp-company-ignore-case t
   "If t, case is ignored in completion matches.")
 
+(defvar omnisharp-company-strip-trailing-brackets nil
+  "If t, strips trailing <> and () from completions.")
+
 (defvar omnisharp-company-begin-after-member-access t
   "If t, begin completion when pressing '.' after a class, object
   or namespace")
+
+(defvar omnisharp-company-sort-results t
+  "If t, autocompletion results are sorted alphabetically")
 
 (defvar omnisharp-imenu-support nil
 "If t, activate imenu integration. Defaults to nil.")
@@ -716,6 +722,8 @@ triggers a completion immediately"
 
     (ignore-case omnisharp-company-ignore-case)
 
+    (sorted omnisharp-company-sort-results)
+
     (post-completion (let ((ann (omnisharp--company-annotation arg)))
                        (when (and omnisharp-company-do-template-completion
                                   ann (string-match-p "([^)]" ann))
@@ -732,11 +740,14 @@ SomeMethod(int parameter)' and the original value ITEM."
   (let* ((case-fold-search nil)
          (completion (omnisharp--completion-result-item-get-completion-text item))
          (display (omnisharp--completion-result-item-get-display-text item))
-         output
+         (output completion)
          annotation)
     
     ;; Remove any trailing brackets from the completion string
-    (setq output (car (split-string completion "(")))
+    
+    (when omnisharp-company-strip-trailing-brackets
+      (setq output (car (split-string completion "(\\|<"))))
+
     (setq annotation (concat omnisharp-company-type-separator display))
     (add-text-properties 0 (length output)
                          (list 'omnisharp-item item 'omnisharp-ann annotation)
@@ -752,6 +763,7 @@ company-mode-friendly"
   (let* ((json-false :json-false)
          ;; json-false helps distinguish between null and false in
          ;; json. This is an emacs limitation.
+         (completion-ignore-case omnisharp-company-ignore-case)
          (params
           (omnisharp--get-auto-complete-params))
          (json-result-auto-complete-response
@@ -1939,6 +1951,46 @@ contents with the issue at point fixed."
     
     (compile (concat build-command " && " test-command))))
 
+;;; Some Helm integration
+(when (require 'helm-grep nil 'noerror)
+  (defvar helm-omnisharp-usage-candidates nil)
+
+  (defvar helm-source-omnisharp-find-usages
+    '((name . "Omnisharp - Symbol Usages")
+      (candidate-transformer . helm-omnisharp-usage-candidate-transformer)
+      (action . omnisharp-go-to-file-line-and-column)
+      (candidates . helm-omnisharp-usage-candidates)))
+
+  (defun helm-omnisharp-usage-transform-candidate (candidate)
+    "Convert a quickfix entry into helm output"
+    (cons
+     (format "%s(%s): %s"
+             (propertize (file-name-nondirectory
+                          (cdr (assoc 'FileName candidate)))
+                         'face 'helm-grep-file)
+             (propertize (number-to-string (cdr (assoc 'Line candidate)))
+                         'face 'helm-grep-lineno)
+             (cdr (assoc 'Text candidate)))
+     candidate))
+  
+  (defun helm-omnisharp-usage-candidate-transformer (candidates)
+    "Convert all the quickfix candidates into helm output"
+    (mapcar 'helm-omnisharp-usage-transform-candidate candidates))
+
+  (defun omnisharp--helm-got-usages (quickfixes)
+    (setq helm-omnisharp-usage-candidates quickfixes)
+    (helm :sources 'helm-source-omnisharp-find-usages :buffer "*Omnisharp Usages*"))
+
+  (defun omnisharp-helm-find-usages ()
+    "Find usages for the symbol under point using Helm"
+    (interactive)
+    (message "Helm Finding usages...")
+    (omnisharp-find-usages-worker
+      (omnisharp--get-common-params)
+      'omnisharp--helm-got-usages))
+  )
+
+  
 (provide 'omnisharp)
 
 ;;; omnisharp.el ends here
