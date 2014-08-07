@@ -51,6 +51,19 @@
 (evil-define-key 'normal omnisharp-mode-map
   (kbd ",.") 'omnisharp-show-overloads-at-point)
 
+(evil-define-key 'normal omnisharp-mode-map
+  (kbd ",rt")
+  (lambda() (interactive) (omnisharp-unit-test "single")))
+
+(evil-define-key 'normal omnisharp-mode-map
+  (kbd ",rf")
+  (lambda() (interactive) (omnisharp-unit-test "fixture")))
+
+(evil-define-key 'normal omnisharp-mode-map
+  (kbd ",ra")
+  (lambda() (interactive) (omnisharp-unit-test "all")))
+
+(evil-define-key 'normal omnisharp-mode-map (kbd ",rl") 'recompile)
 
 ;; Speed up auto-complete on mono drastically. This comes with the
 ;; downside that documentation is impossible to fetch.

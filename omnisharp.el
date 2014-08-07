@@ -2,7 +2,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 2.4
+;; Version: 2.5
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.19") (csharp-mode "0.8.6"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -241,6 +241,12 @@ server backend."
      ["Build solution in emacs" omnisharp-build-in-emacs]
      ["Start syntax check" flycheck-mode]
      ["Fix code issue at point" omnisharp-fix-code-issue-at-point]
+     )
+
+    ("Unit tests"
+     ["Run test at point" (lambda() (interactive) (omnisharp-unit-test "single"))]
+     ["Run test fixture" (lambda() (interactive) (omnisharp-unit-test "fixture"))]
+     ["Run all tests in project" (lambda() (interactive) (omnisharp-unit-test "all"))]
      )
 
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
@@ -1914,6 +1920,24 @@ contents with the issue at point fixed."
      (concat (omnisharp-get-host)
              "fixcodeissue")
      run-code-action-request)))
+
+(add-to-list 'compilation-error-regexp-alist
+		 '(" in \\(.+\\):\\([1-9][0-9]+\\)" 1 2))
+
+(defun omnisharp-unit-test (mode)
+  "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'" 
+  (interactive)
+  (let ((build-command
+	 (omnisharp-post-message-curl
+	  (concat (omnisharp-get-host) "buildcommand") (omnisharp--get-common-params)))
+
+	(test-command
+	 (cdr (assoc 'TestCommand
+		     (omnisharp-post-message-curl-as-json
+		      (concat (omnisharp-get-host) "gettestcontext") 
+		      (cons `("Type" . ,mode) (omnisharp--get-common-params)))))))
+    
+    (compile (concat build-command " && " test-command))))
 
 (provide 'omnisharp)
 

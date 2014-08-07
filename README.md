@@ -72,6 +72,8 @@ Lacks a better UI and a good default configuration.
     * Start server
     * Reload solution
     * Stop server
+* Test runner
+  * Can run test at point, fixture or all tests in project.
 
 ## Details
 
@@ -207,6 +209,17 @@ your init file:
 ```
 
 company-mode completion will only trigger when omnisharp-mode is active.
+
+### Test runner integration
+
+Can run the test at point, fixture at point, or all tests
+in project.
+
+![](pics/tests.png)
+
+Specify the path and parameters to your test runner on the server here :-
+https://github.com/nosami/OmniSharpServer/blob/0eb8644f67c020fc570aaf6629beabb7654ac944/OmniSharp/config.json#L10
+
 
 ## Installation
 
