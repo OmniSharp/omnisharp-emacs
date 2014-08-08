@@ -1979,7 +1979,7 @@ contents with the issue at point fixed."
 
   (defun omnisharp--helm-got-usages (quickfixes)
     (setq helm-omnisharp-usage-candidates quickfixes)
-    (helm :sources 'helm-source-omnisharp-find-usages :buffer "*Omnisharp Usages*"))
+    (helm :sources 'helm-source-omnisharp-find-usages :buffer omnisharp--find-usages-buffer-name))
 
   (defun omnisharp-helm-find-usages ()
     "Find usages for the symbol under point using Helm"
