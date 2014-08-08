@@ -164,7 +164,9 @@ information.")
 ;; Note that emacs seems to internally expect windows paths to have
 ;; forward slashes.
 (defcustom omnisharp--windows-curl-tmp-file-path
-  "C:/omnisharp-tmp-file.cs"
+  (omnisharp--convert-backslashes-to-forward-slashes
+   (concat (getenv "USERPROFILE")
+           "/omnisharp-tmp-file.cs"))
   "The full file path where to save temporary stuff that gets sent to
 the OmniSharp API. Only used on Windows.
 Must be writable by the current user."
