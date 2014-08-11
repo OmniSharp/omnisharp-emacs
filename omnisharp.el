@@ -1388,36 +1388,30 @@ the user selects a completion and the completion is inserted."
 argument, add the displayed result to the kill ring. This can be used
 to insert the result in code, for example."
   (interactive "P")
-  (let ((current-type-information
-         (omnisharp-current-type-information-worker 'Type
-          (omnisharp--get-common-params))))
-
-    (message current-type-information)
-    (when add-to-kill-ring
-      (kill-new current-type-information))))
+  (omnisharp-current-type-information-worker 'Type))
 
 (defun omnisharp-current-type-documentation (&optional add-to-kill-ring)
   "Display documentation of the current type under point. With prefix
 argument, add the displayed result to the kill ring. This can be used
 to insert the result in code, for example."
   (interactive "P")
-  (let ((current-type-information
-         (omnisharp-current-type-information-worker 'Documentation
-          (omnisharp--get-common-params))))
+  (omnisharp-current-type-information-worker 'Documentation))
 
-    (message current-type-information)
-    (when add-to-kill-ring
-      (kill-new current-type-information))))
-
-(defun omnisharp-current-type-information-worker (datatype params)
-  "Returns information about the type under the cursor in the given
-PARAMS as a single human-readable string."
-  (let ((json-result
-         (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "typelookup")
-          params)))
-    (cdr (assoc datatype json-result))))
-
+(defun omnisharp-current-type-information-worker (type-property-name
+                                                  &optional add-to-kill-ring)
+  "Get type info from the API and display a part of the response as a
+message. TYPE-PROPERTY-NAME is a symbol in the type lookup response
+from the server side, i.e. 'Type or 'Documentation that will be
+displayed to the user."
+  (omnisharp-post-message-curl-as-json-async
+   (concat (omnisharp-get-host) "typelookup")
+   (omnisharp--get-common-params)
+   (lambda (response)
+     (let ((stuff-to-display (cdr (assoc type-property-name
+                                         response))))
+       (message stuff-to-display)
+       (when add-to-kill-ring
+         (kill-new stuff-to-display))))))
 
 (defun omnisharp-current-type-information-to-kill-ring ()
   "Shows the information of the current type and adds it to the kill
