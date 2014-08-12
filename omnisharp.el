@@ -1427,14 +1427,13 @@ ring."
   "Build the current solution in a non-blocking fashion inside emacs.
 Uses the standard compilation interface (compile)."
   (interactive)
-  (let ((build-command (omnisharp-get-build-command)))
+  ;; Build command contains backslashes on Windows systems. Work
+  ;; around this by using double backslashes. Other systems are not
+  ;; affected.
+  (let ((build-command (omnisharp--fix-build-command-if-on-windows
+                        (omnisharp-get-build-command))))
     (omnisharp--recognize-mono-compilation-error-format)
-    (compile
-     ;; Build command contains backslashes on Windows systems. Work
-     ;; around this by using double backslashes. Other systems are not
-     ;; affected.
-     (omnisharp--fix-build-command-if-on-windows
-      build-command))
+    (compile build-command)
     (add-to-list 'compile-history build-command)))
 
 (defun omnisharp--recognize-mono-compilation-error-format ()
