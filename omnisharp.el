@@ -226,6 +226,7 @@ server backend."
 
     ("Current symbol"
      ["Show type" omnisharp-current-type-information]
+     ["Show documentation" omnisharp-current-type-documentation]
      ["Show type and add it to kill ring" omnisharp-current-type-information-to-kill-ring]
      ["Find usages" omnisharp-find-usages]
      ["Find implementations" omnisharp-find-implementations]
