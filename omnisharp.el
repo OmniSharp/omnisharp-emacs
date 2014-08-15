@@ -1567,6 +1567,27 @@ then accept and have fixed automatically."
   :error-parser (lambda (output checker buffer)
                   (omnisharp--flycheck-error-parser-raw-json
                    output checker buffer 'info))
+  :predicate (lambda () omnisharp-mode)
+  :next-checkers ((no-errors . csharp-omnisharp-curl-code-issues)))
+
+(flycheck-define-checker csharp-omnisharp-curl-semantic-errors
+  "Reports semantic errors (type errors) that prevent successful
+compilation."
+  :command ("curl"
+            (eval
+             (omnisharp--get-curl-command-executable-string-for-api-name
+              (omnisharp--get-common-params)
+              "semanticerrors")))
+
+  :error-patterns ((error line-start
+                          (file-name) ":"
+                          line ":"
+                          column
+                          " "
+                          (message (one-or-more not-newline))))
+  :error-parser (lambda (output checker buffer)
+                  (omnisharp--flycheck-error-parser-raw-json
+                   output checker buffer 'info))
   :predicate (lambda () omnisharp-mode))
 
 (defun omnisharp--flycheck-error-parser-raw-json
