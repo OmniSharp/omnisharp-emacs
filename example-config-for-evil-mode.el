@@ -3,6 +3,7 @@
 (evil-define-key 'insert omnisharp-mode-map (kbd "M-.") 'omnisharp-auto-complete)
 (evil-define-key 'normal omnisharp-mode-map (kbd "<f12>") 'omnisharp-go-to-definition)
 (evil-define-key 'normal omnisharp-mode-map (kbd "g u") 'omnisharp-find-usages)
+(evil-define-key 'normal omnisharp-mode-map (kbd "g I") 'omnisharp-find-implementations) ; g i is taken
 (evil-define-key 'normal omnisharp-mode-map (kbd "g o") 'omnisharp-go-to-definition)
 (evil-define-key 'normal omnisharp-mode-map (kbd "g r") 'omnisharp-run-code-action-refactoring)
 (evil-define-key 'normal omnisharp-mode-map (kbd "g f") 'omnisharp-fix-code-issue-at-point)
