@@ -263,10 +263,15 @@ server backend."
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
   (interactive)
-  (omnisharp-post-message-curl
+  (message (concat "Reloading the server. Calls to the server will not"
+                   " work until the server has reloaded."))
+  (omnisharp-post-message-curl-async
    (concat (omnisharp-get-host) "reloadsolution")
    ;; no params needed
-   nil))
+   nil
+   (lambda (_)
+     (message "OmniSharpServer solution reloaded")))
+  )
 
 (defun omnisharp-go-to-definition (&optional other-window)
   "Jump to the definition of the symbol under point. With prefix
