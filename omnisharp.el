@@ -508,9 +508,11 @@ follow results to the locations in the actual files."
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
   (interactive)
-  (omnisharp-post-message-curl
+  (omnisharp-post-message-curl-async
    (concat (omnisharp-get-host) "stopserver")
-   nil))
+   nil
+   (lambda (_)
+     (message "OmniSharpServer stopped."))))
 
 ;; TODO create omnisharp-add-to-solution that lets user choose which
 ;; file to add.
