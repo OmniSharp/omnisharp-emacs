@@ -99,6 +99,15 @@ response. This may be set to nil to get a speed boost for
 completions."
   :group 'omnisharp
   :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-auto-complete-want-importable-types nil
+  "Whether to search for autocompletions in all available
+namespaces. If a match is found for a new namespace, the namespace is
+automatically imported. This variable may be set to nil to get a speed
+boost for completions."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
 		 (const :tag "No" nil)))
 
 (defvar omnisharp-auto-complete-popup-keymap
@@ -621,16 +630,23 @@ and complete members."
                         nil)
                        :json-false
                      omnisharp-auto-complete-want-documentation))
-         (request-with-doc-option
-          (cons
-           `(WantDocumentationForEveryCompletionResult
-             . ,want-doc)
-           (omnisharp--get-common-params)))
-         (final-request
-          ;; Add WordToComplete to params
+         (want-imports (if (equal
+                            omnisharp-auto-complete-want-importable-types
+                            nil)
+                           :json-false
+                         omnisharp-auto-complete-want-importable-types)))
+    (setq request
+          (cons `(WantDocumentationForEveryCompletionResult . ,want-doc)
+                request))
+
+    ;; Add WordToComplete to params
+    (setq request
           (cons `(WordToComplete . ,(thing-at-point 'symbol))
-                request-with-doc-option)))
-    final-request))
+                request))
+    (setq request
+          (cons `(WantImportableTypes . ,want-imports)
+                request))
+    request))
 
 ;; Use this source in your csharp editing mode hook like so:
 ;; (add-to-list 'ac-sources 'ac-source-omnisharp)
@@ -1156,6 +1172,8 @@ current buffer."
       (progn (message "No completions.")
              nil)
 
+    (setq json-result-alist
+          (omnisharp--vector-to-list json-result-alist))
     (let* ((display-list
             (omnisharp--convert-auto-complete-json-to-popup-format
              json-result-alist))
@@ -1166,19 +1184,38 @@ current buffer."
 
            (max-width (omnisharp--get-max-item-length
                        completion-texts))
-           (result (popup-menu* display-list
-                                :width max-width
-                                :keymap omnisharp-auto-complete-popup-keymap
-                                :margin-left 1
-                                :margin-right 1
-                                :scroll-bar t
-                                :isearch
-                                omnisharp-auto-complete-popup-want-isearch
-                                :help-delay
-                                omnisharp-auto-complete-popup-help-delay)))
+           (result-completion-text
+            (popup-menu* display-list
+                         :width max-width
+                         :keymap omnisharp-auto-complete-popup-keymap
+                         :margin-left 1
+                         :margin-right 1
+                         :scroll-bar t
+                         :isearch
+                         omnisharp-auto-complete-popup-want-isearch
+                         :help-delay
+                         omnisharp-auto-complete-popup-help-delay))
+
+           ;; A performance improvement may be gained here by using
+           ;; hashtables if this seems too slow.
+           ;;
+           ;; Get the full item so we can then get the
+           ;; RequiredNamespaceImport value from it
+           (completed-item
+            (-first (lambda (a)
+                      (equal result-completion-text
+                             (cdr (assoc 'CompletionText a))))
+                    json-result-alist))
+           (required-namespace-import
+            (cdr (assoc 'RequiredNamespaceImport
+                        completed-item))))
+
       (omnisharp--replace-symbol-in-buffer-with
        (omnisharp--current-word-or-empty-string)
-       result))))
+       result-completion-text)
+
+      (when required-namespace-import
+        (omnisharp--insert-namespace-import required-namespace-import)))))
 
 (defun omnisharp--replace-symbol-in-buffer-with (symbol-to-replace
                                                  replacement-string)
@@ -1226,10 +1263,25 @@ is a more sophisticated matching framework than what popup.el offers."
 
            (completion-text-to-insert
             (cdr (assoc 'CompletionText
+                        chosen-candidate)))
+           (required-namespace-import
+            (cdr (assoc 'RequiredNamespaceImport
                         chosen-candidate))))
+
       (omnisharp--replace-symbol-in-buffer-with
        (omnisharp--current-word-or-empty-string)
-       completion-text-to-insert))))
+       completion-text-to-insert)
+
+      (when required-namespace-import
+        (omnisharp--insert-namespace-import required-namespace-import)))))
+
+(defun omnisharp--insert-namespace-import (full-import-text-to-insert)
+  "Inserts the given text at the top of the current file without
+moving point."
+  (save-excursion
+    (beginning-of-buffer)
+    (insert "using " full-import-text-to-insert ";")
+    (newline)))
 
 (defun omnisharp--current-word-or-empty-string ()
   (or (thing-at-point 'symbol)

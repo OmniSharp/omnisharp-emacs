@@ -22,6 +22,8 @@ Lacks a better UI and a good default configuration.
 
 * Contextual code completion (i.e. auto-complete / IntelliSense) using
   [popup.el][] or [ido-mode][] or [company-mode][] if it is installed.
+  Currently popup and ido-mode can complete symbols in all namespaces
+  if so configured.
     * Popup.el and company-mode provide a more sophisticated
       interface, with the possibility to fall back on all of ido's
       flexible matching power.
