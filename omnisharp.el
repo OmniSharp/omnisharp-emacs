@@ -229,6 +229,7 @@ server backend."
 
     ("Current symbol"
      ["Show type" omnisharp-current-type-information]
+     ["Show documentation" omnisharp-current-type-documentation]
      ["Show type and add it to kill ring" omnisharp-current-type-information-to-kill-ring]
      ["Find usages" omnisharp-find-usages]
      ["Find implementations" omnisharp-find-implementations]
@@ -265,10 +266,15 @@ server backend."
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
   (interactive)
-  (omnisharp-post-message-curl
+  (message (concat "Reloading the server. Calls to the server will not"
+                   " work until the server has reloaded."))
+  (omnisharp-post-message-curl-async
    (concat (omnisharp-get-host) "reloadsolution")
    ;; no params needed
-   nil))
+   nil
+   (lambda (_)
+     (message "OmniSharpServer solution reloaded")))
+  )
 
 (defun omnisharp-go-to-definition (&optional other-window)
   "Jump to the definition of the symbol under point. With prefix
@@ -1429,14 +1435,13 @@ ring."
   "Build the current solution in a non-blocking fashion inside emacs.
 Uses the standard compilation interface (compile)."
   (interactive)
-  (let ((build-command (omnisharp-get-build-command)))
+  ;; Build command contains backslashes on Windows systems. Work
+  ;; around this by using double backslashes. Other systems are not
+  ;; affected.
+  (let ((build-command (omnisharp--fix-build-command-if-on-windows
+                        (omnisharp-get-build-command))))
     (omnisharp--recognize-mono-compilation-error-format)
-    (compile
-     ;; Build command contains backslashes on Windows systems. Work
-     ;; around this by using double backslashes. Other systems are not
-     ;; affected.
-     (omnisharp--fix-build-command-if-on-windows
-      build-command))
+    (compile build-command)
     (add-to-list 'compile-history build-command)))
 
 (defun omnisharp--recognize-mono-compilation-error-format ()
@@ -1567,6 +1572,27 @@ then accept and have fixed automatically."
                             column
                             " "
                             (message (one-or-more not-newline))))
+  :error-parser (lambda (output checker buffer)
+                  (omnisharp--flycheck-error-parser-raw-json
+                   output checker buffer 'info))
+  :predicate (lambda () omnisharp-mode)
+  :next-checkers ((no-errors . csharp-omnisharp-curl-code-issues)))
+
+(flycheck-define-checker csharp-omnisharp-curl-semantic-errors
+  "Reports semantic errors (type errors) that prevent successful
+compilation."
+  :command ("curl"
+            (eval
+             (omnisharp--get-curl-command-executable-string-for-api-name
+              (omnisharp--get-common-params)
+              "semanticerrors")))
+
+  :error-patterns ((error line-start
+                          (file-name) ":"
+                          line ":"
+                          column
+                          " "
+                          (message (one-or-more not-newline))))
   :error-parser (lambda (output checker buffer)
                   (omnisharp--flycheck-error-parser-raw-json
                    output checker buffer 'info))
@@ -1932,6 +1958,10 @@ contents with the issue at point fixed."
 
 (add-to-list 'compilation-error-regexp-alist
 		 '(" in \\(.+\\):\\([1-9][0-9]+\\)" 1 2))
+
+;; nunit-console.exe on windows uses this format
+(add-to-list 'compilation-error-regexp-alist
+               '(" in \\(.+\\):line \\([0-9]+\\)" 1 2))
 
 (defun omnisharp-unit-test (mode)
   "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'" 
