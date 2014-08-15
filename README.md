@@ -110,6 +110,10 @@ popup.el with documentation. The documentation may be disabled if you
 need the screen space. There is an option to show documentation in a
 help buffer.
 
+To (not) complete from all namespaces, use the prefix argument when
+calling. This inverts the
+`omnisharp-auto-complete-want-importable-types` setting temporarily.
+
 ![](pics/auto-complete-popup-documentation.png)
 
 #### Ido interface
@@ -121,6 +125,10 @@ new search term by pressing C-SPC.
 
 This makes it really easy to e.g. narrow the list down to members that
 handle a specific type, such as bool.
+
+To (not) complete from all namespaces, use the prefix argument when
+calling. This inverts the
+`omnisharp-auto-complete-want-importable-types` setting temporarily.
 
 ![](pics/auto-complete-ido.png)
 

@@ -597,14 +597,23 @@ solution."
    (concat (omnisharp-get-host) "addreference")
    params))
 
-(defun omnisharp-auto-complete ()
-  (interactive)
+(defun omnisharp-auto-complete (&optional invert-importable-types-setting)
+  "If called with a prefix argument, will complete types that are not
+present in the current namespace or imported namespaces, inverting the
+default `omnisharp-auto-complete-want-importable-types'
+value. Selecting one of these will import the required namespace."
+  (interactive "P")
   (let* ((json-false :json-false)
          ;; json-false helps distinguish between null and false in
          ;; json. This is an emacs limitation.
 
+         ;; Invert the user configuration value if requested
          (params
-          (omnisharp--get-auto-complete-params))
+          (let ((omnisharp-auto-complete-want-importable-types
+                 (if invert-importable-types-setting
+                     (not omnisharp-auto-complete-want-importable-types)
+                   omnisharp-auto-complete-want-importable-types)))
+            (omnisharp--get-auto-complete-params)))
 
          (display-function
           (omnisharp--get-auto-complete-display-function))
