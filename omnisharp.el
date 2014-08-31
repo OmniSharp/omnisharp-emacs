@@ -1638,8 +1638,7 @@ then accept and have fixed automatically."
   :error-parser (lambda (output checker buffer)
                   (omnisharp--flycheck-error-parser-raw-json
                    output checker buffer 'info))
-  :predicate (lambda () omnisharp-mode)
-  :next-checkers ((no-errors . csharp-omnisharp-curl-code-issues)))
+  :predicate (lambda () omnisharp-mode))
 
 (flycheck-define-checker csharp-omnisharp-curl-semantic-errors
   "Reports semantic errors (type errors) that prevent successful
