@@ -64,6 +64,9 @@ Lacks a better UI and a good default configuration.
     * Jump to errors like in normal `*compilation*` output
 * Format the current buffer
     * Currently only one formatting style supported, easy to add more.
+* Fix using statements
+    * Sorts, removes and adds any missing using statements
+      for the current buffer
 * Syntax checker for parse errors
     * Runs using the provided [Flycheck][] checker in the background.
 * Syntax checker for code issues (refactoring suggestions)
