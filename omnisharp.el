@@ -221,7 +221,9 @@ server backend."
   (add-to-list 'flycheck-checkers
                'csharp-omnisharp-curl)
   (add-to-list 'flycheck-checkers
-               'csharp-omnisharp-curl-code-issues))
+               'csharp-omnisharp-curl-code-issues)
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl-semantic-errors))
 
 (easy-menu-define omnisharp-mode-menu omnisharp-mode-map
   "Menu for omnisharp-mode"
@@ -452,9 +454,9 @@ name to rename to, defaulting to the current name of the symbol."
     ;; the user deos not feel disoriented
     (omnisharp-go-to-file-line-and-column location-before-rename)
 
-    (message "Rename complete in files: %s"
-             (--map (cdr (assoc 'FileName it))
-                    modified-file-responses))))
+    (message "Rename complete in files: \n%s"
+             (-interpose "\n" (--map (cdr (assoc 'FileName it))
+                                     modified-file-responses)))))
 
 (defun omnisharp-rename-worker (rename-request)
   "Given a RenameRequest, returns a list of ModifiedFileResponse
