@@ -221,7 +221,9 @@ server backend."
   (add-to-list 'flycheck-checkers
                'csharp-omnisharp-curl)
   (add-to-list 'flycheck-checkers
-               'csharp-omnisharp-curl-code-issues))
+               'csharp-omnisharp-curl-code-issues)
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl-semantic-errors))
 
 (easy-menu-define omnisharp-mode-menu omnisharp-mode-map
   "Menu for omnisharp-mode"
