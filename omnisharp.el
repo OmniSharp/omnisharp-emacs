@@ -1095,11 +1095,12 @@ api at URL using that file as the parameters."
    omnisharp--windows-curl-tmp-file-path
    (json-encode params))
   (let ((path-with-curl-prefix
-         (concat "@"
-                 omnisharp--windows-curl-tmp-file-path)))
+         (concat "\"@"
+                 omnisharp--windows-curl-tmp-file-path
+		 "\"")))
     `(:command ,omnisharp--curl-executable-path
                :arguments
-               ("--silent" "-H" "Content-type: application/json"
+               ("--silent" "-H" "\"Content-type: application/json\""
                 "--data-binary"
                 ;; @ specifies a file path to curl
                 ,path-with-curl-prefix
