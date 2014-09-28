@@ -746,28 +746,48 @@ items."
   otherwise. CURRENTLY UNSUPPORTED.")
 
 (defvar omnisharp-company-type-separator " : "
-  "The string used to visually seperate functions/variables from
-  their types")
+  "The string used to visually separate functions/variables from
+  their types"
+  :group 'omnisharp
+  :type 'string)
 
-(defvar omnisharp-company-ignore-case t
-  "If t, case is ignored in completion matches.")
+(defcustom omnisharp-company-ignore-case t
+  "If t, case is ignored in completion matches."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
-(defvar omnisharp-company-strip-trailing-brackets nil
-  "If t, strips trailing <> and () from completions.")
+(defcustom omnisharp-company-strip-trailing-brackets nil
+  "If t, strips trailing <> and () from completions."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
-(defvar omnisharp-company-begin-after-member-access t
+(defcustom omnisharp-company-begin-after-member-access t
   "If t, begin completion when pressing '.' after a class, object
-  or namespace")
+  or namespace"
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
-(defvar omnisharp-company-sort-results t
-  "If t, autocompletion results are sorted alphabetically")
+(defcustom omnisharp-company-sort-results t
+  "If t, autocompletion results are sorted alphabetically"
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
-(defvar omnisharp-imenu-support nil
-"If t, activate imenu integration. Defaults to nil.")
+(defcustom omnisharp-imenu-support nil
+  "If t, activate imenu integration. Defaults to nil."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
-(defvar omnisharp-eldoc-support t
-"If t, activate eldoc integration - eldoc-mode must also be enabled for
- this to work. Defaults to t.")
+(defcustom omnisharp-eldoc-support t
+  "If t, activate eldoc integration - eldoc-mode must also be enabled for
+  this to work. Defaults to t."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
 (defvar omnisharp--eldoc-fontification-buffer-name " * OmniSharp : Eldoc Fontification *"
   "The name of the buffer that is used to fontify eldoc strings.")
