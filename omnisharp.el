@@ -745,8 +745,8 @@ items."
   "Set to t if you want in-line parameter completion, nil
   otherwise. CURRENTLY UNSUPPORTED.")
 
-(defcustom omnisharp-company-type-separator " : "
-  "The string used to visually seperate functions/variables from
+(defvar omnisharp-company-type-separator " : "
+  "The string used to visually separate functions/variables from
   their types"
   :group 'omnisharp
   :type 'string)
