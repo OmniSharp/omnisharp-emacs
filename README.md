@@ -92,11 +92,6 @@ works with non-trivial code.
 
 ![](pics/company-mode-popup-complex.png)
 
-company-mode also allows for yasnippet-like template completion of
-method parameters.
-
-![](pics/company-mode-parameters.png)
-
 Pressing F1 with a candidate selected in the the company-mode popup
 shows a buffer with documentation.
 
