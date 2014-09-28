@@ -136,7 +136,9 @@ omnisharp-find-usages is called.")
 omnisharp-find-implementations is called.")
 
 (defvar omnisharp-ambiguous-results-header
-  (concat "These results are ambiguous."
+  (concat "These results are ambiguous. You can run
+(omnisharp-run-code-action-refactoring) when point is on them to see
+options for fixing them."
           "\n\n")
   "This is shown at the top of the result buffer when
 there are ambiguous unresolved symbols after running omnisharp-fix-usings")
@@ -369,19 +371,32 @@ asynchronously. On completions, CALLBACK is run with the quickfixes as its only 
 (defun omnisharp-fix-usings ()
   "Sorts usings, removes unused using statements and
 adds any missing usings. If there are any ambiguous unresolved symbols, they are
-shown in a compilation buffer"
+shown in a compilation buffer."
   (interactive)
   (save-buffer)
-  (omnisharp-fix-usings-worker
-   (buffer-file-name)
-   (line-number-at-pos)
-   (omnisharp--current-column)))
+  (message "Fixing using directives for the current buffer. Hold on...")
+  (-if-let (ambiguous-results
+            (omnisharp-fix-usings-worker
+             (buffer-file-name)
+             (line-number-at-pos)
+             (omnisharp--current-column)))
+      (omnisharp--write-quickfixes-to-compilation-buffer
+       ambiguous-results
+       omnisharp--ambiguous-symbols-buffer-name
+       omnisharp-ambiguous-results-header)
 
+    ;; Otherwise destroy any previous ambiguous result so the user
+    ;; clearly sees the compilation buffer contents have changed
+    (-if-let (ambiguous-results-buffer
+              (get-buffer omnisharp--ambiguous-symbols-buffer-name))
+        (kill-buffer ambiguous-results-buffer))))
 
 (defun omnisharp-fix-usings-worker (filename
 				    current-line
 				    current-column)
-  "Returns a buffer with fixed up usings and if necessary, show ambiguous results"
+  "Sets the current buffer contents to a buffer with fixed up usings
+or if necessary, returns any ambiguous results so the user may fix
+them manually."
   (let ((json-result
          (omnisharp-post-message-curl-as-json
           (concat (omnisharp-get-host) "fixusings")
@@ -392,17 +407,8 @@ shown in a compilation buffer"
      (cdr (assoc 'Buffer json-result))
      current-line
      current-column)
-
-    (setq ambiguous-results
-	  (omnisharp--vector-to-list
-	   (cdr (assoc 'AmbiguousResults json-result))))
-
-    (if ambiguous-results
-	(omnisharp--write-quickfixes-to-compilation-buffer
-	 ambiguous-results
-	 omnisharp--ambiguous-symbols-buffer-name
-	 omnisharp-ambiguous-results-header)
-      )))
+    (omnisharp--vector-to-list
+     (cdr (assoc 'AmbiguousResults json-result)))))
 
 (defun omnisharp-navigate-to-region
   (&optional other-window)
