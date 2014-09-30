@@ -749,9 +749,7 @@ items."
 
 (defvar omnisharp-company-type-separator " : "
   "The string used to visually separate functions/variables from
-  their types"
-  :group 'omnisharp
-  :type 'string)
+  their types")
 
 (defcustom omnisharp-company-ignore-case t
   "If t, case is ignored in completion matches."
