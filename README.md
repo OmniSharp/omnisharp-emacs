@@ -6,7 +6,8 @@ C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
 ## This requires the Omnisharp Server program
-The server must be at least the following version:
+The server must be at least the following version (expect this to be
+update to this guide whenever the required version changes):
 
 ```
 8355b92f30ac6f9b5f62bfbb618b7b4f45db7915
