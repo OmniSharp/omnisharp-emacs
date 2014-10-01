@@ -56,6 +56,9 @@ OmniSharp server."
   "The name of the temporary buffer that is used to display the
 results of a 'find usages' call.")
 
+(defvar omnisharp-debug nil
+  "When non-nil, omnisharp-emacs will write entries a debug log")
+
 (defvar omnisharp--find-implementations-buffer-name "* OmniSharp : Implementations *"
   "The name of the temporary buffer that is used to display the
 results of a 'find implementations' call.")
@@ -1169,9 +1172,29 @@ Returns the curl process"
 (defun omnisharp--get-curl-command (url params)
   "Returns a command that may be used to communicate with the API via
 the curl program. Depends on the operating system."
-  (if (equal system-type 'windows-nt)
-      (omnisharp--get-curl-command-windows-with-tmp-file url params)
-    (omnisharp--get-curl-command-unix url params)))
+  (let ((curl-command
+         (if (equal system-type 'windows-nt)
+             (omnisharp--get-curl-command-windows-with-tmp-file url params)
+           (omnisharp--get-curl-command-unix url params))))
+    (when omnisharp-debug
+      (omnisharp--log-curl-command curl-command))
+    curl-command))
+
+(defun omnisharp--log-curl-command (curl-command)
+  (omnisharp--log (prin1-to-string curl-command)))
+
+(defun omnisharp--log (single-or-multiline-log-string)
+  (let* ((log-buffer (get-buffer-create "*omnisharp-debug*"))
+         (iso-format-string "%Y-%m-%dT%T%z")
+         (timestamp-and-log-string
+          (format-time-string iso-format-string (current-time))))
+    (with-current-buffer log-buffer
+      (end-of-buffer)
+      (insert "\n\n\n")
+      (insert (concat timestamp-and-log-string
+                      "\n"
+                      single-or-multiline-log-string))
+      (insert "\n"))))
 
 (defun omnisharp--get-curl-command-executable-string-for-api-name
   (params api-name)
