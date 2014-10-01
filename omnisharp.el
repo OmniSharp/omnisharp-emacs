@@ -1254,6 +1254,9 @@ something goes wrong, return a human-readable warning."
   (condition-case nil
       (json-read-from-string json-string)
     (error
+     (when omnisharp-debug
+       (omnisharp--log (concat "omnisharp--json-read-from-string error: "
+                               (prin1-to-string json-string))))
      (or error-message
          "Error communicating to the OmniSharpServer instance"))))
 
