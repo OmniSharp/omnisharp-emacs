@@ -1213,12 +1213,13 @@ with \"stuff\" set to sensible values."
 (defun omnisharp--get-curl-command-unix (url params)
   "Returns a command using plain curl that can be executed to
 communicate with the API."
-  `(:command ,omnisharp--curl-executable-path
-             :arguments
-             ("--silent" "-H" "Content-type: application/json"
-              "--data"
-              ,(json-encode params)
-              ,url)))
+  `(:command
+    ,omnisharp--curl-executable-path
+    :arguments
+    ("--silent" "-H" "Content-type: application/json"
+     "--data"
+     ,(json-encode params)
+     ,url)))
 
 (defun omnisharp--get-curl-command-windows-with-tmp-file (url params)
   "Basically: put PARAMS to file, then create a curl command to the
