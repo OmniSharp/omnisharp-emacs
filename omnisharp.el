@@ -709,7 +709,8 @@ triggers a completion immediately"
     (meta (omnisharp--get-company-candidate-data arg 'DisplayText))
 
     (doc-buffer (let ((doc-buffer (company-doc-buffer
-                                   (omnisharp--get-company-candidate-data arg 'Description))))
+                                   (omnisharp--get-company-candidate-data
+                                    arg 'Description))))
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
@@ -718,28 +719,25 @@ triggers a completion immediately"
 
     (sorted omnisharp-company-sort-results)
 
+    ;; Check to see if we need to do any templating
     (post-completion (let* ((item (get-text-property 0 'omnisharp-item arg))
                             (method-base (omnisharp--get-method-base item)))
                        (when (and omnisharp-company-do-template-completion
                                  method-base (string-match-p "([^)]" method-base))
-                         ;; This was a function match, do templating.
                          (company-template-c-like-templatify method-base))))))
                        
-     ;; (let ((ann (omnisharp--get-company-candidate-data arg 'MethodHeader)))
-     ;;                   (when (and omnisharp-company-do-template-completion
-     ;;                              ann (string-match-p "([^)]" ann))
-     ;;                     ;; This was a function match, do templating.
-     ;;                     (company-template-c-like-templatify ann))))))
 
 
 (defun omnisharp--get-method-base (item)
-  "If function templating is turned on, and the method is not a generic, return the 
-   'method base' (basically, the method definition minus its return type)"
+  "If function templating is turned on, and the method is not a
+   generic, return the 'method base' (basically, the method definition
+   minus its return type)"
     (when omnisharp-company-do-template-completion
       (let ((method-base (omnisharp--completion-result-item-get-method-header item))
-            (display (omnisharp--completion-result-item-get-completion-text item)))
-        (message display)
-        (when (and method-base (not (string= method-base "")) (not (string-match-p "<" display)))
+            (display (omnisharp--completion-result-item-get-completion-text
+                      item)))
+        (when (and method-base (not (string= method-base ""))
+                   (not (string-match-p "<" display)))
           method-base))))
 
 (defun omnisharp--make-company-completion (item)
@@ -755,16 +753,12 @@ SomeMethod(int parameter)' and the original value ITEM."
          (method-base (omnisharp--get-method-base item))
          annotation)
     
-    ;; If we have templating turned on, if there is a method header use that for completion.
-    ;; The templating engine will then pick up the completion for you
+    ;; If we have templating turned on, if there is a method header
+    ;; use that for completion.  The templating engine will then pick
+    ;; up the completion for you
     (when method-base
       (setq output method-base))
 
-    ;; (when omnisharp-company-do-template-completion
-    ;;   (let ((method-base (omnisharp--completion-result-item-get-method-header item)))
-    ;;     (when (and method-base (not (string= method-base "")))
-    ;;       (setq output method-base))))
-    
     ;; Remove any trailing brackets from the completion string
     (when omnisharp-company-strip-trailing-brackets
       (setq output (car (split-string completion "(\\|<"))))
