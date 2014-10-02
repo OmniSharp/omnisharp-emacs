@@ -718,12 +718,29 @@ triggers a completion immediately"
 
     (sorted omnisharp-company-sort-results)
 
-    (post-completion (let ((ann (omnisharp--company-annotation arg)))
+    (post-completion (let* ((item (get-text-property 0 'omnisharp-item arg))
+                            (method-base (omnisharp--get-method-base item)))
                        (when (and omnisharp-company-do-template-completion
-                                  ann (string-match-p "([^)]" ann))
+                                 method-base (string-match-p "([^)]" method-base))
                          ;; This was a function match, do templating.
-                         (insert ann)
-                         (company-template-c-like-templatify ann))))))
+                         (company-template-c-like-templatify method-base))))))
+                       
+     ;; (let ((ann (omnisharp--get-company-candidate-data arg 'MethodHeader)))
+     ;;                   (when (and omnisharp-company-do-template-completion
+     ;;                              ann (string-match-p "([^)]" ann))
+     ;;                     ;; This was a function match, do templating.
+     ;;                     (company-template-c-like-templatify ann))))))
+
+
+(defun omnisharp--get-method-base (item)
+  "If function templating is turned on, and the method is not a generic, return the 
+   'method base' (basically, the method definition minus its return type)"
+    (when omnisharp-company-do-template-completion
+      (let ((method-base (omnisharp--completion-result-item-get-method-header item))
+            (display (omnisharp--completion-result-item-get-completion-text item)))
+        (message display)
+        (when (and method-base (not (string= method-base "")) (not (string-match-p "<" display)))
+          method-base))))
 
 (defun omnisharp--make-company-completion (item)
   "`company-mode' expects the beginning of the candidate to be
@@ -735,10 +752,20 @@ SomeMethod(int parameter)' and the original value ITEM."
          (completion (omnisharp--completion-result-item-get-completion-text item))
          (display (omnisharp--completion-result-item-get-display-text item))
          (output completion)
+         (method-base (omnisharp--get-method-base item))
          annotation)
     
-    ;; Remove any trailing brackets from the completion string
+    ;; If we have templating turned on, if there is a method header use that for completion.
+    ;; The templating engine will then pick up the completion for you
+    (when method-base
+      (setq output method-base))
+
+    ;; (when omnisharp-company-do-template-completion
+    ;;   (let ((method-base (omnisharp--completion-result-item-get-method-header item)))
+    ;;     (when (and method-base (not (string= method-base "")))
+    ;;       (setq output method-base))))
     
+    ;; Remove any trailing brackets from the completion string
     (when omnisharp-company-strip-trailing-brackets
       (setq output (car (split-string completion "(\\|<"))))
 
@@ -1240,6 +1267,9 @@ is a more sophisticated matching framework than what popup.el offers."
 
 (defun omnisharp--completion-result-item-get-display-text (item)
   (cdr (assoc 'DisplayText item)))
+
+(defun omnisharp--completion-result-item-get-method-header (item)
+  (cdr (assoc 'MethodHeader item)))
 
 (defun omnisharp--get-max-item-length (completions)
   "Returns the length of the longest completion in 'completions'."
