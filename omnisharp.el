@@ -2138,16 +2138,21 @@ contents with the issue at point fixed."
   "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'" 
   (interactive)
   (let ((build-command
-	 (omnisharp-post-message-curl
-	  (concat (omnisharp-get-host) "buildcommand") (omnisharp--get-common-params)))
+         (omnisharp--fix-build-command-if-on-windows
+          (omnisharp-get-build-command)))
 
-	(test-command
-	 (cdr (assoc 'TestCommand
-		     (omnisharp-post-message-curl-as-json
-		      (concat (omnisharp-get-host) "gettestcontext") 
-		      (cons `("Type" . ,mode) (omnisharp--get-common-params)))))))
+        (test-command
+         (omnisharp--fix-build-command-if-on-windows
+          (cdr (assoc 'TestCommand
+                      (omnisharp-post-message-curl-as-json
+                       (concat (omnisharp-get-host) "gettestcontext") 
+                       (cons `("Type" . ,mode) (omnisharp--get-common-params))))))))
     
-    (compile (concat build-command " && " test-command))))
+    (compile build-command)
+    ;; User can answer yes straight away if they don't want to
+    ;; recompile. But they have to be very fast!
+    (when (yes-or-no-p "Compilation started. Answer yes when you want to run tests.")
+      (compile test-command))))
 
 ;;; Some Helm integration
 (when (require 'helm-grep nil 'noerror)
