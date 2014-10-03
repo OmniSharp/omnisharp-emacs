@@ -355,12 +355,18 @@ to select one (or more) to jump to."
   (omnisharp-find-implementations-worker
    (omnisharp--get-common-params)
    (lambda (quickfixes)
-     (if (equal 0 (length quickfixes))
+     (cond ((equal 0 (length quickfixes))
          (message "No implementations found."))
+
+           ;; Go directly to the implementation if there only is one
+           ((equal 1 (length quickfixes))
+            (omnisharp-go-to-file-line-and-column (first quickfixes)))
+
+           (t
      (omnisharp--write-quickfixes-to-compilation-buffer
       quickfixes
       omnisharp--find-implementations-buffer-name
-      omnisharp-find-implementations-header))))
+             omnisharp-find-implementations-header))))))
 
 (defun omnisharp-find-implementations-worker (request callback)
   "Gets a list of QuickFix lisp objects from a findimplementations api call
