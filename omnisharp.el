@@ -355,12 +355,18 @@ to select one (or more) to jump to."
   (omnisharp-find-implementations-worker
    (omnisharp--get-common-params)
    (lambda (quickfixes)
-     (if (equal 0 (length quickfixes))
-         (message "No implementations found."))
-     (omnisharp--write-quickfixes-to-compilation-buffer
-      quickfixes
-      omnisharp--find-implementations-buffer-name
-      omnisharp-find-implementations-header))))
+     (cond ((equal 0 (length quickfixes))
+            (message "No implementations found."))
+
+           ;; Go directly to the implementation if there only is one
+           ((equal 1 (length quickfixes))
+            (omnisharp-go-to-file-line-and-column (first quickfixes)))
+
+           (t
+            (omnisharp--write-quickfixes-to-compilation-buffer
+             quickfixes
+             omnisharp--find-implementations-buffer-name
+             omnisharp-find-implementations-header))))))
 
 (defun omnisharp-find-implementations-worker (request callback)
   "Gets a list of QuickFix lisp objects from a findimplementations api call
@@ -1230,9 +1236,9 @@ api at URL using that file as the parameters."
    omnisharp--windows-curl-tmp-file-path
    (json-encode params))
   (let ((path-with-curl-prefix
-         (concat "\"@"
+         (concat "@"
                  omnisharp--windows-curl-tmp-file-path
-		 "\"")))
+                 )))
     `(:command ,omnisharp--curl-executable-path
                :arguments
                ("--silent" "-H" "Content-type: application/json"
@@ -2132,16 +2138,21 @@ contents with the issue at point fixed."
   "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'" 
   (interactive)
   (let ((build-command
-	 (omnisharp-post-message-curl
-	  (concat (omnisharp-get-host) "buildcommand") (omnisharp--get-common-params)))
+         (omnisharp--fix-build-command-if-on-windows
+          (omnisharp-get-build-command)))
 
-	(test-command
-	 (cdr (assoc 'TestCommand
-		     (omnisharp-post-message-curl-as-json
-		      (concat (omnisharp-get-host) "gettestcontext") 
-		      (cons `("Type" . ,mode) (omnisharp--get-common-params)))))))
+        (test-command
+         (omnisharp--fix-build-command-if-on-windows
+          (cdr (assoc 'TestCommand
+                      (omnisharp-post-message-curl-as-json
+                       (concat (omnisharp-get-host) "gettestcontext") 
+                       (cons `("Type" . ,mode) (omnisharp--get-common-params))))))))
     
-    (compile (concat build-command " && " test-command))))
+    (compile build-command)
+    ;; User can answer yes straight away if they don't want to
+    ;; recompile. But they have to be very fast!
+    (when (yes-or-no-p "Compilation started. Answer yes when you want to run tests.")
+      (compile test-command))))
 
 ;;; Some Helm integration
 (when (require 'helm-grep nil 'noerror)
