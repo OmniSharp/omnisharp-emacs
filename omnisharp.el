@@ -2,7 +2,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 2.8
+;; Version: 2.9
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.19") (csharp-mode "0.8.6"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -1222,7 +1222,7 @@ communicate with the API."
   `(:command
     ,omnisharp--curl-executable-path
     :arguments
-    ("--silent" "-H" "Content-type: application/json"
+    ("--ipv4" "--silent" "-H" "Content-type: application/json"
      "--data"
      ,(json-encode params)
      ,url)))
