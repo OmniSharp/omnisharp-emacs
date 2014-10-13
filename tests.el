@@ -165,3 +165,25 @@ data."
    (with-stub
      (stub omnisharp-post-message-curl-as-json)
      (omnisharp--get-code-actions-from-api))))
+
+(defun get-line-text (&optional line-number)
+  "Returns the text on the current line or another line with the
+number given"
+  (when (equal nil line-number)
+    (setq line-number (line-number-at-pos)))
+  (goto-line line-number)
+  (buffer-substring-no-properties
+   (line-beginning-position)
+   (line-end-position)))
+
+(ert-deftest omnisharp--insert-namespace-import ()
+  (let* ((new-import "System.IO"))
+    (with-temp-buffer
+      (-each '("using System;\n"
+               "\n"
+               "public class Awesome {}")
+        'insert)
+      (omnisharp--insert-namespace-import new-import)
+
+      (should (equal (concat "using " new-import ";")
+                     (get-line-text 0))))))

@@ -6,7 +6,8 @@ C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
 ## This requires the Omnisharp Server program
-The server must be at least the following version:
+The server must be at least the following version (expect this to be
+update to this guide whenever the required version changes):
 
 ```
 8355b92f30ac6f9b5f62bfbb618b7b4f45db7915
@@ -22,6 +23,8 @@ Lacks a better UI and a good default configuration.
 
 * Contextual code completion (i.e. auto-complete / IntelliSense) using
   [popup.el][] or [ido-mode][] or [company-mode][] if it is installed.
+  Currently popup and ido-mode can complete symbols in all namespaces
+  if so configured.
     * Popup.el and company-mode provide a more sophisticated
       interface, with the possibility to fall back on all of ido's
       flexible matching power.
@@ -62,6 +65,9 @@ Lacks a better UI and a good default configuration.
     * Jump to errors like in normal `*compilation*` output
 * Format the current buffer
     * Currently only one formatting style supported, easy to add more.
+* Fix using statements
+    * Sorts, removes and adds any missing using statements
+      for the current buffer
 * Syntax checker for parse errors
     * Runs using the provided [Flycheck][] checker in the background.
 * Syntax checker for code issues (refactoring suggestions)
@@ -72,6 +78,8 @@ Lacks a better UI and a good default configuration.
     * Start server
     * Reload solution
     * Stop server
+* Test runner
+  * Can run test at point, fixture or all tests in project.
 
 ## Details
 
@@ -85,18 +93,13 @@ works with non-trivial code.
 
 ![](pics/company-mode-popup-complex.png)
 
-company-mode also allows for yasnippet-like template completion of
-method parameters.
-
-![](pics/company-mode-parameters.png)
-
 Pressing F1 with a candidate selected in the the company-mode popup
 shows a buffer with documentation.
 
 ![](pics/company-mode-doc-buffer.png)
 
 Omnisharp's company-mode support ignores case by default, but can be
-made case sensitive by setting omnisharp-company-ignore-case to nil
+made case sensitive by setting `omnisharp-company-ignore-case` to nil.
 
 #### popup.el interface
 
@@ -105,6 +108,10 @@ made case sensitive by setting omnisharp-company-ignore-case to nil
 popup.el with documentation. The documentation may be disabled if you
 need the screen space. There is an option to show documentation in a
 help buffer.
+
+To (not) complete from all namespaces, use the prefix argument when
+calling. This inverts the
+`omnisharp-auto-complete-want-importable-types` setting temporarily.
 
 ![](pics/auto-complete-popup-documentation.png)
 
@@ -117,6 +124,10 @@ new search term by pressing C-SPC.
 
 This makes it really easy to e.g. narrow the list down to members that
 handle a specific type, such as bool.
+
+To (not) complete from all namespaces, use the prefix argument when
+calling. This inverts the
+`omnisharp-auto-complete-want-importable-types` setting temporarily.
 
 ![](pics/auto-complete-ido.png)
 
@@ -182,7 +193,7 @@ To make syntax checking start sooner/later, use:
 ### ElDoc integration
 ElDoc support is switched on by default. This shows type information
 for the symbol at point in the echo area.
-To switch it off, set omnisharp-eldoc-support to nil
+To switch it off, set `omnisharp-eldoc-support` to nil.
 
 ![](pics/eldoc.png)
 
@@ -207,6 +218,17 @@ your init file:
 ```
 
 company-mode completion will only trigger when omnisharp-mode is active.
+
+### Test runner integration
+
+Can run the test at point, fixture at point, or all tests
+in project.
+
+![](pics/tests.png)
+
+Specify the path and parameters to your test runner on the server here :-
+https://github.com/nosami/OmniSharpServer/blob/0eb8644f67c020fc570aaf6629beabb7654ac944/OmniSharp/config.json#L10
+
 
 ## Installation
 
