@@ -2221,64 +2221,38 @@ contents with the issue at point fixed."
   (omnisharp-go-to-file-line-and-column json-result)
   (helm-highlight-current-line nil nil nil nil t))
 
-  ;; (let ((filename (cdr (assoc 'FileName json-result)))
-  ;;       (line (cdr (assoc 'Line json-result))))
-    
-
-  ;; (omnisharp--find-file-possibly-in-other-window filename nil)
-  ;; (helm-goto-line line)))
-
-;; (defvar helm-source-omnisharp-find-usages
-;;   '((name . "Omnisharp - Symbol Usages")
-;;     (candidate-transformer . helm-omnisharp-usage-candidate-transformer)
-;;     ;; (action . omnisharp-go-to-file-line-and-column)
-;;     (action . helm-omnisharp-jump-to-candidate)
-;;     (candidates . helm-omnisharp-usage-candidates)))
-
-
 
 ;;;Helm find symbols
-(defvar helm-source-omnisharp-find-symbols 
-  '((name . "Omnisharp - Find Symbols")
-    (candidate-transformer . helm-omnisharp-find-symbols-candidate-transformer)
-    (action . omnisharp-go-to-file-line-and-column)
-    (match . helm-omnisharp-find-symbols-match)
-    (candidates . helm-omnisharp-find-symbols-candidates)))
+(defun helm-omnisharp-find-symbols ()
+  (interactive)
+  (helm :sources (helm-make-source "!Omnisharp - Find Symbols" 'helm-source-sync
+                                   :action 'helm-omnisharp-jump-to-candidate
+                                   :matchplugin nil
+                                   :match '((lambda (candidate) (string-match-p
+                                                                helm-pattern
+                                                                (nth 0 (split-string
+                                                                        candidate "[\(:]" t)))))
+                                   :candidates 'helm-omnisharp-find-symbols-candidates)
+        :buffer "*Omnisharp Symbols*"
+        :truncate-lines t))
 
 (defun helm-omnisharp-find-symbols-candidates ()
   (let ((quickfix-response
          (omnisharp-post-message-curl-as-json
           (concat (omnisharp-get-host) "findsymbols")
           nil)))
-    (omnisharp--vector-to-list
-     (cdr (assoc 'QuickFixes quickfix-response)))))
-
-(defun helm-omnisharp-find-symbols-match (candidate)
-  (string-match helm-pattern (nth 0 (split-string candidate ":" t))))
+    (mapcar 'helm-omnisharp-find-symbols-transform-candidate
+            (omnisharp--vector-to-list
+             (cdr (assoc 'QuickFixes quickfix-response))))))
 
 (defun helm-omnisharp-find-symbols-transform-candidate (candidate)
   "Convert a quickfix entry into helm output"
-  ;; (message "transforming candidate %s" candidate)
   (cons
    (format "%s : %s"
            (cdr (assoc 'Text candidate))
-           (cdr (assoc 'FileName candidate)))
-   ;; (format "%s(%s): %s"
-   ;;         (propertize (file-name-nondirectory
-   ;;                      (cdr (assoc 'FileName candidate)))
-   ;;                     'face 'helm-grep-file)
-   ;;         (propertize (number-to-string (cdr (assoc 'Line candidate)))
-   ;;                     'face 'helm-grep-lineno)
-   ;;         (cdr (assoc 'Text candidate)))
+           (propertize (cdr (assoc 'FileName candidate))
+                       'face 'helm-grep-file))
    candidate))
-
-(defun helm-omnisharp-find-symbols-candidate-transformer (candidates)
-  "Convert all the quickfix candidates into helm output"
-  (mapcar 'helm-omnisharp-find-symbols-transform-candidate candidates))
-
-(defun helm-omnisharp-find-symbols ()
-  (interactive)
-  (helm :sources 'helm-source-omnisharp-find-symbols :buffer "*Omnisharp Symbols*" :truncate-lines t))
 )
 
   
