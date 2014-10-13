@@ -705,6 +705,11 @@ and complete members."
                         nil)
                        :json-false
                      omnisharp-auto-complete-want-documentation))
+         (want-header (if (equal
+                           omnisharp-company-do-template-completion
+                           nil)
+                          :json-false
+                        omnisharp-company-do-template-completion))
          (want-imports (if (equal
                             omnisharp-auto-complete-want-importable-types
                             nil)
@@ -714,6 +719,9 @@ and complete members."
           (cons `(WantDocumentationForEveryCompletionResult . ,want-doc)
                 request))
 
+    (setq request
+          (cons `(WantMethodHeader . ,want-header)
+                request))
     ;; Add WordToComplete to params
     (setq request
           (cons `(WordToComplete . ,(thing-at-point 'symbol))
