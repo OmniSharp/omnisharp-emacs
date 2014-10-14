@@ -1832,9 +1832,9 @@ the json."
 (defun omnisharp--imenu-make-marker (element)
   "Takes a QuickCheck element and returns the position of the
 cursor at that location"
-  (let* ((element-line (cdr (assoc 'Line quickfix-alist)))
-         (element-column (cdr (assoc 'Column quickfix-alist)))
-         (element-filename (cdr (assoc 'Filename quickfix-alist)))
+  (let* ((element-line (cdr (assoc 'Line element)))
+         (element-column (cdr (assoc 'Column element)))
+         (element-filename (cdr (assoc 'Filename element)))
          (use-buffer (current-buffer)))
     (save-excursion
         (omnisharp-go-to-file-line-and-column-worker
