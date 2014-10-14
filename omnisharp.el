@@ -2208,6 +2208,7 @@ contents with the issue at point fixed."
     (helm :sources (helm-make-source "Omnisharp - Symbol Usages" 'helm-source-sync
                                      :candidates omnisharp-helm-usage-candidates
                                      :action 'omnisharp-helm-jump-to-candidate)
+          :truncate-lines t
           :buffer omnisharp--find-usages-buffer-name))
 
   (defun omnisharp-helm-find-usages ()
