@@ -854,37 +854,39 @@ triggers a completion immediately"
     (sorted omnisharp-company-sort-results)
 
     ;; Check to see if we need to do any templating
-    (post-completion (let* ((item (get-text-property 0 'omnisharp-item arg))
-                            (method-base (omnisharp--get-method-base item)))
+    (post-completion (let* ((json-result (get-text-property 0 'omnisharp-item arg))
+                            (method-base (omnisharp--get-method-base json-result)))
                        (when (and omnisharp-company-do-template-completion
-                                  method-base (string-match-p "([^)]" method-base))
+                                  method-base
+                                  (string-match-p "([^)]" method-base))
                          (company-template-c-like-templatify method-base))))))
                        
 
 
-(defun omnisharp--get-method-base (item)
+(defun omnisharp--get-method-base (json-result)
   "If function templating is turned on, and the method is not a
    generic, return the 'method base' (basically, the method definition
    minus its return type)"
     (when omnisharp-company-do-template-completion
-      (let ((method-base (omnisharp--completion-result-item-get-method-header item))
+      (let ((method-base (omnisharp--completion-result-item-get-method-header json-result))
             (display (omnisharp--completion-result-item-get-completion-text
-                      item)))
-        (when (and method-base (not (string= method-base ""))
+                      json-result)))
+        (when (and method-base
+                   (not (string= method-base ""))
                    (not (string-match-p "<" display)))
           method-base))))
 
-(defun omnisharp--make-company-completion (item)
+(defun omnisharp--make-company-completion (json-result)
   "`company-mode' expects the beginning of the candidate to be
 the same as the characters being completed.  This method converts
 a function description of 'void SomeMethod(int parameter)' to
 string 'SomeMethod' propertized with annotation 'void
 SomeMethod(int parameter)' and the original value ITEM."
   (let* ((case-fold-search nil)
-         (completion (omnisharp--completion-result-item-get-completion-text item))
-         (display (omnisharp--completion-result-item-get-display-text item))
+         (completion (omnisharp--completion-result-item-get-completion-text json-result))
+         (display (omnisharp--completion-result-item-get-display-text json-result))
          (output completion)
-         (method-base (omnisharp--get-method-base item))
+         (method-base (omnisharp--get-method-base json-result))
          annotation)
 
     ;; If we have templating turned on, if there is a method header
@@ -899,7 +901,7 @@ SomeMethod(int parameter)' and the original value ITEM."
 
     (setq annotation (concat omnisharp-company-type-separator display))
     (add-text-properties 0 (length output)
-                         (list 'omnisharp-item item 'omnisharp-ann annotation)
+                         (list 'omnisharp-item json-result 'omnisharp-ann annotation)
                          output)
     output))
 
@@ -2188,10 +2190,10 @@ contents with the issue at point fixed."
 
 ;;; Some Helm integration
 (when (require 'helm-grep nil 'noerror)
-  ;;;Helm usages
+  ;;; Helm usages
   (defvar omnisharp-helm-usage-candidates nil)
 
-  (defun omnisharp-helm-usage-transform-candidate (candidate)
+  (defun omnisharp--helm-usage-transform-candidate (candidate)
     "Convert a quickfix entry into helm output"
     (cons
      (format "%s(%s): %s"
@@ -2204,10 +2206,10 @@ contents with the issue at point fixed."
      candidate))
   
   (defun omnisharp--helm-got-usages (quickfixes)
-    (setq omnisharp-helm-usage-candidates (mapcar 'omnisharp-helm-usage-transform-candidate quickfixes))
+    (setq omnisharp-helm-usage-candidates (mapcar 'omnisharp--helm-usage-transform-candidate quickfixes))
     (helm :sources (helm-make-source "Omnisharp - Symbol Usages" 'helm-source-sync
                                      :candidates omnisharp-helm-usage-candidates
-                                     :action 'omnisharp-helm-jump-to-candidate)
+                                     :action 'omnisharp--helm-jump-to-candidate)
           :truncate-lines t
           :buffer omnisharp--find-usages-buffer-name))
 
@@ -2219,35 +2221,35 @@ contents with the issue at point fixed."
       (omnisharp--get-common-params)
       'omnisharp--helm-got-usages))
 
-  (defun omnisharp-helm-jump-to-candidate (json-result)
+  (defun omnisharp--helm-jump-to-candidate (json-result)
     (omnisharp-go-to-file-line-and-column json-result)
     (helm-highlight-current-line nil nil nil nil t))
 
 
-;;;Helm find symbols
+  ;;; Helm find symbols
   (defun omnisharp-helm-find-symbols ()
   (interactive)
   (helm :sources (helm-make-source "Omnisharp - Find Symbols" 'helm-source-sync
-                                   :action 'omnisharp-helm-jump-to-candidate
+                                   :action 'omnisharp--helm-jump-to-candidate
                                    :matchplugin nil
                                    :match '((lambda (candidate) (string-match-p
                                                                 helm-pattern
                                                                 (nth 1 (split-string
                                                                         candidate ":" t)))))
-                                   :candidates 'omnisharp-helm-find-symbols-candidates)
+                                   :candidates 'omnisharp--helm-find-symbols-candidates)
         :buffer "*Omnisharp Symbols*"
         :truncate-lines t))
 
-  (defun omnisharp-helm-find-symbols-candidates ()
+  (defun omnisharp--helm-find-symbols-candidates ()
     (let ((quickfix-response
            (omnisharp-post-message-curl-as-json
             (concat (omnisharp-get-host) "findsymbols")
             nil)))
-      (mapcar 'omnisharp-helm-find-symbols-transform-candidate
+      (mapcar 'omnisharp--helm-find-symbols-transform-candidate
               (omnisharp--vector-to-list
                (cdr (assoc 'QuickFixes quickfix-response))))))
 
-  (defun omnisharp-helm-find-symbols-transform-candidate (candidate)
+  (defun omnisharp--helm-find-symbols-transform-candidate (candidate)
     "Convert a quickfix entry into helm output"
     (cons
      (format "%s : %s"
