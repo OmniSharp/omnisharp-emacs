@@ -2092,13 +2092,12 @@ result."
   (when (eq nil server-exe-file-path)
     (setq server-exe-file-path
           omnisharp-server-executable-path))
-  (setq server-exe-file-path (shell-quote-argument
-                              (expand-file-name server-exe-file-path)))
-  (setq solution-file-path (shell-quote-argument
-                              (expand-file-name solution-file-path)))
   (cond
    ((equal system-type 'windows-nt)
-    (concat server-exe-file-path " -s " solution-file-path " > NUL"))
+    (concat (shell-quote-argument server-exe-file-path)
+            " -s "
+            (shell-quote-argument solution-file-path)
+            " > NUL"))
 
    (t ; some kind of unix: linux or osx
     (concat "mono " server-exe-file-path

@@ -7,34 +7,36 @@
 (ert-deftest omnisharp--get-omnisharp-server-executable-command ()
   "The correct server path must be returned on windows and unix systems"
 
-  (let ((omnisharp-server-executable-path "OmniSharp.exe"))
-    ;; Windows
+  (setq omnisharp-server-executable-path "OmniSharp.exe")
+  ;; Windows
+  (with-mock
+    (stub w32-shell-dos-semantics)
     (should
-     (equal "OmniSharp.exe -s some solution.sln > NUL"
+     (equal "OmniSharp.exe -s some\\ solution.sln > NUL"
             (let ((system-type 'windows-nt))
               (omnisharp--get-omnisharp-server-executable-command
-               "some solution.sln"))))
+               "some solution.sln")))))
 
-    ;; osx
-    (let ((system-type 'darwin))
-      (should
-       (equal "mono OmniSharp.exe -s some solution.sln > /dev/null"
-              (omnisharp--get-omnisharp-server-executable-command
-               "some solution.sln"))))
+  ;; osx
+  (let ((system-type 'darwin))
+    (should
+     (equal "mono OmniSharp.exe -s some solution.sln > /dev/null"
+            (omnisharp--get-omnisharp-server-executable-command
+             "some solution.sln"))))
 
-    ;; linux
-    (let ((system-type 'gnu/linux))
-      (should
-       (equal "mono OmniSharp.exe -s some solution.sln > /dev/null"
-              (omnisharp--get-omnisharp-server-executable-command
-               "some solution.sln")))
+  ;; linux
+  (let ((system-type 'gnu/linux))
+    (should
+     (equal "mono OmniSharp.exe -s some solution.sln > /dev/null"
+            (omnisharp--get-omnisharp-server-executable-command
+             "some solution.sln")))
 
-      ;; Should also support an optional parameter
-      (should
-       (equal "mono /another/path/to/OmniSharp.exe -s some solution.sln > /dev/null"
-              (omnisharp--get-omnisharp-server-executable-command
-               "some solution.sln"
-               "/another/path/to/OmniSharp.exe"))))))
+    ;; Should also support an optional parameter
+    (should
+     (equal "mono /another/path/to/OmniSharp.exe -s some solution.sln > /dev/null"
+            (omnisharp--get-omnisharp-server-executable-command
+             "some solution.sln"
+             "/another/path/to/OmniSharp.exe")))))
 
 (ert-deftest flycheck-error-parser-raw-json-can-convert-syntax-errors-to-flycheck-errors ()
   "The output from a /syntaxerrors call must be a valid input for the
