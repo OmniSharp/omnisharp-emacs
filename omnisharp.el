@@ -2029,24 +2029,24 @@ result."
 
 ;; define a method to nicely start the server
 ;;;###autoload
-(defun omnisharp-start-omnisharp-server (solution)
-  "Starts an OmniSharpServer for a given solution"
+(defun omnisharp-start-omnisharp-server (path-to-solution)
+  "Starts an OmniSharpServer for a given path to a solution file"
   (interactive "fStart OmniSharpServer.exe for solution: ")
   (setq BufferName "*Omni-Server*")
   (omnisharp--find-and-cache-omnisharp-server-executable-path)
   (if (equal nil omnisharp-server-executable-path)
       (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
-    (if (string= (file-name-extension solution) "sln")
+    (if (string= (file-name-extension path-to-solution) "sln")
         (progn
-          (message (format "Starting OmniSharpServer for solution file: %s" solution))
+          (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
           (if (not (eq nil (get-buffer BufferName)))
               (kill-buffer BufferName))
           (start-process-shell-command
            "Omni-Server"
            (get-buffer-create BufferName)
-           (omnisharp--get-omnisharp-server-executable-command solution)))
+           (omnisharp--get-omnisharp-server-executable-command path-to-solution)))
 
-      (error (format "Path does not lead to a solution file: %s" solution)))))
+      (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
 
 (defun omnisharp--find-and-cache-omnisharp-server-executable-path ()
   "Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
