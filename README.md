@@ -204,7 +204,23 @@ either natively or in combination with helm-imenu
 Imenu support is off by default, but can be turned on by setting
 omnisharp-imenu-support to t
 
+### Helm integration
+
+If you have Helm installed, Omnisharp offers several
+integrations. First of all, there's helm-imenu:
+
 ![](pics/helm-imenu.png)
+
+There's also 'omnisharp-helm-find-usages', which allows you to easily
+navigate to references in your project:
+
+![](pics/omnisharp-helm-find-usages.png)
+
+And then there's 'omnisharp-helm-find-symbols', which allows you find
+and jump to any symbol in your project:
+
+![](pics/omnisharp-helm-find-symbols.png)
+
 
 ### company-mode integration
 
