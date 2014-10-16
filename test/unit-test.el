@@ -1,6 +1,3 @@
-(require 'ert)
-(require 'el-mock)
-
 ;; You can run tests with M-x ert but remember to evaluate them before
 ;; running if you changed something!
 
