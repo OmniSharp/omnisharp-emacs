@@ -813,7 +813,7 @@ items."
 
 ;; Path to the server
 (defcustom omnisharp-server-executable-path nil
-"Path to OmniSharpServer. If its value is nil, search for the server in the exec-path")
+  "Path to OmniSharpServer. If its value is nil, search for the server in the exec-path")
 
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
@@ -862,21 +862,21 @@ triggers a completion immediately"
                                   method-base
                                   (string-match-p "([^)]" method-base))
                          (company-template-c-like-templatify method-base))))))
-                       
+
 
 
 (defun omnisharp--get-method-base (json-result)
   "If function templating is turned on, and the method is not a
    generic, return the 'method base' (basically, the method definition
    minus its return type)"
-    (when omnisharp-company-do-template-completion
-      (let ((method-base (omnisharp--completion-result-item-get-method-header json-result))
-            (display (omnisharp--completion-result-item-get-completion-text
-                      json-result)))
-        (when (and method-base
-                   (not (string= method-base ""))
-                   (not (string-match-p "<" display)))
-          method-base))))
+  (when omnisharp-company-do-template-completion
+    (let ((method-base (omnisharp--completion-result-item-get-method-header json-result))
+          (display (omnisharp--completion-result-item-get-completion-text
+                    json-result)))
+      (when (and method-base
+                 (not (string= method-base ""))
+                 (not (string-match-p "<" display)))
+        method-base))))
 
 (defun omnisharp--make-company-completion (json-result)
   "`company-mode' expects the beginning of the candidate to be
@@ -1163,7 +1163,7 @@ the OmniSharp server understands."
   (let ((all-open-buffers-list
          (-map 'buffer-file-name (buffer-list))))
     (--any? (string-equal file-name it)
-           all-open-buffers-list)))
+            all-open-buffers-list)))
 
 (defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
@@ -1307,8 +1307,8 @@ something goes wrong, return a human-readable warning."
   "Posts message to curl at URL with PARAMS asynchronously.
 On completion, the curl output is parsed as json and passed into CALLBACK."
   (omnisharp-post-message-curl-async url params
-    (lambda (str)
-      (apply callback (list (omnisharp--json-read-from-string str))))))
+                                     (lambda (str)
+                                       (apply callback (list (omnisharp--json-read-from-string str))))))
 
 (defun omnisharp--auto-complete-display-function-popup
   (json-result-alist)
@@ -1577,9 +1577,9 @@ window."
 
    (t ; no buffer for this file exists yet
     (funcall (if other-window
-               'find-file-other-window
-             'find-file)
-           filename))))
+                 'find-file-other-window
+               'find-file)
+             filename))))
 
 (defun omnisharp--vector-to-list (vector)
   (append vector nil))
@@ -1745,8 +1745,8 @@ type errors."
   ;; This must be an external process. Currently flycheck does not
   ;; support using elisp functions as checkers.
   :command ("curl" ; this is overridden by
-                   ; flycheck-csharp-omnisharp-curl-executable if it
-                   ; is set
+                                        ; flycheck-csharp-omnisharp-curl-executable if it
+                                        ; is set
             (eval
              (omnisharp--get-curl-command-executable-string-for-api-name
               (omnisharp--get-common-params)
@@ -1841,14 +1841,14 @@ cursor at that location"
          (element-filename (cdr (assoc 'Filename element)))
          (use-buffer (current-buffer)))
     (save-excursion
-        (omnisharp-go-to-file-line-and-column-worker
-         element-line
-         element-column
-         element-filename
-         nil ; other-window
-         ;; dont-save-old-pos
-         t)
-        (point-marker))))
+      (omnisharp-go-to-file-line-and-column-worker
+       element-line
+       element-column
+       element-filename
+       nil ; other-window
+       ;; dont-save-old-pos
+       t)
+      (point-marker))))
 
 (defun omnisharp-imenu-create-index ()
   "Imenu callback function - returns an alist of ((member-name . position))"
@@ -2163,11 +2163,11 @@ contents with the issue at point fixed."
      run-code-action-request)))
 
 (add-to-list 'compilation-error-regexp-alist
-		 '(" in \\(.+\\):\\([1-9][0-9]+\\)" 1 2))
+             '(" in \\(.+\\):\\([1-9][0-9]+\\)" 1 2))
 
 ;; nunit-console.exe on windows uses this format
 (add-to-list 'compilation-error-regexp-alist
-               '(" in \\(.+\\):line \\([0-9]+\\)" 1 2))
+             '(" in \\(.+\\):line \\([0-9]+\\)" 1 2))
 
 (defun omnisharp-unit-test (mode)
   "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'" 
@@ -2219,8 +2219,8 @@ contents with the issue at point fixed."
     (interactive)
     (message "Helm Finding usages...")
     (omnisharp-find-usages-worker
-      (omnisharp--get-common-params)
-      'omnisharp--helm-got-usages))
+     (omnisharp--get-common-params)
+     'omnisharp--helm-got-usages))
 
   (defun omnisharp--helm-jump-to-candidate (json-result)
     (omnisharp-go-to-file-line-and-column json-result)
@@ -2229,17 +2229,17 @@ contents with the issue at point fixed."
 
   ;;; Helm find symbols
   (defun omnisharp-helm-find-symbols ()
-  (interactive)
-  (helm :sources (helm-make-source "Omnisharp - Find Symbols" 'helm-source-sync
-                                   :action 'omnisharp--helm-jump-to-candidate
-                                   :matchplugin nil
-                                   :match '((lambda (candidate) (string-match-p
-                                                                helm-pattern
-                                                                (nth 1 (split-string
-                                                                        candidate ":" t)))))
-                                   :candidates 'omnisharp--helm-find-symbols-candidates)
-        :buffer "*Omnisharp Symbols*"
-        :truncate-lines t))
+    (interactive)
+    (helm :sources (helm-make-source "Omnisharp - Find Symbols" 'helm-source-sync
+                                     :action 'omnisharp--helm-jump-to-candidate
+                                     :matchplugin nil
+                                     :match '((lambda (candidate) (string-match-p
+                                                                   helm-pattern
+                                                                   (nth 1 (split-string
+                                                                           candidate ":" t)))))
+                                     :candidates 'omnisharp--helm-find-symbols-candidates)
+          :buffer "*Omnisharp Symbols*"
+          :truncate-lines t))
 
   (defun omnisharp--helm-find-symbols-candidates ()
     (let ((quickfix-response
@@ -2257,10 +2257,9 @@ contents with the issue at point fixed."
              (propertize (cdr (assoc 'FileName candidate))
                          'face 'helm-grep-file)
              (nth 0 (split-string (cdr (assoc 'Text candidate)) "(")))
-     candidate))
-)
+     candidate)))
 
-  
+
 (provide 'omnisharp)
 
 ;;; omnisharp.el ends here
