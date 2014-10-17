@@ -16,3 +16,8 @@ line endings, so windows CRLF is considered the same as Unix LF."
         (let ((actual (s-replace (string ?\C-m) (string ?\C-j) (buffer-string)))
               (message "Expected '%s' to be part of '%s', but was not."))
           (cl-assert (s-contains? expected actual) nil message expected actual))))
+
+(And "^I evaluate the command \"\\([^\"]+\\)\"$"
+     (lambda (command-to-execute)
+       (eval (read command-to-execute))))
+
