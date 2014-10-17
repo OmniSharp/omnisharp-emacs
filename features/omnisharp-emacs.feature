@@ -6,7 +6,6 @@ Feature: Fix usings
   Background:
     # TODO start omnisharp server somehow
     Given I open temp file "some-file.cs"
-    And I bind key "C-c i" to "omnisharp-fix-usings"
 
   Scenario: Insert missing namespace import
     When I insert:
@@ -15,7 +14,7 @@ Feature: Fix usings
           StringWriter writer;
       }
       """
-    And I press "C-c i"
+    And I evaluate the command "(omnisharp-fix-usings)"
     Then I should see, ignoring line endings:
       """
       using System.IO;
