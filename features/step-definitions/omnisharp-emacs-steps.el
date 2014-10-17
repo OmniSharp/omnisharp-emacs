@@ -21,3 +21,15 @@ line endings, so windows CRLF is considered the same as Unix LF."
      (lambda (command-to-execute)
        (eval (read command-to-execute))))
 
+(When "^I switch to the existing buffer \"\\([^\"]+\\)\"$"
+      "Asserts the buffer with the given name exists and switches to that buffer."
+      (lambda (existing-buffer-name)
+        (let ((buffer (get-buffer existing-buffer-name))
+              (message "Expected the buffer %s to exist but it did not."))
+          (cl-assert (not (eq nil buffer)) nil message existing-buffer-name)
+          (switch-to-buffer buffer))))
+
+(And "^I wait \"\\([^\"]+\\)\" seconds$"
+     (lambda (seconds)
+       (sit-for (read seconds))))
+

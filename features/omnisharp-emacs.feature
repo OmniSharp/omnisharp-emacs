@@ -7,7 +7,7 @@ Feature: Fix usings
     # TODO start omnisharp server somehow
     Given I open temp file "some-file.cs"
 
-  Scenario: Insert missing namespace import
+  Scenario: A single import is added automatically
     When I insert:
       """
       public class Awesome {
@@ -22,4 +22,32 @@ Feature: Fix usings
       public class Awesome {
           StringWriter writer;
       }
+      """
+
+  Scenario: Multiple imports let the user choose the import they want manually
+    When I insert:
+      """
+      namespace mika {
+          public class test {
+              class1 classOne;
+          }
+      }
+
+      namespace ns1
+      {
+          public class class1{}
+      }
+
+      namespace ns2
+      {
+          public class class1{}
+      }
+      """
+    And I evaluate the command "(omnisharp-fix-usings)"
+    When I switch to the existing buffer "* OmniSharp : Ambiguous unresolved symbols *"
+    Then I should see, ignoring line endings:
+      """
+      These results are ambiguous. You can run
+      (omnisharp-run-code-action-refactoring) when point is on them to see
+      options for fixing them.
       """
