@@ -23,6 +23,10 @@
 
 (Before
  ;; Before each scenario is run
+
+ ;; evil's normal mode messes up point locations
+ (when (fboundp 'evil-insert)
+   (evil-insert 1))
  )
 
 (After

@@ -33,3 +33,9 @@ line endings, so windows CRLF is considered the same as Unix LF."
      (lambda (seconds)
        (sit-for (read seconds))))
 
+(When "^My buffer contents are, and my point is at $:$"
+  (lambda (buffer-contents-to-insert)
+    (insert buffer-contents-to-insert)
+    (beginning-of-buffer)
+    (re-search-forward "\\$")
+    (delete-backward-char 1)))
