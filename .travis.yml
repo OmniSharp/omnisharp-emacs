@@ -7,3 +7,11 @@ before_script:
     - sudo apt-get install --force-yes mono-opt emacs-snapshot emacs-snapshot-el
     - git clone https://github.com/nosami/OmniSharpServer.git
     - curl -fsSkL https://raw.github.com/cask/cask/master/go | python
+    - cask
+    - mono --version
+    - cd OmniSharpServer
+    - xbuild
+    - cd ..
+    
+script:
+    ./run-integration-tests.sh
