@@ -5,6 +5,7 @@ Feature: Auto-complete
 
   Background:
     Given I open temp file "some-file.cs"
+    Given The buffer is empty
     Given I set "omnisharp--auto-complete-display-backend" to "'popup"
 
   Scenario: Auto-complete a member with the popup interface
