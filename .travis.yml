@@ -7,15 +7,16 @@ before_script:
     - sudo apt-get update -q
     - sudo apt-get install --force-yes mono-devel emacs-snapshot emacs-snapshot-el
     - git clone https://github.com/nosami/OmniSharpServer.git
-    - curl -fsSkL https://raw.github.com/cask/cask/master/go | python
-    - export PATH="/home/travis/.cask/bin:$PATH"
-    - emacs --version
-    - cask
     - mono --version
     - cd OmniSharpServer
     - git submodule update --init --recursive
     - xbuild
     - cd ..
+    - mono ./OmniSharp/bin/Debug/OmniSharp.exe -s ./OmniSharp.Tests/Solution/minimal/minimal.sln &
+    - curl -fsSkL https://raw.github.com/cask/cask/master/go | python
+    - export PATH="/home/travis/.cask/bin:$PATH"
+    - emacs --version
+    - cask
     
 script:
     ./run-integration-tests.sh
