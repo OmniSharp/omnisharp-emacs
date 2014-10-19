@@ -13,6 +13,7 @@ before_script:
     - cask
     - mono --version
     - cd OmniSharpServer
+    - git submodule update --init --recursive
     - xbuild
     - cd ..
     
