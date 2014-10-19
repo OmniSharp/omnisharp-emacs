@@ -7,6 +7,7 @@ before_script:
     - sudo apt-get install --force-yes mono-opt emacs-snapshot emacs-snapshot-el
     - git clone https://github.com/nosami/OmniSharpServer.git
     - curl -fsSkL https://raw.github.com/cask/cask/master/go | python
+    - export PATH="/home/travis/.cask/bin:$PATH"
     - cask
     - mono --version
     - cd OmniSharpServer
