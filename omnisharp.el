@@ -2053,9 +2053,7 @@ result."
   "Returns a doc string appropriate for the current context, or nil."
   (condition-case nil
       (let ((current-type-information
-             (omnisharp-current-type-information-worker
-              'Type
-              (omnisharp--get-common-params))))
+             (omnisharp-current-type-information-worker 'Type)))
         (omnisharp--eldoc-fontify-string current-type-information))
     (error nil)))
 
