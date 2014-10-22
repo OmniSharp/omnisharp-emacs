@@ -855,8 +855,9 @@ triggers a completion immediately"
 
     ;; Check to see if we need to do any templating
     (post-completion (let* ((json-result (get-text-property 0 'omnisharp-item arg))
+                            (allow-templating (get-text-property 0 'omnisharp-allow-templating arg))
                             (method-base (omnisharp--get-method-base json-result)))
-                       (when (and omnisharp-company-do-template-completion
+                       (when (and allow-templating
                                   method-base
                                   (string-match-p "([^)]" method-base))
                          (company-template-c-like-templatify method-base))))))
@@ -887,21 +888,28 @@ SomeMethod(int parameter)' and the original value ITEM."
          (display (omnisharp--completion-result-item-get-display-text json-result))
          (output completion)
          (method-base (omnisharp--get-method-base json-result))
+         (allow-templating omnisharp-company-do-template-completion)
          annotation)
 
     ;; If we have templating turned on, if there is a method header
     ;; use that for completion.  The templating engine will then pick
     ;; up the completion for you
-    (when method-base
-      (setq output method-base))
+    ;; If we're looking at a line that already has a < or (, don't
+    ;; enable templating, and also strip < and ( from our completions
+    (cond ((looking-at-p "\\s-*(\\|<")
+           (setq allow-templating nil)
+           (setq output (car (split-string output "\\.*(\\|<"))))
+          ((and (not omnisharp-company-do-template-completion)
+                omnisharp-company-strip-trailing-brackets)
+           (setq output (car (split-string completion "(\\|<"))))
+          (method-base
+           (setq output method-base)))
     
-    ;; Remove any trailing brackets from the completion string
-    (when omnisharp-company-strip-trailing-brackets
-      (setq output (car (split-string completion "(\\|<"))))
-
     (setq annotation (concat omnisharp-company-type-separator display))
     (add-text-properties 0 (length output)
-                         (list 'omnisharp-item json-result 'omnisharp-ann annotation)
+                         (list 'omnisharp-item json-result
+                               'omnisharp-ann annotation
+                               'omnisharp-allow-templating allow-templating)
                          output)
     output))
 
