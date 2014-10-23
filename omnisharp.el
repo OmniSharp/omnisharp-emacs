@@ -857,6 +857,9 @@ triggers a completion immediately"
     (post-completion (let* ((json-result (get-text-property 0 'omnisharp-item arg))
                             (allow-templating (get-text-property 0 'omnisharp-allow-templating arg))
                             (method-base (omnisharp--get-method-base json-result)))
+                       ;; Make sure company-template is loaded.
+                       ;; Do it here because company-mode is optional
+                       (require 'company-template)
                        (when (and allow-templating
                                   method-base
                                   (string-match-p "([^)]" method-base))
