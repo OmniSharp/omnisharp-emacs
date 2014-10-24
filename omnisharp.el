@@ -891,6 +891,10 @@ triggers a completion immediately"
             (display (omnisharp--completion-result-item-get-completion-text
                       json-result)))
         (when (and method-base
+                   ;; company doesn't expand < properly, so
+                   ;; if we're not using yasnippet, disable templating on methods that contain it
+                   (or omnisharp-company-template-use-yasnippet
+                       (not (string-match-p "<" display)))
                    (not (string= method-base "")))
           method-base))))
 
