@@ -869,7 +869,7 @@ triggers a completion immediately"
                                (let ((method-snippet (omnisharp--completion-result-item-get-method-snippet
                                                       json-result)))
                                  (when method-snippet
-                                   (omnisharp--company-templatify arg method-snippet))))
+                                   (omnisharp--snippet-templatify arg method-snippet))))
                            ;; Fallback on company completion but make sure company-template is loaded.
                            ;; Do it here because company-mode is optional
                            (require 'company-template)
@@ -878,7 +878,7 @@ triggers a completion immediately"
                                         (string-match-p "([^)]" method-base))
                                (company-template-c-like-templatify method-base)))))))))
                        
-(defun omnisharp--company-templatify (call snippet)
+(defun omnisharp--snippet-templatify (call snippet)
   (delete-region (- (point) (length call)) (point))
   (yas/expand-snippet snippet))
 
