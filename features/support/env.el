@@ -1,6 +1,7 @@
 ;; In this file the test environment is configured. Test packages are
 ;; required, package state is reset between test runs, etc.
 (require 'f)
+(require 's)
 
 (defvar omnisharp-emacs-support-path
   (f-dirname (f-this-file)))
@@ -10,6 +11,14 @@
 
 (defvar omnisharp-emacs-root-path
   (f-parent omnisharp-emacs-features-path))
+
+(defvar omnisharp-server-root-path
+  (f-join omnisharp-emacs-root-path
+          "OmniSharpServer/"))
+
+(defvar omnisharp-minimal-test-solution-path
+  (f-join omnisharp-server-root-path
+          "OmniSharp.Tests/Solution/minimal/"))
 
 (add-to-list 'load-path omnisharp-emacs-root-path)
 
