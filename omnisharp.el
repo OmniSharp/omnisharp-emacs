@@ -704,37 +704,26 @@ and complete members."
 
 (defun omnisharp--get-auto-complete-params ()
   "Return an AutoCompleteRequest for the current buffer state."
-  (let* ((request (omnisharp--get-common-params))
-         (want-doc (omnisharp--t-or-json-false
+  (append `((WantDocumentationForEveryCompletionResult
+             . ,(omnisharp--t-or-json-false
                     omnisharp-auto-complete-want-documentation))
-         (want-header (omnisharp--t-or-json-false
+
+            (WantMethodHeader
+             . ,(omnisharp--t-or-json-false
                        omnisharp-company-do-template-completion))
-         (want-snippet (omnisharp--t-or-json-false
+
+            (WantSnippet
+             . ,(omnisharp--t-or-json-false
                         (and omnisharp-company-do-template-completion
                              omnisharp-company-template-use-yasnippet)))
-         (want-imports (omnisharp--t-or-json-false
-                        omnisharp-auto-complete-want-importable-types)))
 
-    (setq request
-          (cons `(WantDocumentationForEveryCompletionResult . ,want-doc)
-                request))
+            (WantImportableTypes
+             . ,(omnisharp--t-or-json-false
+                 omnisharp-auto-complete-want-importable-types))
 
-    (setq request
-          (cons `(WantMethodHeader . ,want-header)
-                request))
+            (WordToComplete . ,(thing-at-point 'symbol)))
 
-    (setq request
-          (cons `(WantSnippet . ,want-snippet)
-                request))
-
-    ;; Add WordToComplete to params
-    (setq request
-          (cons `(WordToComplete . ,(thing-at-point 'symbol))
-                request))
-    (setq request
-          (cons `(WantImportableTypes . ,want-imports)
-                request))
-    request))
+          (omnisharp--get-common-params)))
 
 ;; Use this source in your csharp editing mode hook like so:
 ;; (add-to-list 'ac-sources 'ac-source-omnisharp)
