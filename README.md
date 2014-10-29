@@ -1,6 +1,7 @@
 # omnisharp-emacs
-![](https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master)
-(https://github.com/OmniSharp/omnisharp-emacs)
+<a href="https://github.com/OmniSharp/omnisharp-emacs">
+    <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
+</a>
 
 omnisharp-emacs is a port of the awesome [OmniSharp][] server to the
 Emacs text editor. It provides IDE-like features for editing files in
