@@ -2097,7 +2097,8 @@ result."
   (cond
    ((equal system-type 'windows-nt)
     (concat server-exe-file-path " -s " solution-file-path " > NUL"))
-
+   ((equal system-type 'cygwin) ;; No mono needed on cygwin
+    (concat server-exe-file-path " -s " solution-file-path " > /dev/null"))
    (t ; some kind of unix: linux or osx
     (concat "mono " server-exe-file-path
             " -s " solution-file-path
