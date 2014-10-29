@@ -2123,6 +2123,11 @@ result."
     (setq server-exe-file-path
           omnisharp-server-executable-path))
   (cond
+   ((equal system-type 'cygwin) ;; No mono needed on cygwin
+    (concat (shell-quote-argument server-exe-file-path)
+            " -s "
+            (shell-quote-argument solution-file-path)
+            " > /dev/null"))
    ((equal system-type 'windows-nt)
     (concat (shell-quote-argument server-exe-file-path)
             " -s "
