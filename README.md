@@ -1,6 +1,6 @@
 # omnisharp-emacs
 <a href="//travis-ci.org/OmniSharp/omnisharp-emacs">
-    <img src="//travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
+    <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
 </a>
 
 omnisharp-emacs is a port of the awesome [OmniSharp][] server to the
