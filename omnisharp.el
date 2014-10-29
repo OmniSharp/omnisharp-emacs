@@ -699,39 +699,33 @@ and complete members."
   (insert ".")
   (omnisharp-auto-complete))
 
+(defun omnisharp--t-or-json-false (val)
+  (if val
+      t
+    :json-false))
+
 (defun omnisharp--get-auto-complete-params ()
   "Return an AutoCompleteRequest for the current buffer state."
-  (let* ((request (omnisharp--get-common-params))
-         (want-doc (if (equal
-                        omnisharp-auto-complete-want-documentation
-                        nil)
-                       :json-false
-                     omnisharp-auto-complete-want-documentation))
-         (want-header (if (equal
-                           omnisharp-company-do-template-completion
-                           nil)
-                          :json-false
-                        omnisharp-company-do-template-completion))
-         (want-imports (if (equal
-                            omnisharp-auto-complete-want-importable-types
-                            nil)
-                           :json-false
-                         omnisharp-auto-complete-want-importable-types)))
-    (setq request
-          (cons `(WantDocumentationForEveryCompletionResult . ,want-doc)
-                request))
+  (append `((WantDocumentationForEveryCompletionResult
+             . ,(omnisharp--t-or-json-false
+                    omnisharp-auto-complete-want-documentation))
 
-    (setq request
-          (cons `(WantMethodHeader . ,want-header)
-                request))
-    ;; Add WordToComplete to params
-    (setq request
-          (cons `(WordToComplete . ,(thing-at-point 'symbol))
-                request))
-    (setq request
-          (cons `(WantImportableTypes . ,want-imports)
-                request))
-    request))
+            (WantMethodHeader
+             . ,(omnisharp--t-or-json-false
+                       omnisharp-company-do-template-completion))
+
+            (WantSnippet
+             . ,(omnisharp--t-or-json-false
+                        (and omnisharp-company-do-template-completion
+                             omnisharp-company-template-use-yasnippet)))
+
+            (WantImportableTypes
+             . ,(omnisharp--t-or-json-false
+                 omnisharp-auto-complete-want-importable-types))
+
+            (WordToComplete . ,(thing-at-point 'symbol)))
+
+          (omnisharp--get-common-params)))
 
 ;; Use this source in your csharp editing mode hook like so:
 ;; (add-to-list 'ac-sources 'ac-source-omnisharp)
@@ -762,13 +756,25 @@ items."
 
 
 ;; company-mode integration
-(defvar omnisharp-company-do-template-completion nil
-  "Set to t if you want in-line parameter completion, nil
-  otherwise. CURRENTLY UNSUPPORTED.")
-
 (defvar omnisharp-company-type-separator " : "
   "The string used to visually separate functions/variables from
   their types")
+
+(defcustom omnisharp-company-do-template-completion t
+  "Set to t if you want in-line parameter completion, nil
+  otherwise."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-company-template-use-yasnippet t 
+  "Set to t if you want completion to happen via yasnippet
+  otherwise fall back on company's templating. Requires yasnippet
+  to be installed"
+  
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
 (defcustom omnisharp-company-ignore-case t
   "If t, case is ignored in completion matches."
@@ -857,26 +863,42 @@ triggers a completion immediately"
 
     ;; Check to see if we need to do any templating
     (post-completion (let* ((json-result (get-text-property 0 'omnisharp-item arg))
-                            (method-base (omnisharp--get-method-base json-result)))
-                       (when (and omnisharp-company-do-template-completion
-                                  method-base
-                                  (string-match-p "([^)]" method-base))
-                         (company-template-c-like-templatify method-base))))))
-
-
+                            (allow-templating (get-text-property 0 'omnisharp-allow-templating arg)))
+                       (when allow-templating
+                         ;; Do yasnippet completion
+                         (if (and omnisharp-company-template-use-yasnippet (fboundp 'yas/expand-snippet))
+                             (progn
+                               (let ((method-snippet (omnisharp--completion-result-item-get-method-snippet
+                                                      json-result)))
+                                 (when method-snippet
+                                   (omnisharp--snippet-templatify arg method-snippet))))
+                           ;; Fallback on company completion but make sure company-template is loaded.
+                           ;; Do it here because company-mode is optional
+                           (require 'company-template)
+                           (let ((method-base (omnisharp--get-method-base json-result)))
+                             (when (and method-base
+                                        (string-match-p "([^)]" method-base))
+                               (company-template-c-like-templatify method-base)))))))))
+                       
+(defun omnisharp--snippet-templatify (call snippet)
+  (delete-region (- (point) (length call)) (point))
+  (yas/expand-snippet snippet))
 
 (defun omnisharp--get-method-base (json-result)
   "If function templating is turned on, and the method is not a
    generic, return the 'method base' (basically, the method definition
    minus its return type)"
-  (when omnisharp-company-do-template-completion
-    (let ((method-base (omnisharp--completion-result-item-get-method-header json-result))
-          (display (omnisharp--completion-result-item-get-completion-text
-                    json-result)))
-      (when (and method-base
-                 (not (string= method-base ""))
-                 (not (string-match-p "<" display)))
-        method-base))))
+    (when omnisharp-company-do-template-completion
+      (let ((method-base (omnisharp--completion-result-item-get-method-header json-result))
+            (display (omnisharp--completion-result-item-get-completion-text
+                      json-result)))
+        (when (and method-base
+                   ;; company doesn't expand < properly, so
+                   ;; if we're not using yasnippet, disable templating on methods that contain it
+                   (or omnisharp-company-template-use-yasnippet
+                       (not (string-match-p "<" display)))
+                   (not (string= method-base "")))
+          method-base))))
 
 (defun omnisharp--make-company-completion (json-result)
   "`company-mode' expects the beginning of the candidate to be
@@ -889,21 +911,28 @@ SomeMethod(int parameter)' and the original value ITEM."
          (display (omnisharp--completion-result-item-get-display-text json-result))
          (output completion)
          (method-base (omnisharp--get-method-base json-result))
+         (allow-templating omnisharp-company-do-template-completion)
          annotation)
 
     ;; If we have templating turned on, if there is a method header
     ;; use that for completion.  The templating engine will then pick
     ;; up the completion for you
-    (when method-base
-      (setq output method-base))
+    ;; If we're looking at a line that already has a < or (, don't
+    ;; enable templating, and also strip < and ( from our completions
+    (cond ((looking-at-p "\\s-*(\\|<")
+           (setq allow-templating nil)
+           (setq output (car (split-string output "\\.*(\\|<"))))
+          ((and (not omnisharp-company-do-template-completion)
+                omnisharp-company-strip-trailing-brackets)
+           (setq output (car (split-string completion "(\\|<"))))
+          (method-base
+           (setq output method-base)))
     
-    ;; Remove any trailing brackets from the completion string
-    (when omnisharp-company-strip-trailing-brackets
-      (setq output (car (split-string completion "(\\|<"))))
-
     (setq annotation (concat omnisharp-company-type-separator display))
     (add-text-properties 0 (length output)
-                         (list 'omnisharp-item json-result 'omnisharp-ann annotation)
+                         (list 'omnisharp-item json-result
+                               'omnisharp-ann annotation
+                               'omnisharp-allow-templating allow-templating)
                          output)
     output))
 
@@ -1463,6 +1492,9 @@ moving point."
 
 (defun omnisharp--completion-result-item-get-method-header (item)
   (cdr (assoc 'MethodHeader item)))
+
+(defun omnisharp--completion-result-item-get-method-snippet (item)
+  (cdr (assoc 'Snippet item)))
 
 (defun omnisharp--get-max-item-length (completions)
   "Returns the length of the longest completion in 'completions'."
@@ -2055,9 +2087,7 @@ result."
   "Returns a doc string appropriate for the current context, or nil."
   (condition-case nil
       (let ((current-type-information
-             (omnisharp-current-type-information-worker
-              'Type
-              (omnisharp--get-common-params))))
+             (omnisharp-current-type-information-worker 'Type)))
         (omnisharp--eldoc-fontify-string current-type-information))
     (error nil)))
 
