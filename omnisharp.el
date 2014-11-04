@@ -2103,8 +2103,8 @@ result."
     (if (string= (file-name-extension path-to-solution) "sln")
         (progn
           (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
-          (if (not (eq nil (get-buffer BufferName)))
-              (kill-buffer BufferName))
+          (when (not (eq nil (get-buffer BufferName)))
+            (kill-buffer BufferName))
           (start-process-shell-command
            "Omni-Server"
            (get-buffer-create BufferName)
@@ -2135,8 +2135,8 @@ result."
             " > NUL"))
 
    (t ; some kind of unix: linux or osx
-    (concat "mono " server-exe-file-path
-            " -s " solution-file-path
+    (concat "mono " (shell-quote-argument server-exe-file-path)
+            " -s " (shell-quote-argument solution-file-path)
             " > /dev/null"))))
 
 ;;;###autoload
