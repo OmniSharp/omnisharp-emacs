@@ -712,6 +712,8 @@ and complete members."
              . ,(omnisharp--t-or-json-false
                        omnisharp-company-do-template-completion))
 
+            (WantReturnType . t)
+
             (WantSnippet
              . ,(omnisharp--t-or-json-false
                         (and omnisharp-company-do-template-completion
@@ -910,7 +912,9 @@ SomeMethod(int parameter)' and the original value ITEM."
          (output completion)
          (method-base (omnisharp--get-method-base json-result))
          (allow-templating omnisharp-company-do-template-completion)
-         annotation)
+         (annotation (concat omnisharp-company-type-separator
+                             (omnisharp--completion-result-get-item
+                              json-result 'ReturnType))))
 
     ;; If we have templating turned on, if there is a method header
     ;; use that for completion.  The templating engine will then pick
@@ -926,7 +930,7 @@ SomeMethod(int parameter)' and the original value ITEM."
           (method-base
            (setq output method-base)))
     
-    (setq annotation (concat omnisharp-company-type-separator display))
+
     (add-text-properties 0 (length output)
                          (list 'omnisharp-item json-result
                                'omnisharp-ann annotation
@@ -1493,6 +1497,9 @@ moving point."
 
 (defun omnisharp--completion-result-item-get-method-snippet (item)
   (cdr (assoc 'Snippet item)))
+
+(defun omnisharp--completion-result-get-item (json-alist type)
+  (cdr (assoc type json-alist)))
 
 (defun omnisharp--get-max-item-length (completions)
   "Returns the length of the longest completion in 'completions'."
