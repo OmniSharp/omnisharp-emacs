@@ -850,6 +850,8 @@ triggers a completion immediately"
 
     (meta (omnisharp--get-company-candidate-data arg 'DisplayText))
 
+    (require-match 'never)
+
     (doc-buffer (let ((doc-buffer (company-doc-buffer
                                    (omnisharp--get-company-candidate-data
                                     arg 'Description))))
