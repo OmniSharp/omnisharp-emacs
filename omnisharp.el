@@ -760,6 +760,9 @@ items."
   "The string used to visually separate functions/variables from
   their types")
 
+(defvar omnisharp-company-last-completion nil
+  "The last completion used by company. Used by ElDoc")
+
 (defcustom omnisharp-company-do-template-completion t
   "Set to t if you want in-line parameter completion, nil
   otherwise."
@@ -866,6 +869,8 @@ triggers a completion immediately"
     ;; Check to see if we need to do any templating
     (post-completion (let* ((json-result (get-text-property 0 'omnisharp-item arg))
                             (allow-templating (get-text-property 0 'omnisharp-allow-templating arg)))
+                       (omnisharp--tag-text-with-completion-info arg json-result)
+                       (setq omnisharp-company-last-completion (omnisharp--completion-result-get-item json-result 'DisplayText))
                        (when allow-templating
                          ;; Do yasnippet completion
                          (if (and omnisharp-company-template-use-yasnippet (fboundp 'yas/expand-snippet))
@@ -873,7 +878,7 @@ triggers a completion immediately"
                                (let ((method-snippet (omnisharp--completion-result-item-get-method-snippet
                                                       json-result)))
                                  (when method-snippet
-                                   (omnisharp--snippet-templatify arg method-snippet))))
+                                   (omnisharp--snippet-templatify arg method-snippet json-result))))
                            ;; Fallback on company completion but make sure company-template is loaded.
                            ;; Do it here because company-mode is optional
                            (require 'company-template)
@@ -882,9 +887,32 @@ triggers a completion immediately"
                                         (string-match-p "([^)]" method-base))
                                (company-template-c-like-templatify method-base)))))))))
                        
-(defun omnisharp--snippet-templatify (call snippet)
+(defun omnisharp--tag-text-with-completion-info (call json-result)
+  "Adds data to the completed text which we then use in ElDoc"
+  (add-text-properties (- (point) (length call)) (point)
+                       (list 'omnisharp-result json-result)))
+
+(defun omnisharp--yasnippet-tag-text-with-completion-info ()
+  "This is called after yasnippet has finished expanding a template. 
+   It adds data to the completed text, which we later use in ElDoc"
+  (when omnisharp-snippet-json-result
+    (add-text-properties yas-snippet-beg yas-snippet-end 
+                         (list 'omnisharp-result omnisharp-snippet-json-result))
+    (remove-hook 'yas-after-exit-snippet-hook 'omnisharp--yasnippet-tag-text-with-completion-info)
+    (setq omnisharp-snippet-json-result nil)))
+  
+(defvar omnisharp-snippet-json-result nil)
+
+(defun omnisharp--snippet-templatify (call snippet json-result)
+  "Does a snippet expansion of the completed text.
+   Also sets up a hook which will eventually add data for ElDoc"
+  (when (not omnisharp-snippet-json-result)
+    (setq omnisharp-snippet-json-result json-result)
+    (add-hook 'yas-after-exit-snippet-hook 'omnisharp--yasnippet-tag-text-with-completion-info))
+  
   (delete-region (- (point) (length call)) (point))
   (yas/expand-snippet snippet))
+
 
 (defun omnisharp--get-method-base (json-result)
   "If function templating is turned on, and the method is not a
@@ -2084,19 +2112,73 @@ result."
             (csharp-mode)))
         (current-buffer)))))
 
+
 (defun omnisharp--eldoc-fontify-string (str)
   (with-current-buffer (omnisharp--get-eldoc-fontification-buffer)
     (delete-region (point-min) (point-max))
     (font-lock-fontify-region (point) (progn (insert str ";") (point)))
     (buffer-substring (point-min) (1- (point-max)))))
 
+(defun omnisharp--jump-to-enclosing-func ()
+  "Jumps to the closing brace of the current function definition"
+  (interactive)
+  (let ((start-point (point))
+        (found-point (point))
+        (found-start nil))
+     (save-excursion
+       (let ((test-point (point)))
+         (while (not found-start)
+           (search-backward-regexp "(\\|;\\|{")
+           (cond ((eq (point) test-point)
+                  (setq found-start t))
+
+                 ((looking-at-p "(")
+                  (setq test-point (point))
+                  (forward-sexp)
+                  (when (> (point) start-point)
+                    (setq found-point test-point)
+                    (setq found-start t))
+                  (goto-char test-point))
+
+                 (t (setq found-start t))))))
+     (goto-char found-point)))
+
+(defun omnisharp--eldoc-default ()
+  "Tries to find completion information about the method before point"
+  (save-excursion
+    (omnisharp--jump-to-enclosing-func)
+    (search-backward-regexp "\\sw")
+    (let* ((json-result (get-text-property (point) 'omnisharp-result))
+           (type-info (omnisharp--completion-result-get-item json-result 'DisplayText)))
+
+      (if (and type-info (not (string= "" type-info)))
+        (omnisharp--eldoc-fontify-string type-info)
+      nil))))
+
+
+(defun omnisharp--eldoc-worker ()
+  "Gets type information from omnisharp server about the symbol at point"
+  (omnisharp--completion-result-get-item 
+   (omnisharp-post-message-curl-as-json
+    (concat (omnisharp-get-host) "typelookup")
+    (omnisharp--get-common-params))
+   'Type))
+
 (defun omnisharp-eldoc-function ()
-  "Returns a doc string appropriate for the current context, or nil."
+  "Returns a doc string appropriate for the current context.
+   If point is on an empty char, it looks for data on any previous completions.
+   Otherwise, returns nil."
   (condition-case nil
-      (let ((current-type-information
-             (omnisharp-current-type-information-worker 'Type)))
-        (omnisharp--eldoc-fontify-string current-type-information))
-    (error nil)))
+      (if (looking-at-p " ")
+          (omnisharp--eldoc-default)
+        (let ((current-type-information
+               (omnisharp--eldoc-worker)))
+          (if (and current-type-information (not (string= "" current-type-information)))
+              (progn
+                (omnisharp--eldoc-fontify-string current-type-information))
+            (omnisharp--eldoc-default))))
+    (error nil
+           (omnisharp--eldoc-default))))
 
 ;; define a method to nicely start the server
 ;;;###autoload
