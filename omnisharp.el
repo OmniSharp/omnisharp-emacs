@@ -2135,8 +2135,8 @@ result."
             " > NUL"))
 
    (t ; some kind of unix: linux or osx
-    (concat "mono " server-exe-file-path
-            " -s " solution-file-path
+    (concat "mono " (shell-quote-argument server-exe-file-path)
+            " -s " (shell-quote-argument solution-file-path)
             " > /dev/null"))))
 
 ;;;###autoload
