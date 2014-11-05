@@ -960,7 +960,13 @@ SomeMethod(int parameter)' and the original value ITEM."
           (method-base
            (setq output method-base)))
     
+    ;; When we aren't templating, show the full description of the
+    ;; method, rather than just the return type
+    (when (not allow-templating)
+      (setq annotation (concat omnisharp-company-type-separator
+                               display)))
 
+    ;; Embed in completion into the completion text, so we can use it later
     (add-text-properties 0 (length output)
                          (list 'omnisharp-item json-result
                                'omnisharp-ann annotation
