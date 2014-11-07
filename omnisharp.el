@@ -64,7 +64,7 @@ results of a 'find usages' call.")
 results of a 'find implementations' call.")
 
 (defvar omnisharp--ambiguous-symbols-buffer-name "* OmniSharp : Ambiguous unresolved symbols *"
-  "The name of the temporary buffer that is used to display any 
+  "The name of the temporary buffer that is used to display any
 ambiguous unresolved symbols of a 'fix usings' call.")
 
 (defvar omnisharp--last-auto-complete-result-buffer-name
@@ -767,11 +767,11 @@ items."
   :type '(choice (const :tag "Yes" t)
                  (const :tag "No" nil)))
 
-(defcustom omnisharp-company-template-use-yasnippet t 
+(defcustom omnisharp-company-template-use-yasnippet t
   "Set to t if you want completion to happen via yasnippet
   otherwise fall back on company's templating. Requires yasnippet
   to be installed"
-  
+
   :group 'omnisharp
   :type '(choice (const :tag "Yes" t)
                  (const :tag "No" nil)))
@@ -879,7 +879,7 @@ triggers a completion immediately"
                              (when (and method-base
                                         (string-match-p "([^)]" method-base))
                                (company-template-c-like-templatify method-base)))))))))
-                       
+
 (defun omnisharp--snippet-templatify (call snippet)
   (delete-region (- (point) (length call)) (point))
   (yas/expand-snippet snippet))
@@ -927,7 +927,7 @@ SomeMethod(int parameter)' and the original value ITEM."
            (setq output (car (split-string completion "(\\|<"))))
           (method-base
            (setq output method-base)))
-    
+
     (setq annotation (concat omnisharp-company-type-separator display))
     (add-text-properties 0 (length output)
                          (list 'omnisharp-item json-result
@@ -2124,19 +2124,19 @@ result."
           omnisharp-server-executable-path))
   (cond
    ((equal system-type 'cygwin) ;; No mono needed on cygwin
-    (concat (shell-quote-argument server-exe-file-path)
+    (concat (shell-quote-argument-safe server-exe-file-path)
             " -s "
-            (shell-quote-argument solution-file-path)
+            (shell-quote-argument-safe solution-file-path)
             " > /dev/null"))
    ((equal system-type 'windows-nt)
-    (concat (shell-quote-argument server-exe-file-path)
+    (concat (shell-quote-argument-safe server-exe-file-path)
             " -s "
-            (shell-quote-argument solution-file-path)
+            (shell-quote-argument-safe solution-file-path)
             " > NUL"))
 
    (t ; some kind of unix: linux or osx
-    (concat "mono " (shell-quote-argument server-exe-file-path)
-            " -s " (shell-quote-argument solution-file-path)
+    (concat "mono " (shell-quote-argument-safe server-exe-file-path)
+            " -s " (shell-quote-argument-safe solution-file-path)
             " > /dev/null"))))
 
 ;;;###autoload
@@ -2205,7 +2205,7 @@ contents with the issue at point fixed."
              '(" in \\(.+\\):line \\([0-9]+\\)" 1 2))
 
 (defun omnisharp-unit-test (mode)
-  "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'" 
+  "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'"
   (interactive)
   (let ((build-command
          (omnisharp--fix-build-command-if-on-windows
@@ -2215,7 +2215,7 @@ contents with the issue at point fixed."
          (omnisharp--fix-build-command-if-on-windows
           (cdr (assoc 'TestCommand
                       (omnisharp-post-message-curl-as-json
-                       (concat (omnisharp-get-host) "gettestcontext") 
+                       (concat (omnisharp-get-host) "gettestcontext")
                        (cons `("Type" . ,mode) (omnisharp--get-common-params))))))))
 
     (compile build-command)
@@ -2240,7 +2240,7 @@ contents with the issue at point fixed."
                          'face 'helm-grep-lineno)
              (cdr (assoc 'Text candidate)))
      candidate))
-  
+
   (defun omnisharp--helm-got-usages (quickfixes)
     (setq omnisharp-helm-usage-candidates (mapcar 'omnisharp--helm-usage-transform-candidate quickfixes))
     (helm :sources (helm-make-source "Omnisharp - Symbol Usages" 'helm-source-sync
@@ -2294,8 +2294,43 @@ contents with the issue at point fixed."
              (nth 0 (split-string (cdr (assoc 'Text candidate)) "(")))
      candidate)))
 
+(defun shell-quote-argument-safe (argument)
+  "uses special version of shell-quote-argument-safe for emacs >= 24.4 and default in other case"
+  (if (and (>= emacs-major-version 24)
+           (>= emacs-minor-version 4))
+      (shell-quote-argument-24-4 argument)
+    (shell-quote-argument argument)))
+
+(defun shell-quote-argument-24-4 (argument)
+  "Quote an argument for passing as argument to an inferior shell."
+  (if (eq system-type 'ms-dos)
+      ;; Quote using double quotes, but escape any existing quotes in
+      ;; the argument with backslashes.
+      (let ((result "")
+	    (start 0)
+	    end)
+	(if (or (null (string-match "[^\"]" argument))
+		(< (match-end 0) (length argument)))
+	    (while (string-match "[\"]" argument start)
+	      (setq end (match-beginning 0)
+		    result (concat result (substring argument start end)
+				   "\\" (substring argument end (1+ end)))
+		    start (1+ end))))
+	(concat "\"" result (substring argument start) "\""))
+    (if (eq system-type 'windows-nt)
+	(concat "\"" argument "\"")
+      (if (equal argument "")
+	  "''"
+	;; Quote everything except POSIX filename characters.
+	;; This should be safe enough even for really weird shells.
+	(let ((result "") (start 0) end)
+	  (while (string-match "[^-0-9a-zA-Z_./~]" argument start)
+	    (setq end (match-beginning 0)
+		  result (concat result (substring argument start end)
+				 "\\" (substring argument end (1+ end)))
+		  start (1+ end)))
+	  (concat result (substring argument start)))))))
 
 (provide 'omnisharp)
 
 ;;; omnisharp.el ends here
-
