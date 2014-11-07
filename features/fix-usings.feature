@@ -21,7 +21,10 @@ Feature: Fix usings
     Then I should see, ignoring line endings:
       """
       using System.IO;
+      """
 
+    Then I should see, ignoring line endings:
+      """
       namespace FixUsingsTest {
           public class Awesome {
               StringWriter writer;
