@@ -760,9 +760,6 @@ items."
   "The string used to visually separate functions/variables from
   their types")
 
-(defvar omnisharp-company-last-completion nil
-  "The last completion used by company. Used by ElDoc")
-
 (defcustom omnisharp-company-do-template-completion t
   "Set to t if you want in-line parameter completion, nil
   otherwise."
@@ -870,7 +867,6 @@ triggers a completion immediately"
     (post-completion (let* ((json-result (get-text-property 0 'omnisharp-item arg))
                             (allow-templating (get-text-property 0 'omnisharp-allow-templating arg)))
                        (omnisharp--tag-text-with-completion-info arg json-result)
-                       (setq omnisharp-company-last-completion (omnisharp--completion-result-get-item json-result 'DisplayText))
                        (when allow-templating
                          ;; Do yasnippet completion
                          (if (and omnisharp-company-template-use-yasnippet (fboundp 'yas/expand-snippet))
