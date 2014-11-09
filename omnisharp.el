@@ -897,7 +897,9 @@ triggers a completion immediately"
     (remove-hook 'yas-after-exit-snippet-hook 'omnisharp--yasnippet-tag-text-with-completion-info)
     (setq omnisharp-snippet-json-result nil)))
   
-(defvar omnisharp-snippet-json-result nil)
+(defvar omnisharp-snippet-json-result nil
+   "Internal, used by snippet completion callback to tag a yasnippet
+    completion with data, used by ElDoc.")
 
 (defun omnisharp--snippet-templatify (call snippet json-result)
   "Does a snippet expansion of the completed text.
