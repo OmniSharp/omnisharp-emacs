@@ -834,6 +834,7 @@ triggers a completion immediately"
           symbol)
       'stop)))
 
+
 (defun company-omnisharp (command &optional arg &rest ignored)
   "`company-mode' completion back-end using OmniSharp."
   (case command
