@@ -2,7 +2,7 @@
 ;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
-;; Version: 2.4
+;; Version: 3.2
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.19") (csharp-mode "0.8.6"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
@@ -56,9 +56,16 @@ OmniSharp server."
   "The name of the temporary buffer that is used to display the
 results of a 'find usages' call.")
 
+(defvar omnisharp-debug nil
+  "When non-nil, omnisharp-emacs will write entries a debug log")
+
 (defvar omnisharp--find-implementations-buffer-name "* OmniSharp : Implementations *"
   "The name of the temporary buffer that is used to display the
 results of a 'find implementations' call.")
+
+(defvar omnisharp--ambiguous-symbols-buffer-name "* OmniSharp : Ambiguous unresolved symbols *"
+  "The name of the temporary buffer that is used to display any 
+ambiguous unresolved symbols of a 'fix usings' call.")
 
 (defvar omnisharp--last-auto-complete-result-buffer-name
   "* OmniSharp : Last auto-complete result *"
@@ -99,6 +106,15 @@ response. This may be set to nil to get a speed boost for
 completions."
   :group 'omnisharp
   :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-auto-complete-want-importable-types nil
+  "Whether to search for autocompletions in all available
+namespaces. If a match is found for a new namespace, the namespace is
+automatically imported. This variable may be set to nil to get a speed
+boost for completions."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
 		 (const :tag "No" nil)))
 
 (defvar omnisharp-auto-complete-popup-keymap
@@ -121,6 +137,14 @@ omnisharp-find-usages is called.")
           "\n\n")
   "This is shown at the top of the result buffer when
 omnisharp-find-implementations is called.")
+
+(defvar omnisharp-ambiguous-results-header
+  (concat "These results are ambiguous. You can run
+(omnisharp-run-code-action-refactoring) when point is on them to see
+options for fixing them."
+          "\n\n")
+  "This is shown at the top of the result buffer when
+there are ambiguous unresolved symbols after running omnisharp-fix-usings")
 
 (defvar omnisharp--auto-complete-display-backend
   'popup
@@ -163,13 +187,16 @@ information.")
 
 ;; Note that emacs seems to internally expect windows paths to have
 ;; forward slashes.
-(defcustom omnisharp--windows-curl-tmp-file-path
-  "C:/omnisharp-tmp-file.cs"
-  "The full file path where to save temporary stuff that gets sent to
+(eval-after-load 'omnisharp
+  '(defcustom omnisharp--windows-curl-tmp-file-path
+     (omnisharp--convert-backslashes-to-forward-slashes
+      (concat (getenv "USERPROFILE")
+              "/omnisharp-tmp-file.cs"))
+     "The full file path where to save temporary stuff that gets sent to
 the OmniSharp API. Only used on Windows.
 Must be writable by the current user."
-  :group 'omnisharp
-  :type 'file)
+     :group 'omnisharp
+     :type 'file))
 
 (defcustom omnisharp--curl-executable-path
   "curl"
@@ -197,7 +224,9 @@ server backend."
   (add-to-list 'flycheck-checkers
                'csharp-omnisharp-curl)
   (add-to-list 'flycheck-checkers
-               'csharp-omnisharp-curl-code-issues))
+               'csharp-omnisharp-curl-code-issues)
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl-semantic-errors))
 
 (easy-menu-define omnisharp-mode-menu omnisharp-mode-map
   "Menu for omnisharp-mode"
@@ -226,6 +255,7 @@ server backend."
 
     ("Current symbol"
      ["Show type" omnisharp-current-type-information]
+     ["Show documentation" omnisharp-current-type-documentation]
      ["Show type and add it to kill ring" omnisharp-current-type-information-to-kill-ring]
      ["Find usages" omnisharp-find-usages]
      ["Find implementations" omnisharp-find-implementations]
@@ -243,8 +273,15 @@ server backend."
      ["Fix code issue at point" omnisharp-fix-code-issue-at-point]
      )
 
+    ("Unit tests"
+     ["Run test at point" (lambda() (interactive) (omnisharp-unit-test "single"))]
+     ["Run test fixture" (lambda() (interactive) (omnisharp-unit-test "fixture"))]
+     ["Run all tests in project" (lambda() (interactive) (omnisharp-unit-test "all"))]
+     )
+
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
     ["Run code format on current buffer" omnisharp-code-format]
+    ["Fix using statements" omnisharp-fix-usings]
     ))
 
 (defun omnisharp-get-host ()
@@ -256,10 +293,15 @@ server backend."
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
   (interactive)
-  (omnisharp-post-message-curl
+  (message (concat "Reloading the server. Calls to the server will not"
+                   " work until the server has reloaded."))
+  (omnisharp-post-message-curl-async
    (concat (omnisharp-get-host) "reloadsolution")
    ;; no params needed
-   nil))
+   nil
+   (lambda (_)
+     (message "OmniSharpServer solution reloaded")))
+  )
 
 (defun omnisharp-go-to-definition (&optional other-window)
   "Jump to the definition of the symbol under point. With prefix
@@ -313,12 +355,18 @@ to select one (or more) to jump to."
   (omnisharp-find-implementations-worker
    (omnisharp--get-common-params)
    (lambda (quickfixes)
-     (if (equal 0 (length quickfixes))
-         (message "No implementations found."))
-     (omnisharp--write-quickfixes-to-compilation-buffer
-      quickfixes
-      omnisharp--find-implementations-buffer-name
-      omnisharp-find-implementations-header))))
+     (cond ((equal 0 (length quickfixes))
+            (message "No implementations found."))
+
+           ;; Go directly to the implementation if there only is one
+           ((equal 1 (length quickfixes))
+            (omnisharp-go-to-file-line-and-column (first quickfixes)))
+
+           (t
+            (omnisharp--write-quickfixes-to-compilation-buffer
+             quickfixes
+             omnisharp--find-implementations-buffer-name
+             omnisharp-find-implementations-header))))))
 
 (defun omnisharp-find-implementations-worker (request callback)
   "Gets a list of QuickFix lisp objects from a findimplementations api call
@@ -330,6 +378,48 @@ asynchronously. On completions, CALLBACK is run with the quickfixes as its only 
    (lambda (quickfix-response)
      (apply callback (list (omnisharp--vector-to-list
                             (cdr (assoc 'QuickFixes quickfix-response))))))))
+
+(defun omnisharp-fix-usings ()
+  "Sorts usings, removes unused using statements and
+adds any missing usings. If there are any ambiguous unresolved symbols, they are
+shown in a compilation buffer."
+  (interactive)
+  (save-buffer)
+  (message "Fixing using directives for the current buffer. Hold on...")
+  (-if-let (ambiguous-results
+            (omnisharp-fix-usings-worker
+             (buffer-file-name)
+             (line-number-at-pos)
+             (omnisharp--current-column)))
+      (omnisharp--write-quickfixes-to-compilation-buffer
+       ambiguous-results
+       omnisharp--ambiguous-symbols-buffer-name
+       omnisharp-ambiguous-results-header)
+
+    ;; Otherwise destroy any previous ambiguous result so the user
+    ;; clearly sees the compilation buffer contents have changed
+    (-if-let (ambiguous-results-buffer
+              (get-buffer omnisharp--ambiguous-symbols-buffer-name))
+        (kill-buffer ambiguous-results-buffer))))
+
+(defun omnisharp-fix-usings-worker (filename
+				    current-line
+				    current-column)
+  "Sets the current buffer contents to a buffer with fixed up usings
+or if necessary, returns any ambiguous results so the user may fix
+them manually."
+  (let ((json-result
+         (omnisharp-post-message-curl-as-json
+          (concat (omnisharp-get-host) "fixusings")
+          (omnisharp--get-common-params))))
+
+    (omnisharp--set-buffer-contents-to
+     filename
+     (cdr (assoc 'Buffer json-result))
+     current-line
+     current-column)
+    (omnisharp--vector-to-list
+     (cdr (assoc 'AmbiguousResults json-result)))))
 
 (defun omnisharp-navigate-to-region
   (&optional other-window)
@@ -373,9 +463,9 @@ name to rename to, defaulting to the current name of the symbol."
     ;; the user deos not feel disoriented
     (omnisharp-go-to-file-line-and-column location-before-rename)
 
-    (message "Rename complete in files: %s"
-             (--map (cdr (assoc 'FileName it))
-                    modified-file-responses))))
+    (message "Rename complete in files: \n%s"
+             (-interpose "\n" (--map (cdr (assoc 'FileName it))
+                                     modified-file-responses)))))
 
 (defun omnisharp-rename-worker (rename-request)
   "Given a RenameRequest, returns a list of ModifiedFileResponse
@@ -401,13 +491,15 @@ renames require interactive confirmation from the user."
           (omnisharp--get-solution-files-list-of-strings))
          (location-before-rename
           (omnisharp--get-common-params-for-emacs-side-use)))
+
+    (setq omnisharp--current-solution-files all-solution-files)
     (tags-query-replace current-word
                         rename-to
                         delimited
                         ;; This is expected to be a form that will be
                         ;; evaluated to get the list of all files to
                         ;; process.
-                        'all-solution-files)
+                        'omnisharp--current-solution-files)
     ;; Keep point in the buffer that initialized the rename so that
     ;; the user deos not feel disoriented
     (omnisharp-go-to-file-line-and-column location-before-rename)))
@@ -493,9 +585,11 @@ follow results to the locations in the actual files."
 (defun omnisharp-stop-server ()
   "Stop the current omnisharp instance."
   (interactive)
-  (omnisharp-post-message-curl
+  (omnisharp-post-message-curl-async
    (concat (omnisharp-get-host) "stopserver")
-   nil))
+   nil
+   (lambda (_)
+     (message "OmniSharpServer stopped."))))
 
 ;; TODO create omnisharp-add-to-solution that lets user choose which
 ;; file to add.
@@ -571,14 +665,23 @@ solution."
    (concat (omnisharp-get-host) "addreference")
    params))
 
-(defun omnisharp-auto-complete ()
-  (interactive)
+(defun omnisharp-auto-complete (&optional invert-importable-types-setting)
+  "If called with a prefix argument, will complete types that are not
+present in the current namespace or imported namespaces, inverting the
+default `omnisharp-auto-complete-want-importable-types'
+value. Selecting one of these will import the required namespace."
+  (interactive "P")
   (let* ((json-false :json-false)
          ;; json-false helps distinguish between null and false in
          ;; json. This is an emacs limitation.
 
+         ;; Invert the user configuration value if requested
          (params
-          (omnisharp--get-auto-complete-params))
+          (let ((omnisharp-auto-complete-want-importable-types
+                 (if invert-importable-types-setting
+                     (not omnisharp-auto-complete-want-importable-types)
+                   omnisharp-auto-complete-want-importable-types)))
+            (omnisharp--get-auto-complete-params)))
 
          (display-function
           (omnisharp--get-auto-complete-display-function))
@@ -596,24 +699,33 @@ and complete members."
   (insert ".")
   (omnisharp-auto-complete))
 
+(defun omnisharp--t-or-json-false (val)
+  (if val
+      t
+    :json-false))
+
 (defun omnisharp--get-auto-complete-params ()
   "Return an AutoCompleteRequest for the current buffer state."
-  (let* ((request (omnisharp--get-common-params))
-         (want-doc (if (equal
-                        omnisharp-auto-complete-want-documentation
-                        nil)
-                       :json-false
-                     omnisharp-auto-complete-want-documentation))
-         (request-with-doc-option
-          (cons
-           `(WantDocumentationForEveryCompletionResult
-             . ,want-doc)
-           (omnisharp--get-common-params)))
-         (final-request
-          ;; Add WordToComplete to params
-          (cons `(WordToComplete . ,(thing-at-point 'symbol))
-                request-with-doc-option)))
-    final-request))
+  (append `((WantDocumentationForEveryCompletionResult
+             . ,(omnisharp--t-or-json-false
+                    omnisharp-auto-complete-want-documentation))
+
+            (WantMethodHeader
+             . ,(omnisharp--t-or-json-false
+                       omnisharp-company-do-template-completion))
+
+            (WantSnippet
+             . ,(omnisharp--t-or-json-false
+                        (and omnisharp-company-do-template-completion
+                             omnisharp-company-template-use-yasnippet)))
+
+            (WantImportableTypes
+             . ,(omnisharp--t-or-json-false
+                 omnisharp-auto-complete-want-importable-types))
+
+            (WordToComplete . ,(thing-at-point 'symbol)))
+
+          (omnisharp--get-common-params)))
 
 ;; Use this source in your csharp editing mode hook like so:
 ;; (add-to-list 'ac-sources 'ac-source-omnisharp)
@@ -644,27 +756,63 @@ items."
 
 
 ;; company-mode integration
-(defvar omnisharp-company-do-template-completion nil
-  "Set to t if you want in-line parameter completion, nil
-  otherwise. CURRENTLY UNSUPPORTED.")
-
 (defvar omnisharp-company-type-separator " : "
-  "The string used to visually seperate functions/variables from
+  "The string used to visually separate functions/variables from
   their types")
 
-(defvar omnisharp-company-ignore-case t
-  "If t, case is ignored in completion matches.")
+(defcustom omnisharp-company-do-template-completion t
+  "Set to t if you want in-line parameter completion, nil
+  otherwise."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
-(defvar omnisharp-company-begin-after-member-access t
+(defcustom omnisharp-company-template-use-yasnippet t 
+  "Set to t if you want completion to happen via yasnippet
+  otherwise fall back on company's templating. Requires yasnippet
+  to be installed"
+  
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-company-ignore-case t
+  "If t, case is ignored in completion matches."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-company-strip-trailing-brackets nil
+  "If t, strips trailing <> and () from completions."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-company-begin-after-member-access t
   "If t, begin completion when pressing '.' after a class, object
-  or namespace")
+  or namespace"
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
-(defvar omnisharp-imenu-support nil
-"If t, activate imenu integration. Defaults to nil.")
+(defcustom omnisharp-company-sort-results t
+  "If t, autocompletion results are sorted alphabetically"
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
-(defvar omnisharp-eldoc-support t
-"If t, activate eldoc integration - eldoc-mode must also be enabled for
- this to work. Defaults to t.")
+(defcustom omnisharp-imenu-support nil
+  "If t, activate imenu integration. Defaults to nil."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-eldoc-support t
+  "If t, activate eldoc integration - eldoc-mode must also be enabled for
+  this to work. Defaults to t."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
 (defvar omnisharp--eldoc-fontification-buffer-name " * OmniSharp : Eldoc Fontification *"
   "The name of the buffer that is used to fontify eldoc strings.")
@@ -705,37 +853,88 @@ triggers a completion immediately"
     (meta (omnisharp--get-company-candidate-data arg 'DisplayText))
 
     (doc-buffer (let ((doc-buffer (company-doc-buffer
-                                   (omnisharp--get-company-candidate-data arg 'Description))))
+                                   (omnisharp--get-company-candidate-data
+                                    arg 'Description))))
                   (with-current-buffer doc-buffer
                     (visual-line-mode))
                   doc-buffer))
 
     (ignore-case omnisharp-company-ignore-case)
 
-    (post-completion (let ((ann (omnisharp--company-annotation arg)))
-                       (when (and omnisharp-company-do-template-completion
-                                  ann (string-match-p "([^)]" ann))
-                         ;; This was a function match, do templating.
-                         (insert ann)
-                         (company-template-c-like-templatify ann))))))
+    (sorted omnisharp-company-sort-results)
 
-(defun omnisharp--make-company-completion (item)
+    ;; Check to see if we need to do any templating
+    (post-completion (let* ((json-result (get-text-property 0 'omnisharp-item arg))
+                            (allow-templating (get-text-property 0 'omnisharp-allow-templating arg)))
+                       (when allow-templating
+                         ;; Do yasnippet completion
+                         (if (and omnisharp-company-template-use-yasnippet (fboundp 'yas/expand-snippet))
+                             (progn
+                               (let ((method-snippet (omnisharp--completion-result-item-get-method-snippet
+                                                      json-result)))
+                                 (when method-snippet
+                                   (omnisharp--snippet-templatify arg method-snippet))))
+                           ;; Fallback on company completion but make sure company-template is loaded.
+                           ;; Do it here because company-mode is optional
+                           (require 'company-template)
+                           (let ((method-base (omnisharp--get-method-base json-result)))
+                             (when (and method-base
+                                        (string-match-p "([^)]" method-base))
+                               (company-template-c-like-templatify method-base)))))))))
+                       
+(defun omnisharp--snippet-templatify (call snippet)
+  (delete-region (- (point) (length call)) (point))
+  (yas/expand-snippet snippet))
+
+(defun omnisharp--get-method-base (json-result)
+  "If function templating is turned on, and the method is not a
+   generic, return the 'method base' (basically, the method definition
+   minus its return type)"
+    (when omnisharp-company-do-template-completion
+      (let ((method-base (omnisharp--completion-result-item-get-method-header json-result))
+            (display (omnisharp--completion-result-item-get-completion-text
+                      json-result)))
+        (when (and method-base
+                   ;; company doesn't expand < properly, so
+                   ;; if we're not using yasnippet, disable templating on methods that contain it
+                   (or omnisharp-company-template-use-yasnippet
+                       (not (string-match-p "<" display)))
+                   (not (string= method-base "")))
+          method-base))))
+
+(defun omnisharp--make-company-completion (json-result)
   "`company-mode' expects the beginning of the candidate to be
 the same as the characters being completed.  This method converts
 a function description of 'void SomeMethod(int parameter)' to
 string 'SomeMethod' propertized with annotation 'void
 SomeMethod(int parameter)' and the original value ITEM."
   (let* ((case-fold-search nil)
-         (completion (omnisharp--completion-result-item-get-completion-text item))
-         (display (omnisharp--completion-result-item-get-display-text item))
-         output
+         (completion (omnisharp--completion-result-item-get-completion-text json-result))
+         (display (omnisharp--completion-result-item-get-display-text json-result))
+         (output completion)
+         (method-base (omnisharp--get-method-base json-result))
+         (allow-templating omnisharp-company-do-template-completion)
          annotation)
+
+    ;; If we have templating turned on, if there is a method header
+    ;; use that for completion.  The templating engine will then pick
+    ;; up the completion for you
+    ;; If we're looking at a line that already has a < or (, don't
+    ;; enable templating, and also strip < and ( from our completions
+    (cond ((looking-at-p "\\s-*(\\|<")
+           (setq allow-templating nil)
+           (setq output (car (split-string output "\\.*(\\|<"))))
+          ((and (not omnisharp-company-do-template-completion)
+                omnisharp-company-strip-trailing-brackets)
+           (setq output (car (split-string completion "(\\|<"))))
+          (method-base
+           (setq output method-base)))
     
-    ;; Remove any trailing brackets from the completion string
-    (setq output (car (split-string completion "(")))
     (setq annotation (concat omnisharp-company-type-separator display))
     (add-text-properties 0 (length output)
-                         (list 'omnisharp-item item 'omnisharp-ann annotation)
+                         (list 'omnisharp-item json-result
+                               'omnisharp-ann annotation
+                               'omnisharp-allow-templating allow-templating)
                          output)
     output))
 
@@ -748,6 +947,7 @@ company-mode-friendly"
   (let* ((json-false :json-false)
          ;; json-false helps distinguish between null and false in
          ;; json. This is an emacs limitation.
+         (completion-ignore-case omnisharp-company-ignore-case)
          (params
           (omnisharp--get-auto-complete-params))
          (json-result-auto-complete-response
@@ -994,7 +1194,7 @@ the OmniSharp server understands."
   (let ((all-open-buffers-list
          (-map 'buffer-file-name (buffer-list))))
     (--any? (string-equal file-name it)
-           all-open-buffers-list)))
+            all-open-buffers-list)))
 
 (defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
@@ -1042,9 +1242,29 @@ Returns the curl process"
 (defun omnisharp--get-curl-command (url params)
   "Returns a command that may be used to communicate with the API via
 the curl program. Depends on the operating system."
-  (if (equal system-type 'windows-nt)
-      (omnisharp--get-curl-command-windows-with-tmp-file url params)
-    (omnisharp--get-curl-command-unix url params)))
+  (let ((curl-command
+         (if (equal system-type 'windows-nt)
+             (omnisharp--get-curl-command-windows-with-tmp-file url params)
+           (omnisharp--get-curl-command-unix url params))))
+    (when omnisharp-debug
+      (omnisharp--log-curl-command curl-command))
+    curl-command))
+
+(defun omnisharp--log-curl-command (curl-command)
+  (omnisharp--log (prin1-to-string curl-command)))
+
+(defun omnisharp--log (single-or-multiline-log-string)
+  (let* ((log-buffer (get-buffer-create "*omnisharp-debug*"))
+         (iso-format-string "%Y-%m-%dT%T%z")
+         (timestamp-and-log-string
+          (format-time-string iso-format-string (current-time))))
+    (with-current-buffer log-buffer
+      (end-of-buffer)
+      (insert "\n\n\n")
+      (insert (concat timestamp-and-log-string
+                      "\n"
+                      single-or-multiline-log-string))
+      (insert "\n"))))
 
 (defun omnisharp--get-curl-command-executable-string-for-api-name
   (params api-name)
@@ -1063,12 +1283,13 @@ with \"stuff\" set to sensible values."
 (defun omnisharp--get-curl-command-unix (url params)
   "Returns a command using plain curl that can be executed to
 communicate with the API."
-  `(:command ,omnisharp--curl-executable-path
-             :arguments
-             ("--silent" "-H" "Content-type: application/json"
-              "--data"
-              ,(json-encode params)
-              ,url)))
+  `(:command
+    ,omnisharp--curl-executable-path
+    :arguments
+    ("--ipv4" "--silent" "-H" "Content-type: application/json"
+     "--data"
+     ,(json-encode params)
+     ,url)))
 
 (defun omnisharp--get-curl-command-windows-with-tmp-file (url params)
   "Basically: put PARAMS to file, then create a curl command to the
@@ -1080,7 +1301,8 @@ api at URL using that file as the parameters."
    (json-encode params))
   (let ((path-with-curl-prefix
          (concat "@"
-                 omnisharp--windows-curl-tmp-file-path)))
+                 omnisharp--windows-curl-tmp-file-path
+                 )))
     `(:command ,omnisharp--curl-executable-path
                :arguments
                ("--silent" "-H" "Content-type: application/json"
@@ -1102,6 +1324,9 @@ something goes wrong, return a human-readable warning."
   (condition-case nil
       (json-read-from-string json-string)
     (error
+     (when omnisharp-debug
+       (omnisharp--log (concat "omnisharp--json-read-from-string error: "
+                               (prin1-to-string json-string))))
      (or error-message
          "Error communicating to the OmniSharpServer instance"))))
 
@@ -1113,8 +1338,8 @@ something goes wrong, return a human-readable warning."
   "Posts message to curl at URL with PARAMS asynchronously.
 On completion, the curl output is parsed as json and passed into CALLBACK."
   (omnisharp-post-message-curl-async url params
-    (lambda (str)
-      (apply callback (list (omnisharp--json-read-from-string str))))))
+                                     (lambda (str)
+                                       (apply callback (list (omnisharp--json-read-from-string str))))))
 
 (defun omnisharp--auto-complete-display-function-popup
   (json-result-alist)
@@ -1129,6 +1354,8 @@ current buffer."
       (progn (message "No completions.")
              nil)
 
+    (setq json-result-alist
+          (omnisharp--vector-to-list json-result-alist))
     (let* ((display-list
             (omnisharp--convert-auto-complete-json-to-popup-format
              json-result-alist))
@@ -1139,19 +1366,38 @@ current buffer."
 
            (max-width (omnisharp--get-max-item-length
                        completion-texts))
-           (result (popup-menu* display-list
-                                :width max-width
-                                :keymap omnisharp-auto-complete-popup-keymap
-                                :margin-left 1
-                                :margin-right 1
-                                :scroll-bar t
-                                :isearch
-                                omnisharp-auto-complete-popup-want-isearch
-                                :help-delay
-                                omnisharp-auto-complete-popup-help-delay)))
+           (result-completion-text
+            (popup-menu* display-list
+                         :width max-width
+                         :keymap omnisharp-auto-complete-popup-keymap
+                         :margin-left 1
+                         :margin-right 1
+                         :scroll-bar t
+                         :isearch
+                         omnisharp-auto-complete-popup-want-isearch
+                         :help-delay
+                         omnisharp-auto-complete-popup-help-delay))
+
+           ;; A performance improvement may be gained here by using
+           ;; hashtables if this seems too slow.
+           ;;
+           ;; Get the full item so we can then get the
+           ;; RequiredNamespaceImport value from it
+           (completed-item
+            (-first (lambda (a)
+                      (equal result-completion-text
+                             (cdr (assoc 'CompletionText a))))
+                    json-result-alist))
+           (required-namespace-import
+            (cdr (assoc 'RequiredNamespaceImport
+                        completed-item))))
+
       (omnisharp--replace-symbol-in-buffer-with
        (omnisharp--current-word-or-empty-string)
-       result))))
+       result-completion-text)
+
+      (when required-namespace-import
+        (omnisharp--insert-namespace-import required-namespace-import)))))
 
 (defun omnisharp--replace-symbol-in-buffer-with (symbol-to-replace
                                                  replacement-string)
@@ -1199,10 +1445,25 @@ is a more sophisticated matching framework than what popup.el offers."
 
            (completion-text-to-insert
             (cdr (assoc 'CompletionText
+                        chosen-candidate)))
+           (required-namespace-import
+            (cdr (assoc 'RequiredNamespaceImport
                         chosen-candidate))))
+
       (omnisharp--replace-symbol-in-buffer-with
        (omnisharp--current-word-or-empty-string)
-       completion-text-to-insert))))
+       completion-text-to-insert)
+
+      (when required-namespace-import
+        (omnisharp--insert-namespace-import required-namespace-import)))))
+
+(defun omnisharp--insert-namespace-import (full-import-text-to-insert)
+  "Inserts the given text at the top of the current file without
+moving point."
+  (save-excursion
+    (beginning-of-buffer)
+    (insert "using " full-import-text-to-insert ";")
+    (newline)))
 
 (defun omnisharp--current-word-or-empty-string ()
   (or (thing-at-point 'symbol)
@@ -1230,6 +1491,12 @@ is a more sophisticated matching framework than what popup.el offers."
 
 (defun omnisharp--completion-result-item-get-display-text (item)
   (cdr (assoc 'DisplayText item)))
+
+(defun omnisharp--completion-result-item-get-method-header (item)
+  (cdr (assoc 'MethodHeader item)))
+
+(defun omnisharp--completion-result-item-get-method-snippet (item)
+  (cdr (assoc 'Snippet item)))
 
 (defun omnisharp--get-max-item-length (completions)
   "Returns the length of the longest completion in 'completions'."
@@ -1344,9 +1611,9 @@ window."
 
    (t ; no buffer for this file exists yet
     (funcall (if other-window
-               'find-file-other-window
-             'find-file)
-           filename))))
+                 'find-file-other-window
+               'find-file)
+             filename))))
 
 (defun omnisharp--vector-to-list (vector)
   (append vector nil))
@@ -1369,36 +1636,30 @@ the user selects a completion and the completion is inserted."
 argument, add the displayed result to the kill ring. This can be used
 to insert the result in code, for example."
   (interactive "P")
-  (let ((current-type-information
-         (omnisharp-current-type-information-worker 'Type
-          (omnisharp--get-common-params))))
-
-    (message current-type-information)
-    (when add-to-kill-ring
-      (kill-new current-type-information))))
+  (omnisharp-current-type-information-worker 'Type))
 
 (defun omnisharp-current-type-documentation (&optional add-to-kill-ring)
   "Display documentation of the current type under point. With prefix
 argument, add the displayed result to the kill ring. This can be used
 to insert the result in code, for example."
   (interactive "P")
-  (let ((current-type-information
-         (omnisharp-current-type-information-worker 'Documentation
-          (omnisharp--get-common-params))))
+  (omnisharp-current-type-information-worker 'Documentation))
 
-    (message current-type-information)
-    (when add-to-kill-ring
-      (kill-new current-type-information))))
-
-(defun omnisharp-current-type-information-worker (datatype params)
-  "Returns information about the type under the cursor in the given
-PARAMS as a single human-readable string."
-  (let ((json-result
-         (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "typelookup")
-          params)))
-    (cdr (assoc datatype json-result))))
-
+(defun omnisharp-current-type-information-worker (type-property-name
+                                                  &optional add-to-kill-ring)
+  "Get type info from the API and display a part of the response as a
+message. TYPE-PROPERTY-NAME is a symbol in the type lookup response
+from the server side, i.e. 'Type or 'Documentation that will be
+displayed to the user."
+  (omnisharp-post-message-curl-as-json-async
+   (concat (omnisharp-get-host) "typelookup")
+   (omnisharp--get-common-params)
+   (lambda (response)
+     (let ((stuff-to-display (cdr (assoc type-property-name
+                                         response))))
+       (message stuff-to-display)
+       (when add-to-kill-ring
+         (kill-new stuff-to-display))))))
 
 (defun omnisharp-current-type-information-to-kill-ring ()
   "Shows the information of the current type and adds it to the kill
@@ -1416,14 +1677,13 @@ ring."
   "Build the current solution in a non-blocking fashion inside emacs.
 Uses the standard compilation interface (compile)."
   (interactive)
-  (let ((build-command (omnisharp-get-build-command)))
+  ;; Build command contains backslashes on Windows systems. Work
+  ;; around this by using double backslashes. Other systems are not
+  ;; affected.
+  (let ((build-command (omnisharp--fix-build-command-if-on-windows
+                        (omnisharp-get-build-command))))
     (omnisharp--recognize-mono-compilation-error-format)
-    (compile
-     ;; Build command contains backslashes on Windows systems. Work
-     ;; around this by using double backslashes. Other systems are not
-     ;; affected.
-     (omnisharp--fix-build-command-if-on-windows
-      build-command))
+    (compile build-command)
     (add-to-list 'compile-history build-command)))
 
 (defun omnisharp--recognize-mono-compilation-error-format ()
@@ -1519,8 +1779,8 @@ type errors."
   ;; This must be an external process. Currently flycheck does not
   ;; support using elisp functions as checkers.
   :command ("curl" ; this is overridden by
-                   ; flycheck-csharp-omnisharp-curl-executable if it
-                   ; is set
+                                        ; flycheck-csharp-omnisharp-curl-executable if it
+                                        ; is set
             (eval
              (omnisharp--get-curl-command-executable-string-for-api-name
               (omnisharp--get-common-params)
@@ -1559,6 +1819,26 @@ then accept and have fixed automatically."
                    output checker buffer 'info))
   :predicate (lambda () omnisharp-mode))
 
+(flycheck-define-checker csharp-omnisharp-curl-semantic-errors
+  "Reports semantic errors (type errors) that prevent successful
+compilation."
+  :command ("curl"
+            (eval
+             (omnisharp--get-curl-command-executable-string-for-api-name
+              (omnisharp--get-common-params)
+              "semanticerrors")))
+
+  :error-patterns ((error line-start
+                          (file-name) ":"
+                          line ":"
+                          column
+                          " "
+                          (message (one-or-more not-newline))))
+  :error-parser (lambda (output checker buffer)
+                  (omnisharp--flycheck-error-parser-raw-json
+                   output checker buffer 'info))
+  :predicate (lambda () omnisharp-mode))
+
 (defun omnisharp--flycheck-error-parser-raw-json
   (output checker buffer &optional error-level)
   "Takes either a QuickFixResponse or a SyntaxErrorsResponse as a
@@ -1590,19 +1870,19 @@ the json."
 (defun omnisharp--imenu-make-marker (element)
   "Takes a QuickCheck element and returns the position of the
 cursor at that location"
-  (let* ((element-line (cdr (assoc 'Line quickfix-alist)))
-         (element-column (cdr (assoc 'Column quickfix-alist)))
-         (element-filename (cdr (assoc 'Filename quickfix-alist)))
+  (let* ((element-line (cdr (assoc 'Line element)))
+         (element-column (cdr (assoc 'Column element)))
+         (element-filename (cdr (assoc 'Filename element)))
          (use-buffer (current-buffer)))
     (save-excursion
-        (omnisharp-go-to-file-line-and-column-worker
-         element-line
-         element-column
-         element-filename
-         nil ; other-window
-         ;; dont-save-old-pos
-         t)
-        (point-marker))))
+      (omnisharp-go-to-file-line-and-column-worker
+       element-line
+       element-column
+       element-filename
+       nil ; other-window
+       ;; dont-save-old-pos
+       t)
+      (point-marker))))
 
 (defun omnisharp-imenu-create-index ()
   "Imenu callback function - returns an alist of ((member-name . position))"
@@ -1809,32 +2089,30 @@ result."
   "Returns a doc string appropriate for the current context, or nil."
   (condition-case nil
       (let ((current-type-information
-             (omnisharp-current-type-information-worker
-              'Type
-              (omnisharp--get-common-params))))
+             (omnisharp-current-type-information-worker 'Type)))
         (omnisharp--eldoc-fontify-string current-type-information))
     (error nil)))
 
 ;; define a method to nicely start the server
 ;;;###autoload
-(defun omnisharp-start-omnisharp-server (solution)
-  "Starts an OmniSharpServer for a given solution"
+(defun omnisharp-start-omnisharp-server (path-to-solution)
+  "Starts an OmniSharpServer for a given path to a solution file"
   (interactive "fStart OmniSharpServer.exe for solution: ")
   (setq BufferName "*Omni-Server*")
   (omnisharp--find-and-cache-omnisharp-server-executable-path)
   (if (equal nil omnisharp-server-executable-path)
       (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
-    (if (string= (file-name-extension solution) "sln")
+    (if (string= (file-name-extension path-to-solution) "sln")
         (progn
-          (message (format "Starting OmniSharpServer for solution file: %s" solution))
-          (if (not (eq nil (get-buffer BufferName)))
-              (kill-buffer BufferName))
+          (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
+          (when (not (eq nil (get-buffer BufferName)))
+            (kill-buffer BufferName))
           (start-process-shell-command
            "Omni-Server"
            (get-buffer-create BufferName)
-           (omnisharp--get-omnisharp-server-executable-command solution)))
+           (omnisharp--get-omnisharp-server-executable-command path-to-solution)))
 
-      (error (format "Path does not lead to a solution file: %s" solution)))))
+      (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
 
 (defun omnisharp--find-and-cache-omnisharp-server-executable-path ()
   "Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
@@ -1847,17 +2125,23 @@ result."
     (setq server-exe-file-path
           omnisharp-server-executable-path))
   (cond
+   ((equal system-type 'cygwin) ;; No mono needed on cygwin
+    (concat (shell-quote-argument server-exe-file-path)
+            " -s "
+            (shell-quote-argument solution-file-path)
+            " > /dev/null"))
    ((equal system-type 'windows-nt)
-    (concat server-exe-file-path " -s " solution-file-path " > NUL"))
+    (concat (shell-quote-argument server-exe-file-path)
+            " -s "
+            (shell-quote-argument solution-file-path)
+            " > NUL"))
 
    (t ; some kind of unix: linux or osx
-    (setq server-exe-file-path (shell-quote-argument
-				(expand-file-name server-exe-file-path)))
+    (concat "mono " (shell-quote-argument server-exe-file-path)
+            " -s " (shell-quote-argument solution-file-path)
     (setq solution-file-path (shell-quote-argument
                               (expand-file-name solution-file-path)))
 
-    (concat "mono " server-exe-file-path
-            " -s " solution-file-path
             " > /dev/null"))))
 
 ;;;###autoload
@@ -1917,6 +2201,104 @@ contents with the issue at point fixed."
      (concat (omnisharp-get-host)
              "fixcodeissue")
      run-code-action-request)))
+
+(add-to-list 'compilation-error-regexp-alist
+             '(" in \\(.+\\):\\([1-9][0-9]+\\)" 1 2))
+
+;; nunit-console.exe on windows uses this format
+(add-to-list 'compilation-error-regexp-alist
+             '(" in \\(.+\\):line \\([0-9]+\\)" 1 2))
+
+(defun omnisharp-unit-test (mode)
+  "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'" 
+  (interactive)
+  (let ((build-command
+         (omnisharp--fix-build-command-if-on-windows
+          (omnisharp-get-build-command)))
+
+        (test-command
+         (omnisharp--fix-build-command-if-on-windows
+          (cdr (assoc 'TestCommand
+                      (omnisharp-post-message-curl-as-json
+                       (concat (omnisharp-get-host) "gettestcontext") 
+                       (cons `("Type" . ,mode) (omnisharp--get-common-params))))))))
+
+    (compile build-command)
+    ;; User can answer yes straight away if they don't want to
+    ;; recompile. But they have to be very fast!
+    (when (yes-or-no-p "Compilation started. Answer yes when you want to run tests.")
+      (compile test-command))))
+
+;;; Some Helm integration
+(when (require 'helm-grep nil 'noerror)
+  ;;; Helm usages
+  (defvar omnisharp-helm-usage-candidates nil)
+
+  (defun omnisharp--helm-usage-transform-candidate (candidate)
+    "Convert a quickfix entry into helm output"
+    (cons
+     (format "%s(%s): %s"
+             (propertize (file-name-nondirectory
+                          (cdr (assoc 'FileName candidate)))
+                         'face 'helm-grep-file)
+             (propertize (number-to-string (cdr (assoc 'Line candidate)))
+                         'face 'helm-grep-lineno)
+             (cdr (assoc 'Text candidate)))
+     candidate))
+  
+  (defun omnisharp--helm-got-usages (quickfixes)
+    (setq omnisharp-helm-usage-candidates (mapcar 'omnisharp--helm-usage-transform-candidate quickfixes))
+    (helm :sources (helm-make-source "Omnisharp - Symbol Usages" 'helm-source-sync
+                                     :candidates omnisharp-helm-usage-candidates
+                                     :action 'omnisharp--helm-jump-to-candidate)
+          :truncate-lines t
+          :buffer omnisharp--find-usages-buffer-name))
+
+  (defun omnisharp-helm-find-usages ()
+    "Find usages for the symbol under point using Helm"
+    (interactive)
+    (message "Helm Finding usages...")
+    (omnisharp-find-usages-worker
+     (omnisharp--get-common-params)
+     'omnisharp--helm-got-usages))
+
+  (defun omnisharp--helm-jump-to-candidate (json-result)
+    (omnisharp-go-to-file-line-and-column json-result)
+    (helm-highlight-current-line nil nil nil nil t))
+
+
+  ;;; Helm find symbols
+  (defun omnisharp-helm-find-symbols ()
+    (interactive)
+    (helm :sources (helm-make-source "Omnisharp - Find Symbols" 'helm-source-sync
+                                     :action 'omnisharp--helm-jump-to-candidate
+                                     :matchplugin nil
+                                     :match '((lambda (candidate) (string-match-p
+                                                                   helm-pattern
+                                                                   (nth 1 (split-string
+                                                                           candidate ":" t)))))
+                                     :candidates 'omnisharp--helm-find-symbols-candidates)
+          :buffer "*Omnisharp Symbols*"
+          :truncate-lines t))
+
+  (defun omnisharp--helm-find-symbols-candidates ()
+    (let ((quickfix-response
+           (omnisharp-post-message-curl-as-json
+            (concat (omnisharp-get-host) "findsymbols")
+            nil)))
+      (mapcar 'omnisharp--helm-find-symbols-transform-candidate
+              (omnisharp--vector-to-list
+               (cdr (assoc 'QuickFixes quickfix-response))))))
+
+  (defun omnisharp--helm-find-symbols-transform-candidate (candidate)
+    "Convert a quickfix entry into helm output"
+    (cons
+     (format "%s : %s"
+             (propertize (cdr (assoc 'FileName candidate))
+                         'face 'helm-grep-file)
+             (nth 0 (split-string (cdr (assoc 'Text candidate)) "(")))
+     candidate)))
+
 
 (provide 'omnisharp)
 

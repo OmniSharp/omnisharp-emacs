@@ -1,4 +1,7 @@
 # omnisharp-emacs
+<a href="//travis-ci.org/OmniSharp/omnisharp-emacs">
+    <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
+</a>
 
 omnisharp-emacs is a port of the awesome [OmniSharp][] server to the
 Emacs text editor. It provides IDE-like features for editing files in
@@ -6,11 +9,12 @@ C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
 ## This requires the Omnisharp Server program
-The server must be at least the following version:
+The server must be at least the following version (expect this to be
+update to this guide whenever the required version changes):
 
 ```
-8355b92f30ac6f9b5f62bfbb618b7b4f45db7915
-Date:   Fri Apr 18 10:44:05 2014 +0100
+c4a1b10d06765e5efa11c3591f096e6bdb6c1b5d
+Date:   Sat Oct 18 23:08:19 2014 +0100
 ```
 
 If you haven't updated your server copy since that, you must upgrade.
@@ -22,6 +26,8 @@ Lacks a better UI and a good default configuration.
 
 * Contextual code completion (i.e. auto-complete / IntelliSense) using
   [popup.el][] or [ido-mode][] or [company-mode][] if it is installed.
+  Currently popup and ido-mode can complete symbols in all namespaces
+  if so configured.
     * Popup.el and company-mode provide a more sophisticated
       interface, with the possibility to fall back on all of ido's
       flexible matching power.
@@ -62,6 +68,9 @@ Lacks a better UI and a good default configuration.
     * Jump to errors like in normal `*compilation*` output
 * Format the current buffer
     * Currently only one formatting style supported, easy to add more.
+* Fix using statements
+    * Sorts, removes and adds any missing using statements
+      for the current buffer
 * Syntax checker for parse errors
     * Runs using the provided [Flycheck][] checker in the background.
 * Syntax checker for code issues (refactoring suggestions)
@@ -72,6 +81,8 @@ Lacks a better UI and a good default configuration.
     * Start server
     * Reload solution
     * Stop server
+* Test runner
+  * Can run test at point, fixture or all tests in project.
 
 ## Details
 
@@ -84,11 +95,6 @@ function description in the minibuffer. As you can see, the completion
 works with non-trivial code.
 
 ![](pics/company-mode-popup-complex.png)
-
-company-mode also allows for yasnippet-like template completion of
-method parameters.
-
-![](pics/company-mode-parameters.png)
 
 Pressing F1 with a candidate selected in the the company-mode popup
 shows a buffer with documentation.
@@ -106,6 +112,10 @@ popup.el with documentation. The documentation may be disabled if you
 need the screen space. There is an option to show documentation in a
 help buffer.
 
+To (not) complete from all namespaces, use the prefix argument when
+calling. This inverts the
+`omnisharp-auto-complete-want-importable-types` setting temporarily.
+
 ![](pics/auto-complete-popup-documentation.png)
 
 #### Ido interface
@@ -117,6 +127,10 @@ new search term by pressing C-SPC.
 
 This makes it really easy to e.g. narrow the list down to members that
 handle a specific type, such as bool.
+
+To (not) complete from all namespaces, use the prefix argument when
+calling. This inverts the
+`omnisharp-auto-complete-want-importable-types` setting temporarily.
 
 ![](pics/auto-complete-ido.png)
 
@@ -193,7 +207,23 @@ either natively or in combination with helm-imenu
 Imenu support is off by default, but can be turned on by setting
 omnisharp-imenu-support to t
 
+### Helm integration
+
+If you have Helm installed, Omnisharp offers several
+integrations. First of all, there's helm-imenu:
+
 ![](pics/helm-imenu.png)
+
+There's also 'omnisharp-helm-find-usages', which allows you to easily
+navigate to references in your project:
+
+![](pics/omnisharp-helm-find-usages.png)
+
+And then there's 'omnisharp-helm-find-symbols', which allows you find
+and jump to any symbol in your project:
+
+![](pics/omnisharp-helm-find-symbols.png)
+
 
 ### company-mode integration
 
@@ -207,6 +237,17 @@ your init file:
 ```
 
 company-mode completion will only trigger when omnisharp-mode is active.
+
+### Test runner integration
+
+Can run the test at point, fixture at point, or all tests
+in project.
+
+![](pics/tests.png)
+
+Specify the path and parameters to your test runner on the server here :-
+https://github.com/nosami/OmniSharpServer/blob/0eb8644f67c020fc570aaf6629beabb7654ac944/OmniSharp/config.json#L10
+
 
 ## Installation
 
