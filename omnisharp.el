@@ -2131,9 +2131,9 @@ result."
             (shell-quote-argument solution-file-path)
             " > /dev/null"))
    ((equal system-type 'windows-nt)
-    (concat (shell-quote-argument server-exe-file-path)
+    (concat server-exe-file-path
             " -s "
-            (shell-quote-argument solution-file-path)
+            solution-file-path
             " > NUL"))
 
    (t ; some kind of unix: linux or osx
