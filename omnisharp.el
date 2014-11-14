@@ -819,7 +819,9 @@ items."
 
 ;; Path to the server
 (defcustom omnisharp-server-executable-path nil
-  "Path to OmniSharpServer. If its value is nil, search for the server in the exec-path")
+"Path to OmniSharpServer. If its value is nil, search for the server in the exec-path"
+:type 'string)
+
 
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
@@ -2129,14 +2131,17 @@ result."
             (shell-quote-argument solution-file-path)
             " > /dev/null"))
    ((equal system-type 'windows-nt)
-    (concat (shell-quote-argument server-exe-file-path)
+    (concat server-exe-file-path
             " -s "
-            (shell-quote-argument solution-file-path)
+            solution-file-path
             " > NUL"))
 
    (t ; some kind of unix: linux or osx
     (concat "mono " (shell-quote-argument server-exe-file-path)
             " -s " (shell-quote-argument solution-file-path)
+    (setq solution-file-path (shell-quote-argument
+                              (expand-file-name solution-file-path)))
+
             " > /dev/null"))))
 
 ;;;###autoload
