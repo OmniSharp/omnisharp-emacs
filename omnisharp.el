@@ -2105,12 +2105,19 @@ result."
           (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
           (when (not (eq nil (get-buffer BufferName)))
             (kill-buffer BufferName))
-          (start-process-shell-command
-           "Omni-Server"
-           (get-buffer-create BufferName)
-           (omnisharp--get-omnisharp-server-executable-command path-to-solution)))
-
+          (let ((process (apply
+			  'start-process
+			  "Omni-Server"
+			  (get-buffer-create BufferName)
+			  (omnisharp--get-omnisharp-server-executable-command path-to-solution))))
+	    (set-process-sentinel process 'omnisharp--server-process-sentinel)
+	    (if (not omnisharp-debug) ;; ignore process output if debug flag not set
+		(set-process-filter process (lambda (process string))))))
       (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
+
+(defun omnisharp--server-process-sentinel (process event)
+  (if (string-match "^exited abnormally" event)
+      (error (concat "OmniSharp server process " event))))
 
 (defun omnisharp--find-and-cache-omnisharp-server-executable-path ()
   "Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
@@ -2119,25 +2126,20 @@ result."
 
 (defun omnisharp--get-omnisharp-server-executable-command
   (solution-file-path &optional server-exe-file-path)
-  (when (eq nil server-exe-file-path)
-    (setq server-exe-file-path
-          omnisharp-server-executable-path))
-  (cond
-   ((equal system-type 'cygwin) ;; No mono needed on cygwin
-    (concat (shell-quote-argument server-exe-file-path)
-            " -s "
-            (shell-quote-argument solution-file-path)
-            " > /dev/null"))
-   ((equal system-type 'windows-nt)
-    (concat (shell-quote-argument server-exe-file-path)
-            " -s "
-            (shell-quote-argument solution-file-path)
-            " > NUL"))
-
-   (t ; some kind of unix: linux or osx
-    (concat "mono " (shell-quote-argument server-exe-file-path)
-            " -s " (shell-quote-argument solution-file-path)
-            " > /dev/null"))))
+  (let* ((server-exe-file-path-arg (expand-file-name 
+				    (if (eq nil server-exe-file-path)
+					omnisharp-server-executable-path
+				      server-exe-file-path)))
+	 (solution-file-path-arg (expand-file-name solution-file-path))
+	 (args (list server-exe-file-path-arg
+		     "-s"
+		     solution-file-path-arg)))
+    (cond
+     ((or (equal system-type 'cygwin) ;; No mono needed on cygwin
+	  (equal system-type 'windows-nt))
+      args)
+     (t ; some kind of unix: linux or osx
+      (cons "mono" args)))))
 
 ;;;###autoload
 (defun omnisharp-check-alive-status ()
