@@ -222,7 +222,16 @@ server backend."
   (if (not (omnisharp--check-alive-status-worker))
       (let ((solution (omnisharp--find-solution-file)))
 	(if (not (eq solution nil))
-	    (omnisharp-start-omnisharp-server solution))))
+	    (let ((directory (car solution))
+		  (files (cdr solution)))
+	      (omnisharp-start-omnisharp-server
+	       (if (eq (cdr files) nil) ; only one solution found
+		   (concat directory (car files))
+		 (read-file-name "Select solution for current file: "
+				 directory
+				 nil
+				 t
+				 (car files))))))))
   ;; These are selected automatically when flycheck is enabled
   (add-to-list 'flycheck-checkers
                'csharp-omnisharp-curl)
@@ -288,6 +297,9 @@ server backend."
     ))
 
 (defun omnisharp--find-solution-file ()
+  "Find solution files in parent directories. Returns a list
+containing the directory and matching filenames, or nil if no
+solution files were found."
   (let ((solution nil))
     (if (not (eq buffer-file-name nil))
 	(locate-dominating-file
@@ -295,8 +307,8 @@ server backend."
 	 (lambda (file)
 	   (let ((dir-files (directory-files file nil "\\.sln$")))
 	     (if (not (eq dir-files nil))
-		 (setq solution (concat (file-name-as-directory file)
-					(car dir-files))))))))
+		 (setq solution (cons (file-name-as-directory file)
+				      dir-files)))))))
     solution))
 
 (defun omnisharp-get-host ()
@@ -2111,32 +2123,30 @@ result."
 (defun omnisharp-start-omnisharp-server (path-to-solution)
   "Starts an OmniSharpServer for a given path to a solution file"
   (interactive (list (let* ((solution (omnisharp--find-solution-file))
-			    (filename (if (not (eq nil solution)) 
-					  (file-name-nondirectory solution)))
-			    (directory (if (not (eq nil solution))
-					   (file-name-directory solution))))
-		       (read-file-name "Start OmniSharpServer.exe for solution: "
-				       directory
-				       nil
-				       t
-				       filename))))
+			    (filename (cadr solution))
+			    (directory (car solution)))
+                       (read-file-name "Start OmniSharpServer.exe for solution: "
+                                       directory
+                                       nil
+                                       t
+                                       filename))))
   (setq BufferName "*Omni-Server*")
   (omnisharp--find-and-cache-omnisharp-server-executable-path)
   (if (equal nil omnisharp-server-executable-path)
       (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
     (if (string= (file-name-extension path-to-solution) "sln")
-	(progn
-	  (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
-	  (when (not (eq nil (get-buffer BufferName)))
-	    (kill-buffer BufferName))
-	  (let ((process (apply
-			  'start-process
-			  "Omni-Server"
-			  (get-buffer-create BufferName)
-			  (omnisharp--get-omnisharp-server-executable-command path-to-solution))))
-	    (set-process-sentinel process 'omnisharp--server-process-sentinel)
-	    (if (not omnisharp-debug) ;; ignore process output if debug flag not set
-		(set-process-filter process (lambda (process string))))))
+        (progn
+          (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
+          (when (not (eq nil (get-buffer BufferName)))
+            (kill-buffer BufferName))
+          (let ((process (apply
+                          'start-process
+                          "Omni-Server"
+                          (get-buffer-create BufferName)
+                          (omnisharp--get-omnisharp-server-executable-command path-to-solution))))
+            (set-process-sentinel process 'omnisharp--server-process-sentinel)
+            (if (not omnisharp-debug) ;; ignore process output if debug flag not set
+                (set-process-filter process (lambda (process string))))))
       (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
 
 (defun omnisharp--server-process-sentinel (process event)
