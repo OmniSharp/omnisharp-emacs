@@ -1,39 +1,47 @@
 ;; You can run tests with M-x ert but remember to evaluate them before
 ;; running if you changed something!
 
+(require 'el-mock)
+(require 'noflet)
+
 (ert-deftest omnisharp--get-omnisharp-server-executable-command ()
   "The correct server path must be returned on windows and unix systems"
 
-  (setq omnisharp-server-executable-path "OmniSharp.exe")
   ;; Windows
-  (with-mock
-    (stub w32-shell-dos-semantics)
-    (should
-     (equal "OmniSharp.exe -s some\\ solution.sln > NUL"
-            (let ((system-type 'windows-nt))
+  ;;
+  ;; ignore expand-file-name calls. just return the original to keep
+  ;; things maintainable
+  (noflet ((expand-file-name (file-name &rest _args)
+                             file-name))
+    (with-mock
+      (setq omnisharp-server-executable-path "OmniSharp.exe")
+      (stub w32-shell-dos-semantics)
+      (should
+       (equal '("OmniSharp.exe" "-s" "some solution.sln")
+              (let ((system-type 'windows-nt))
+                (omnisharp--get-omnisharp-server-executable-command
+                 "some solution.sln")))))
+
+    ;; osx
+    (let ((system-type 'darwin))
+      (should
+       (equal '("mono" "OmniSharp.exe" "-s" "some solution.sln")
               (omnisharp--get-omnisharp-server-executable-command
-               "some solution.sln")))))
+               "some solution.sln"))))
 
-  ;; osx
-  (let ((system-type 'darwin))
-    (should
-     (equal "mono OmniSharp.exe -s some solution.sln > /dev/null"
-            (omnisharp--get-omnisharp-server-executable-command
-             "some solution.sln"))))
+    ;; linux
+    (let ((system-type 'gnu/linux))
+      (should
+       (equal '("mono" "OmniSharp.exe" "-s" "some solution.sln")
+              (omnisharp--get-omnisharp-server-executable-command
+               "some solution.sln")))
 
-  ;; linux
-  (let ((system-type 'gnu/linux))
-    (should
-     (equal "mono OmniSharp.exe -s some solution.sln > /dev/null"
-            (omnisharp--get-omnisharp-server-executable-command
-             "some solution.sln")))
-
-    ;; Should also support an optional parameter
-    (should
-     (equal "mono /another/path/to/OmniSharp.exe -s some solution.sln > /dev/null"
-            (omnisharp--get-omnisharp-server-executable-command
-             "some solution.sln"
-             "/another/path/to/OmniSharp.exe")))))
+      ;; Should also support an optional parameter
+      (should
+       (equal '("mono" "/another/path/to/OmniSharp.exe" "-s" "some solution.sln")
+              (omnisharp--get-omnisharp-server-executable-command
+               "some solution.sln"
+               "/another/path/to/OmniSharp.exe"))))))
 
 (ert-deftest flycheck-error-parser-raw-json-can-convert-syntax-errors-to-flycheck-errors ()
   "The output from a /syntaxerrors call must be a valid input for the
@@ -186,3 +194,22 @@ number given"
 
       (should (equal (concat "using " new-import ";")
                      (get-line-text 0))))))
+
+(ert-deftest activating-omnisharp-mode-should-not-start-server-if-running ()
+  "When server is already running, a new server should not be started"
+  (with-mock
+    (stub omnisharp--check-alive-status-worker => t)
+    (stub omnisharp-start-omnisharp-server)
+    (not-called start-process)
+    (not-called omnisharp--find-solution-file)
+    (omnisharp-mode)))
+
+(ert-deftest activating-omnisharp-mode-should-start-server ()
+  "Activating omnisharp-mode should start an OmniSharpServer"
+  (with-mock
+    (let ((path "/solution/directory/")
+          (solution-name "first-solution.sln"))
+      (stub omnisharp--find-solution-file => `(,path ,solution-name))
+      (stub omnisharp--check-alive-status-worker => nil)
+      (mock (omnisharp-start-omnisharp-server "/solution/directory/first-solution.sln"))
+      (omnisharp-mode))))
