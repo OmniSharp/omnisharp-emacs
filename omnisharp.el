@@ -219,19 +219,17 @@ server backend."
     (when omnisharp-mode
       (make-local-variable 'eldoc-documentation-function)
       (setq eldoc-documentation-function 'omnisharp-eldoc-function)))
-  (if (not (omnisharp--check-alive-status-worker))
-      (let ((solution (omnisharp--find-solution-file)))
-	(if (not (eq solution nil))
-	    (let ((directory (car solution))
-		  (files (cdr solution)))
-	      (omnisharp-start-omnisharp-server
-	       (if (eq (cdr files) nil) ; only one solution found
-		   (concat directory (car files))
-		 (read-file-name "Select solution for current file: "
-				 directory
-				 nil
-				 t
-				 (car files))))))))
+  (unless (omnisharp--check-alive-status-worker)
+    (-let [(directory file . rest) (omnisharp--find-solution-files)]
+      (when directory
+	(omnisharp-start-omnisharp-server
+	 (if (null rest) ; only one solution found
+	     (concat directory file)
+	   (read-file-name "Select solution for current file: "
+			   directory
+			   nil
+			   t
+			   file))))))
   ;; These are selected automatically when flycheck is enabled
   (add-to-list 'flycheck-checkers
                'csharp-omnisharp-curl)
@@ -296,20 +294,19 @@ server backend."
     ["Fix using statements" omnisharp-fix-usings]
     ))
 
-(defun omnisharp--find-solution-file ()
+(defun omnisharp--find-solution-files ()
   "Find solution files in parent directories. Returns a list
 containing the directory and matching filenames, or nil if no
 solution files were found."
-  (let ((solution nil))
-    (if (not (eq buffer-file-name nil))
-	(locate-dominating-file
-	 (file-name-directory buffer-file-name)
-	 (lambda (file)
-	   (let ((dir-files (directory-files file nil "\\.sln$")))
-	     (if (not (eq dir-files nil))
-		 (setq solution (cons (file-name-as-directory file)
-				      dir-files)))))))
-    solution))
+  (let ((solutions nil))
+    (when buffer-file-name
+      (locate-dominating-file
+       (file-name-directory buffer-file-name)
+       (lambda (file)
+	 (-when-let (dir-files (directory-files file nil "\\.sln$"))
+	   (setq solutions (cons (file-name-as-directory file)
+				 dir-files))))))
+    solutions))
 
 (defun omnisharp-get-host ()
   "Makes sure omnisharp-host is ended by / "
@@ -2122,14 +2119,14 @@ result."
 ;;;###autoload
 (defun omnisharp-start-omnisharp-server (path-to-solution)
   "Starts an OmniSharpServer for a given path to a solution file"
-  (interactive (list (let* ((solution (omnisharp--find-solution-file))
-			    (filename (cadr solution))
-			    (directory (car solution)))
-                       (read-file-name "Start OmniSharpServer.exe for solution: "
-                                       directory
-                                       nil
-                                       t
-                                       filename))))
+   (interactive
+    (list
+     (-let [(directory filename . rest) (omnisharp--find-solution-files)]
+       (read-file-name "Start OmniSharpServer.exe for solution: "
+		       directory
+		       nil
+		       t
+		       filename))))
   (setq BufferName "*Omni-Server*")
   (omnisharp--find-and-cache-omnisharp-server-executable-path)
   (if (equal nil omnisharp-server-executable-path)
@@ -2145,7 +2142,7 @@ result."
                           (get-buffer-create BufferName)
                           (omnisharp--get-omnisharp-server-executable-command path-to-solution))))
             (set-process-sentinel process 'omnisharp--server-process-sentinel)
-            (if (not omnisharp-debug) ;; ignore process output if debug flag not set
+            (unless omnisharp-debug ;; ignore process output if debug flag not set
                 (set-process-filter process (lambda (process string))))))
       (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
 
