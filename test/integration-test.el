@@ -36,23 +36,27 @@ default message 'json-readtable-error'"
   (reports-communication-error-with-broken-server-configuration
    (omnisharp-post-message-curl-as-json "any-url"))
 
+  ;; returns a process when successful, and crashes when failing
   (with-broken-server-configuration
    (omnisharp-post-message-curl-as-json-async
     "any-url"
     nil
     (lambda (response-json-string)
-      (reports-communication-error response-json-string)))))
+      (should (equal "Error communicating to the OmniSharpServer instance"
+                     response-json-string))))))
 
 (ert-deftest check-alive-status-worker-should-return-server-result ()
   (with-working-server-configuration
    (should (equal t (omnisharp--check-alive-status-worker))))
 
-  (reports-communication-error-with-broken-server-configuration
-   (omnisharp--check-alive-status-worker)))
+  (with-broken-server-configuration
+   (should (equal nil
+                  (omnisharp--check-alive-status-worker)))))
 
 (ert-deftest check-ready-worker-should-return-server-result ()
   (with-working-server-configuration
    (should (equal t (omnisharp--check-ready-status-worker))))
 
-  (reports-communication-error-with-broken-server-configuration
-   (omnisharp--check-ready-status-worker)))
+  (with-broken-server-configuration
+   (should (equal nil
+                  (omnisharp--check-ready-status-worker)))))
