@@ -1,4 +1,7 @@
 # omnisharp-emacs
+<a href="//travis-ci.org/OmniSharp/omnisharp-emacs">
+    <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
+</a>
 
 omnisharp-emacs is a port of the awesome [OmniSharp][] server to the
 Emacs text editor. It provides IDE-like features for editing files in
@@ -10,8 +13,8 @@ The server must be at least the following version (expect this to be
 update to this guide whenever the required version changes):
 
 ```
-8355b92f30ac6f9b5f62bfbb618b7b4f45db7915
-Date:   Fri Apr 18 10:44:05 2014 +0100
+c4a1b10d06765e5efa11c3591f096e6bdb6c1b5d
+Date:   Sat Oct 18 23:08:19 2014 +0100
 ```
 
 If you haven't updated your server copy since that, you must upgrade.
