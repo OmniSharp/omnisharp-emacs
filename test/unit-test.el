@@ -209,7 +209,7 @@ number given"
   (with-mock
     (let ((path "/solution/directory/")
           (solution-name "first-solution.sln"))
-      (stub omnisharp--find-solution-file => `(,path ,solution-name))
+      (mock (omnisharp--find-solution-files) => `(,path ,solution-name))
       (stub omnisharp--check-alive-status-worker => nil)
       (mock (omnisharp-start-omnisharp-server "/solution/directory/first-solution.sln"))
       (omnisharp-mode))))
