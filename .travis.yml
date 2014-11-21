@@ -20,5 +20,4 @@ before_script:
     
 script:
     ./run-integration-tests.sh
-
-
+    ./run-tests.sh
