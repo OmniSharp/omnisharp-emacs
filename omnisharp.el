@@ -217,12 +217,11 @@ server backend."
   (omnisharp--start-omnisharp-server-for-solution-in-parent-directory)
 
   ;; These are selected automatically when flycheck is enabled
-  (add-to-list 'flycheck-checkers
-               'csharp-omnisharp-curl)
-  (add-to-list 'flycheck-checkers
-               'csharp-omnisharp-curl-code-issues)
-  (add-to-list 'flycheck-checkers
-               'csharp-omnisharp-curl-semantic-errors))
+  (--each '('csharp-omnisharp-curl
+            'csharp-omnisharp-curl-code-issues
+            'csharp-omnisharp-curl-semantic-errors)
+
+    (add-to-list 'flycheck-checkers it)))
 
 (defun omnisharp--init-imenu-support ()
   (when omnisharp-imenu-support
