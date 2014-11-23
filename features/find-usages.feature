@@ -1,6 +1,5 @@
 Feature: Find usages
 
-  @mika
   Scenario: Find usages of a symbol
     Given I open the Omnisharp server source file "minimal/MyClassContainer.cs"
     When My buffer contents are, and my point is at $:
