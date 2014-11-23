@@ -362,9 +362,8 @@ its only argument."
   (omnisharp-post-message-curl-as-json-async
    (concat (omnisharp-get-host) "findusages")
    request
-   (lambda (quickfix-response)
-     (apply callback (list (omnisharp--vector-to-list
-                            (cdr (assoc 'QuickFixes quickfix-response))))))))
+   (-lambda ((&alist 'QuickFixes quickfixes))
+            (apply callback (list (omnisharp--vector-to-list quickfixes))))))
 
 (defun omnisharp--find-usages-show-response (quickfixes)
   (if (equal 0 (length quickfixes))
