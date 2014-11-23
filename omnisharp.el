@@ -29,6 +29,9 @@
 (require 'etags)
 (require 'flycheck)
 
+(add-to-list 'load-path (expand-file-name "./src/"))
+(require 'omnisharp-utils)
+
 (defgroup omnisharp ()
   "Omnisharp-emacs is a port of the awesome OmniSharp server to
 the Emacs text editor. It provides IDE-like features for editing
