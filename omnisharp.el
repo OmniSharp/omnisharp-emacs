@@ -352,18 +352,13 @@ argument, use another window."
   (interactive)
   (message "Finding usages...")
   (omnisharp-find-usages-worker
-   (omnisharp--get-common-params)
-   (lambda (quickfixes)
-     (if (equal 0 (length quickfixes))
-         (message "No usages found."))
-     (omnisharp--write-quickfixes-to-compilation-buffer
-      quickfixes
-      omnisharp--find-usages-buffer-name
-      omnisharp-find-usages-header))))
+    (omnisharp--get-common-params)
+    (lambda (quickfixes) (omnisharp--find-usages-show-response quickfixes))))
 
 (defun omnisharp-find-usages-worker (request callback)
   "Gets a list of QuickFix lisp objects from a findusages api call
-asynchronously. On completions, CALLBACK is run with the quickfixes as its only argument."
+asynchronously. On completions, CALLBACK is run with the quickfixes as
+its only argument."
   (declare (indent defun))
   (omnisharp-post-message-curl-as-json-async
    (concat (omnisharp-get-host) "findusages")
@@ -371,6 +366,14 @@ asynchronously. On completions, CALLBACK is run with the quickfixes as its only 
    (lambda (quickfix-response)
      (apply callback (list (omnisharp--vector-to-list
                             (cdr (assoc 'QuickFixes quickfix-response))))))))
+
+(defun omnisharp--find-usages-show-response (quickfixes)
+  (if (equal 0 (length quickfixes))
+      (message "No usages found.")
+    (omnisharp--write-quickfixes-to-compilation-buffer
+     quickfixes
+     omnisharp--find-usages-buffer-name
+     omnisharp-find-usages-header)))
 
 (defun omnisharp-find-implementations ()
   "Show a buffer containing all implementations of the interface under
