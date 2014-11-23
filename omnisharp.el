@@ -382,20 +382,20 @@ to select one (or more) to jump to."
   (interactive)
   (message "Finding implementations...")
   (omnisharp-find-implementations-worker
-   (omnisharp--get-common-params)
-   (lambda (quickfixes)
-     (cond ((equal 0 (length quickfixes))
-            (message "No implementations found."))
+    (omnisharp--get-common-params)
+    (lambda (quickfixes)
+      (cond ((equal 0 (length quickfixes))
+             (message "No implementations found."))
 
-           ;; Go directly to the implementation if there only is one
-           ((equal 1 (length quickfixes))
-            (omnisharp-go-to-file-line-and-column (first quickfixes)))
+            ;; Go directly to the implementation if there only is one
+            ((equal 1 (length quickfixes))
+             (omnisharp-go-to-file-line-and-column (first quickfixes)))
 
-           (t
-            (omnisharp--write-quickfixes-to-compilation-buffer
-             quickfixes
-             omnisharp--find-implementations-buffer-name
-             omnisharp-find-implementations-header))))))
+            (t
+             (omnisharp--write-quickfixes-to-compilation-buffer
+              quickfixes
+              omnisharp--find-implementations-buffer-name
+              omnisharp-find-implementations-header))))))
 
 (defun omnisharp-find-implementations-worker (request callback)
   "Gets a list of QuickFix lisp objects from a findimplementations api call
@@ -1403,8 +1403,8 @@ something goes wrong, return a human-readable warning."
   "Posts message to curl at URL with PARAMS asynchronously.
 On completion, the curl output is parsed as json and passed into CALLBACK."
   (omnisharp-post-message-curl-async url params
-                                     (lambda (str)
-                                       (apply callback (list (omnisharp--json-read-from-string str))))))
+    (lambda (str)
+      (apply callback (list (omnisharp--json-read-from-string str))))))
 
 (defun omnisharp--auto-complete-display-function-popup
   (json-result-alist)
