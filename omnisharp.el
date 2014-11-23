@@ -209,16 +209,33 @@ server backend."
   :lighter " omnisharp"
   :global nil
   :keymap omnisharp-mode-map
+  (omnisharp--init-imenu-support)
+  (omnisharp--init-eldoc-support)
+  (omnisharp--start-omnisharp-server-for-solution-in-parent-directory)
+
+  ;; These are selected automatically when flycheck is enabled
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl)
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl-code-issues)
+  (add-to-list 'flycheck-checkers
+               'csharp-omnisharp-curl-semantic-errors))
+
+(defun omnisharp--init-imenu-support ()
   (when omnisharp-imenu-support
     (if omnisharp-mode
         (progn
           (setq imenu-create-index-function 'omnisharp-imenu-create-index)
           (imenu-add-menubar-index))
-      (setq imenu-create-index-function 'imenu-default-create-index-function)))
+      (setq imenu-create-index-function 'imenu-default-create-index-function))))
+
+(defun omnisharp--init-eldoc-support ()
   (when omnisharp-eldoc-support
     (when omnisharp-mode
       (make-local-variable 'eldoc-documentation-function)
-      (setq eldoc-documentation-function 'omnisharp-eldoc-function)))
+      (setq eldoc-documentation-function 'omnisharp-eldoc-function))))
+
+(defun omnisharp--start-omnisharp-server-for-solution-in-parent-directory ()
   (unless (omnisharp--check-alive-status-worker)
     (-let [(directory file . rest) (omnisharp--find-solution-files)]
       (when directory
@@ -229,14 +246,7 @@ server backend."
 			   directory
 			   nil
 			   t
-			   file))))))
-  ;; These are selected automatically when flycheck is enabled
-  (add-to-list 'flycheck-checkers
-               'csharp-omnisharp-curl)
-  (add-to-list 'flycheck-checkers
-               'csharp-omnisharp-curl-code-issues)
-  (add-to-list 'flycheck-checkers
-               'csharp-omnisharp-curl-semantic-errors))
+			   file)))))))
 
 (easy-menu-define omnisharp-mode-menu omnisharp-mode-map
   "Menu for omnisharp-mode"
@@ -2219,14 +2229,14 @@ result."
 ;;;###autoload
 (defun omnisharp-start-omnisharp-server (path-to-solution)
   "Starts an OmniSharpServer for a given path to a solution file"
-   (interactive
-    (list
-     (-let [(directory filename . rest) (omnisharp--find-solution-files)]
-       (read-file-name "Start OmniSharpServer.exe for solution: "
-		       directory
-		       nil
-		       t
-		       filename))))
+  (interactive
+   (list
+    (-let [(directory filename . rest) (omnisharp--find-solution-files)]
+      (read-file-name "Start OmniSharpServer.exe for solution: "
+                      directory
+                      nil
+                      t
+                      filename))))
   (setq BufferName "*Omni-Server*")
   (omnisharp--find-and-cache-omnisharp-server-executable-path)
   (if (equal nil omnisharp-server-executable-path)
@@ -2243,7 +2253,7 @@ result."
                           (omnisharp--get-omnisharp-server-executable-command path-to-solution))))
             (set-process-sentinel process 'omnisharp--server-process-sentinel)
             (unless omnisharp-debug ;; ignore process output if debug flag not set
-                (set-process-filter process (lambda (process string))))))
+              (set-process-filter process (lambda (process string))))))
       (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
 
 (defun omnisharp--server-process-sentinel (process event)
