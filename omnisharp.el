@@ -290,19 +290,16 @@ server backend."
      ["Add reference to dll or project" omnisharp-add-reference]
      ["Build solution in emacs" omnisharp-build-in-emacs]
      ["Start syntax check" flycheck-mode]
-     ["Fix code issue at point" omnisharp-fix-code-issue-at-point]
-     )
+     ["Fix code issue at point" omnisharp-fix-code-issue-at-point])
 
     ("Unit tests"
      ["Run test at point" (lambda() (interactive) (omnisharp-unit-test "single"))]
      ["Run test fixture" (lambda() (interactive) (omnisharp-unit-test "fixture"))]
-     ["Run all tests in project" (lambda() (interactive) (omnisharp-unit-test "all"))]
-     )
+     ["Run all tests in project" (lambda() (interactive) (omnisharp-unit-test "all"))])
 
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
     ["Run code format on current buffer" omnisharp-code-format]
-    ["Fix using statements" omnisharp-fix-usings]
-    ))
+    ["Fix using statements" omnisharp-fix-usings]))
 
 (defun omnisharp--find-solution-files ()
   "Find solution files in parent directories. Returns a list
@@ -318,24 +315,16 @@ solution files were found."
 				 dir-files))))))
     solutions))
 
-(defun omnisharp-get-host ()
-  "Makes sure omnisharp-host is ended by / "
-  (if (string= (substring omnisharp-host -1 ) "/")
-      omnisharp-host
-    (concat omnisharp-host "/")))
-
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
   (interactive)
   (message (concat "Reloading the server. Calls to the server will not"
                    " work until the server has reloaded."))
   (omnisharp-post-message-curl-async
-   (concat (omnisharp-get-host) "reloadsolution")
-   ;; no params needed
-   nil
-   (lambda (_)
-     (message "OmniSharpServer solution reloaded")))
-  )
+    (omnisharp--get-api-url "reloadsolution")
+    nil ; no params needed
+    (lambda (_)
+      (message "OmniSharpServer solution reloaded"))))
 
 (defun omnisharp-go-to-definition (&optional other-window)
   "Jump to the definition of the symbol under point. With prefix

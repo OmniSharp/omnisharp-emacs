@@ -3,8 +3,11 @@
 ;; loaded. This is a good place for common test helper functions.
 (require 'ert)
 
-(load-file "omnisharp.el")
+;; these are run in the omnisharp source code root directory
+(add-to-list 'load-path (expand-file-name "./"))
+(add-to-list 'load-path (expand-file-name "./src/"))
 (require 'omnisharp)
+(require 'omnisharp-utils)
 (require 'evil) ; some tests test evil functionality specifically
 (require 'el-mock)
 
