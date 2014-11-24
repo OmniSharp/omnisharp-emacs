@@ -453,13 +453,10 @@ them manually."
   "Navigate to region in current file. If OTHER-WINDOW is given and t,
 use another window."
   (interactive "P")
-  (let ((quickfix-response
-         (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "gotoregion")
-          (omnisharp--get-common-params))))
-    (omnisharp--choose-and-go-to-quickfix-ido
-     (cdr (assoc 'QuickFixes quickfix-response))
-     other-window)))
+  (-let [(&alist 'QuickFixes qfs) (omnisharp-post-message-curl-as-json
+                                   (concat (omnisharp-get-host) "gotoregion")
+                                   (omnisharp--get-common-params))]
+    (omnisharp--choose-and-go-to-quickfix-ido qfs other-window)))
 
 (defun omnisharp-rename ()
   "Rename the current symbol to a new name. Lets the user choose what
