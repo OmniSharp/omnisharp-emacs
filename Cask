@@ -4,6 +4,7 @@
 
 (development
  (depends-on "ecukes")
+ (depends-on "ert-async")
  (depends-on "noflet")
  (depends-on "s")
  (depends-on "ert-runner")
