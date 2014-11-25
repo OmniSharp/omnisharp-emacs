@@ -214,7 +214,7 @@ number given"
      (mock (omnisharp-start-omnisharp-server "/solution/directory/first-solution.sln"))
      (omnisharp-mode))))
 
-(ert-deftest omnisharp--write-quickfixes-to-compilation-buffer ()
+(ert-deftest omnisharp--write-quickfixes-to-compilation-buffer--has-expected-contents ()
   "Writing QuickFixes to the compilation buffer should have the
 expected output in that buffer"
   (save-excursion
@@ -240,3 +240,15 @@ expected output in that buffer"
         (should (s-contains? "public class MyClass" contents))))))
 
 
+(ert-deftest
+    omnisharp--write-quickfixes-to-compilation-buffer-doesnt-mess-with-find-tag-marker-ring ()
+
+  (with-mock
+    (stub ring-insert => (error "must not be called"))
+    (save-excursion
+      (omnisharp--write-quickfixes-to-compilation-buffer
+       '()
+       "buffer-name"
+       "test-buffer-header\n\n"
+       ;; don't save old position to find-tag-marker-ring
+       t))))
