@@ -207,12 +207,13 @@ number given"
 (ert-deftest activating-omnisharp-mode-should-start-server ()
   "Activating omnisharp-mode should start an OmniSharpServer"
   (with-mock
-    (let ((path "/solution/directory/")
-          (solution-name "first-solution.sln"))
-      (mock (omnisharp--find-solution-files) => `(,path ,solution-name))
-      (stub omnisharp--check-alive-status-worker => nil)
-      (mock (omnisharp-start-omnisharp-server "/solution/directory/first-solution.sln"))
-      (omnisharp-mode))))
+   (let ((path "/solution/directory/")
+         (solution-name "first-solution.sln"))
+     (mock (omnisharp--find-solution-files) => `(,path ,solution-name))
+     (stub omnisharp--check-alive-status-worker => nil)
+     (mock (omnisharp-start-omnisharp-server "/solution/directory/first-solution.sln"))
+     (omnisharp-mode))))
+
 (ert-deftest omnisharp--write-quickfixes-to-compilation-buffer ()
   "Writing QuickFixes to the compilation buffer should have the
 expected output in that buffer"
