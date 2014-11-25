@@ -1134,6 +1134,13 @@ run-action-params: original parameters sent to /runcodeaction API."
    (line-number-at-pos)
    (omnisharp--current-column)))
 
+(defun omnisharp-post-message-curl-as-json-async (url params callback)
+  "Posts message to curl at URL with PARAMS asynchronously.
+On completion, the curl output is parsed as json and passed into CALLBACK."
+  (omnisharp-post-message-curl-async url params
+    (lambda (str)
+      (funcall callback (omnisharp--json-read-from-string str)))))
+
 (defun omnisharp-post-message-curl-async (url params callback)
   "Post json stuff to url asynchronously with --data set to given params.
 On completion, CALLBACK is run with the result as it's only parameter.
@@ -1152,18 +1159,11 @@ Returns the curl process"
      process
      (lambda (proc status)
        (unless (process-live-p proc)
-         (apply callback
-                (list (progn (let ((output (with-current-buffer process-buffer (buffer-string))))
-                               (kill-buffer process-buffer)
-                               output)))))))
+         (funcall callback
+                  (progn (let ((output (with-current-buffer process-buffer (buffer-string))))
+                           (kill-buffer process-buffer)
+                           output))))))
     process))
-
-(defun omnisharp-post-message-curl-as-json-async (url params callback)
-  "Posts message to curl at URL with PARAMS asynchronously.
-On completion, the curl output is parsed as json and passed into CALLBACK."
-  (omnisharp-post-message-curl-async url params
-    (lambda (str)
-      (apply callback (list (omnisharp--json-read-from-string str))))))
 
 (defun omnisharp--auto-complete-display-function-popup
   (json-result-alist)
