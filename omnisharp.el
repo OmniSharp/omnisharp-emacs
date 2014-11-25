@@ -1278,17 +1278,12 @@ is a more sophisticated matching framework than what popup.el offers."
 (defun omnisharp--convert-auto-complete-json-to-popup-format
   (json-result-alist)
   (mapcar
-   (lambda (element)
-     (popup-make-item
-      ;; TODO get item from json-result-alist
-      ;;
-      ;; TODO these are already calculated in
-      ;; omnisharp--auto-complete-display-function-popup, stored as
-      ;; completion-texts
-      (cdr (assoc 'DisplayText element))
-      :value (omnisharp--completion-result-item-get-completion-text
-              element)
-      :document (cdr (assoc 'Description element))))
+   (-lambda ((&alist 'DisplayText display-text
+                     'CompletionText completion-text
+                     'Description description))
+            (popup-make-item display-text
+                             :value completion-text
+                             :document description))
    json-result-alist))
 
 (defun omnisharp--completion-result-item-get-completion-text (item)

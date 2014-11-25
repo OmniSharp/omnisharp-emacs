@@ -259,3 +259,25 @@ expected output in that buffer"
       (mock (omnisharp-post-message-curl-async "host/stopserver" * *))
       (omnisharp-stop-server))))
 
+(ert-deftest omnisharp--convert-auto-complete-json-to-popup-format-shows-correct-data ()
+  (let* ((description "Verbosity Verbose; - description")
+         (completion-text "Verbose - completion text")
+         (auto-completions
+          `[((Snippet . "Verbose$0")
+             (ReturnType . "OmniSharp.Verbosity")
+             (MethodHeader . nil)
+             (RequiredNamespaceImport . nil)
+             (DisplayText . "Verbosity Verbose - display text")
+             (Description . ,description)
+             (CompletionText . ,completion-text))])
+         (converted-popup-item
+          (nth 0
+               (omnisharp--convert-auto-complete-json-to-popup-format
+                auto-completions))))
+
+    (should (equal description (popup-item-document converted-popup-item)))
+    (should (equal completion-text (popup-item-value converted-popup-item)))
+    ;; TODO figure out how to verify popup item DisplayText.
+    ;; An item looked like this:
+    ;; #("Verbosity Verbose - display text" 0 32 (document "Verbosity Verbose; - description" value "Verbose - completion text"))
+    ))
