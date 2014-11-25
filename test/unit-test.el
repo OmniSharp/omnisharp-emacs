@@ -213,3 +213,29 @@ number given"
       (stub omnisharp--check-alive-status-worker => nil)
       (mock (omnisharp-start-omnisharp-server "/solution/directory/first-solution.sln"))
       (omnisharp-mode))))
+(ert-deftest omnisharp--write-quickfixes-to-compilation-buffer ()
+  "Writing QuickFixes to the compilation buffer should have the
+expected output in that buffer"
+  (save-excursion
+    (let ((buffer-name "test-buffer-name")
+          (quickfixes-to-write
+           '(((Text . "public class MyClass")
+              (EndColumn . 0)
+              (EndLine . 0)
+              (Column . 18)
+              (Line . 5)
+              (FileName . "/project/MyClass.cs")
+              (LogLevel . nil)))))
+
+      (omnisharp--write-quickfixes-to-compilation-buffer
+       quickfixes-to-write
+       buffer-name
+       "test-buffer-header\n\n")
+      (switch-to-buffer buffer-name)
+
+      (let ((contents (buffer-string)))
+        (should (s-contains? "test-buffer-header" contents))
+        (should (s-contains? "/project/MyClass.cs:5:18:" contents))
+        (should (s-contains? "public class MyClass" contents))))))
+
+

@@ -2,6 +2,7 @@
 ;; This file is included in each test run before any test file is
 ;; loaded. This is a good place for common test helper functions.
 (require 'ert)
+(require 's)
 
 ;; these are run in the omnisharp source code root directory
 (add-to-list 'load-path (expand-file-name "./"))
