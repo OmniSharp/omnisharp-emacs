@@ -981,8 +981,8 @@ omnisharp--last-buffer-specific-auto-complete-result."
 
 (defun omnisharp-auto-complete-overrides ()
   (interactive)
-  (let ((params (omnisharp--get-common-params)))
-    (omnisharp-auto-complete-overrides-worker params)))
+  (omnisharp-auto-complete-overrides-worker
+   (omnisharp--get-common-params)))
 
 (defun omnisharp-auto-complete-overrides-worker (params)
   (let* ((json-result
