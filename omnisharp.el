@@ -1223,13 +1223,6 @@ current buffer."
       (when required-namespace-import
         (omnisharp--insert-namespace-import required-namespace-import)))))
 
-(defun omnisharp--replace-symbol-in-buffer-with (symbol-to-replace
-                                                 replacement-string)
-  "In the current buffer, replaces the given SYMBOL-TO-REPLACE
-\(a string\) with REPLACEMENT-STRING."
-  (search-backward symbol-to-replace)
-  (replace-match replacement-string t t))
-
 (defun omnisharp--auto-complete-display-function-ido
   (json-result-alist)
   "Use ido style completion matching with autocomplete candidates. Ido
@@ -1280,18 +1273,6 @@ is a more sophisticated matching framework than what popup.el offers."
 
       (when required-namespace-import
         (omnisharp--insert-namespace-import required-namespace-import)))))
-
-(defun omnisharp--insert-namespace-import (full-import-text-to-insert)
-  "Inserts the given text at the top of the current file without
-moving point."
-  (save-excursion
-    (beginning-of-buffer)
-    (insert "using " full-import-text-to-insert ";")
-    (newline)))
-
-(defun omnisharp--current-word-or-empty-string ()
-  (or (thing-at-point 'symbol)
-      ""))
 
 ;; TODO Use a plist. This is ridiculous.
 (defun omnisharp--convert-auto-complete-json-to-popup-format
