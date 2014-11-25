@@ -86,4 +86,161 @@ follow results to the locations in the actual files."
             text
             "\n")))
 
+(defun omnisharp--set-buffer-contents-to (filename-for-buffer
+                                          new-buffer-contents
+                                          &optional
+                                          result-point-line
+                                          result-point-column)
+  "Sets the buffer contents to new-buffer-contents for the buffer
+visiting filename-for-buffer. If no buffer is visiting that file, does
+nothing. Afterwards moves point to the coordinates RESULT-POINT-LINE
+and RESULT-POINT-COLUMN.
+
+If RESULT-POINT-LINE and RESULT-POINT-COLUMN are not given, and a
+buffer exists for FILENAME-FOR-BUFFER, its current positions are
+used. If a buffer does not exist, the file is visited and the default
+point position is used."
+  (omnisharp--find-file-possibly-in-other-window
+   filename-for-buffer nil) ; not in other-window
+
+  ;; Default values are the ones in the buffer that is visiting
+  ;; filename-for-buffer.
+  (setq result-point-line
+        (or result-point-line (line-number-at-pos)))
+  (setq result-point-column
+        (or result-point-column (omnisharp--current-column)))
+
+  (save-buffer)
+  (erase-buffer)
+  (insert new-buffer-contents)
+
+  ;; Hack. Puts point where it belongs.
+  (omnisharp-go-to-file-line-and-column-worker
+   result-point-line result-point-column filename-for-buffer))
+
+(defun omnisharp--current-column ()
+  "Returns the current column, converting tab characters in a way that
+the OmniSharp server understands."
+  (let ((tab-width 1))
+    (current-column)))
+
+(defun omnisharp--buffer-exists-for-file-name (file-name)
+  (let ((all-open-buffers-list
+         (-map 'buffer-file-name (buffer-list))))
+    (--any? (string-equal file-name it)
+            all-open-buffers-list)))
+
+(defun omnisharp--get-current-buffer-contents ()
+  (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
+
+(defun omnisharp-post-message-curl (url &optional params)
+  "Post json stuff to url with --data set to given params. Return
+result."
+  (let ((curl-command-plist
+         (omnisharp--get-curl-command url params)))
+    (with-temp-buffer
+      (apply 'call-process
+             (plist-get curl-command-plist :command)
+             nil ;; infile
+             (buffer-name);; destination
+             nil ;; display (no specialities needed)
+             ;; these are just args
+             (plist-get curl-command-plist :arguments))
+      (buffer-string))))
+
+(defun omnisharp--get-curl-command (url params)
+  "Returns a command that may be used to communicate with the API via
+the curl program. Depends on the operating system."
+  (let ((curl-command
+         (if (equal system-type 'windows-nt)
+             (omnisharp--get-curl-command-windows-with-tmp-file url params)
+           (omnisharp--get-curl-command-unix url params))))
+    (when omnisharp-debug
+      (omnisharp--log-curl-command curl-command))
+    curl-command))
+
+(defun omnisharp--log-curl-command (curl-command)
+  (omnisharp--log (prin1-to-string curl-command)))
+
+(defun omnisharp--log (single-or-multiline-log-string)
+  (let* ((log-buffer (get-buffer-create "*omnisharp-debug*"))
+         (iso-format-string "%Y-%m-%dT%T%z")
+         (timestamp-and-log-string
+          (format-time-string iso-format-string (current-time))))
+    (with-current-buffer log-buffer
+      (end-of-buffer)
+      (insert "\n\n\n")
+      (insert (concat timestamp-and-log-string
+                      "\n"
+                      single-or-multiline-log-string))
+      (insert "\n"))))
+
+(defun omnisharp--get-curl-command-executable-string-for-api-name
+  (params api-name)
+  "Returns the full command to call curl with PARAMS for the api API-NAME.
+Example: when called with \"getcodeactions\", returns
+\"curl (stuff) http://localhost:2000/getcodeactions (stuff)\"
+with \"stuff\" set to sensible values."
+  (let ((command-plist
+         (omnisharp--get-curl-command
+          (concat (omnisharp-get-host) api-name)
+          params)))
+    (cons
+     (plist-get command-plist :command)
+     (plist-get command-plist :arguments))))
+
+(defun omnisharp--get-curl-command-unix (url params)
+  "Returns a command using plain curl that can be executed to
+communicate with the API."
+  `(:command
+    ,omnisharp--curl-executable-path
+    :arguments
+    ("--ipv4" "--silent" "-H" "Content-type: application/json"
+     "--data"
+     ,(json-encode params)
+     ,url)))
+
+(defun omnisharp--get-curl-command-windows-with-tmp-file (url params)
+  "Basically: put PARAMS to file, then create a curl command to the
+api at URL using that file as the parameters."
+  ;; TODO could optimise: short buffers need not be written to tmp
+  ;; files.
+  (omnisharp--write-json-params-to-tmp-file
+   omnisharp--windows-curl-tmp-file-path
+   (json-encode params))
+  (let ((path-with-curl-prefix
+         (concat "@"
+                 omnisharp--windows-curl-tmp-file-path
+                 )))
+    `(:command ,omnisharp--curl-executable-path
+               :arguments
+               ("--silent" "-H" "Content-type: application/json"
+                "--data-binary"
+                ;; @ specifies a file path to curl
+                ,path-with-curl-prefix
+                ,url))))
+
+(defun omnisharp--write-json-params-to-tmp-file
+  (target-path stuff-to-write-to-file)
+  "Deletes the file when done."
+  (with-temp-file target-path
+    (insert stuff-to-write-to-file)))
+
+(defun omnisharp--json-read-from-string (json-string
+                                         &optional error-message)
+  "Deserialize the given JSON-STRING to a lisp object. If
+something goes wrong, return a human-readable warning."
+  (condition-case nil
+      (json-read-from-string json-string)
+    (error
+     (when omnisharp-debug
+       (omnisharp--log (concat "omnisharp--json-read-from-string error: "
+                               (prin1-to-string json-string))))
+     (or error-message
+         "Error communicating to the OmniSharpServer instance"))))
+
+(defun omnisharp-post-message-curl-as-json (url &optional params)
+  (omnisharp--json-read-from-string
+   (omnisharp-post-message-curl url params)))
+
 (provide 'omnisharp-utils)
