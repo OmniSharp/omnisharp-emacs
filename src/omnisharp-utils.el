@@ -262,4 +262,9 @@ moving point."
   (or (thing-at-point 'symbol)
       ""))
 
+(defun omnisharp--t-or-json-false (val)
+  (if val
+      t
+    :json-false))
+
 (provide 'omnisharp-utils)

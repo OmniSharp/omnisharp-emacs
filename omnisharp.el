@@ -645,27 +645,22 @@ and complete members."
   (insert ".")
   (omnisharp-auto-complete))
 
-(defun omnisharp--t-or-json-false (val)
-  (if val
-      t
-    :json-false))
-
 (defun omnisharp--get-auto-complete-params ()
   "Return an AutoCompleteRequest for the current buffer state."
   (append `((WantDocumentationForEveryCompletionResult
              . ,(omnisharp--t-or-json-false
-                    omnisharp-auto-complete-want-documentation))
+                 omnisharp-auto-complete-want-documentation))
 
             (WantMethodHeader
              . ,(omnisharp--t-or-json-false
-                       omnisharp-company-do-template-completion))
+                 omnisharp-company-do-template-completion))
 
             (WantReturnType . t)
 
             (WantSnippet
              . ,(omnisharp--t-or-json-false
-                        (and omnisharp-company-do-template-completion
-                             omnisharp-company-template-use-yasnippet)))
+                 (and omnisharp-company-do-template-completion
+                      omnisharp-company-template-use-yasnippet)))
 
             (WantImportableTypes
              . ,(omnisharp--t-or-json-false
