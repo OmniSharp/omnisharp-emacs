@@ -252,3 +252,10 @@ expected output in that buffer"
        "test-buffer-header\n\n"
        ;; don't save old position to find-tag-marker-ring
        t))))
+
+(ert-deftest omnisharp-stop-server-calls-correct-api ()
+  (with-mock
+    (let ((omnisharp-host "host/"))
+      (mock (omnisharp-post-message-curl-async "host/stopserver" * *))
+      (omnisharp-stop-server))))
+
