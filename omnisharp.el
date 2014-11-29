@@ -1953,22 +1953,24 @@ result."
 ;; define a method to nicely start the server
 ;;;###autoload
 (defun omnisharp-start-omnisharp-server (path-to-solution)
-  "Starts an OmniSharpServer for a given path to a solution file"
-  (interactive
-   (list
-    (-let [(directory filename . rest) (omnisharp--find-solution-files)]
-      (read-file-name "Start OmniSharpServer.exe for solution: "
-                      directory
-                      nil
-                      t
-                      filename))))
+  "Starts an OmniSharpServer for a given path to a solution file or a directory"
+   (interactive
+    (list
+     (-let [(directory filename . rest) (omnisharp--find-solution-files)]
+       (read-file-name "Start OmniSharpServer.exe for solution: "
+		       directory
+		       nil
+		       t
+		       filename))))
   (setq BufferName "*Omni-Server*")
   (omnisharp--find-and-cache-omnisharp-server-executable-path)
   (if (equal nil omnisharp-server-executable-path)
       (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
-    (if (string= (file-name-extension path-to-solution) "sln")
+    (if (omnisharp--valid-solution-path-p path-to-solution)
         (progn
-          (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
+          (if (string= (file-name-extension path-to-solution) "sln")
+              (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
+            (message (format "Starting OmniSharpServer using folder mode in: %s" path-to-solution)))
           (when (not (eq nil (get-buffer BufferName)))
             (kill-buffer BufferName))
           (let ((process (apply
@@ -1980,6 +1982,10 @@ result."
             (unless omnisharp-debug ;; ignore process output if debug flag not set
               (set-process-filter process (lambda (process string))))))
       (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
+
+(defun omnisharp--valid-solution-path-p (path-to-solution)
+  (or (string= (file-name-extension path-to-solution) "sln")
+      (file-directory-p path-to-solution)))
 
 (defun omnisharp--server-process-sentinel (process event)
   (if (string-match "^exited abnormally" event)
