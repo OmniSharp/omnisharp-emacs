@@ -254,7 +254,7 @@ https://github.com/nosami/OmniSharpServer/blob/0eb8644f67c020fc570aaf6629beabb76
 This supports Emacs 24.3 and above at least. It has been tested on
 Ubuntu 12.04 (Precise), on Windows 7 and on OSX.
 
-To install, use [MELPA][].
+To install, use [MELPA stable][].
 After MELPA is installed, use
 
 ```
@@ -309,6 +309,6 @@ Pull requests welcome!
 [company-mode]: http://company-mode.github.io
 [ido-mode]: http://www.emacswiki.org/emacs/InteractivelyDoThings
 [Flycheck]: https://github.com/lunaryorn/flycheck
-[MELPA]: http://melpa.milkbox.net/#installing
+[MELPA stable]: https://github.com/milkypostman/melpa#stable-packages
 [the curl website]: http://curl.haxx.se/download.html
 [config-cygwin.json]: https://github.com/nosami/OmniSharpServer/blob/master/OmniSharp/config-cygwin.json
