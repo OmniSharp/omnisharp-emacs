@@ -207,9 +207,77 @@ number given"
 (ert-deftest activating-omnisharp-mode-should-start-server ()
   "Activating omnisharp-mode should start an OmniSharpServer"
   (with-mock
-    (let ((path "/solution/directory/")
-          (solution-name "first-solution.sln"))
-      (mock (omnisharp--find-solution-files) => `(,path ,solution-name))
-      (stub omnisharp--check-alive-status-worker => nil)
-      (mock (omnisharp-start-omnisharp-server "/solution/directory/first-solution.sln"))
-      (omnisharp-mode))))
+   (let ((path "/solution/directory/")
+         (solution-name "first-solution.sln"))
+     (mock (omnisharp--find-solution-files) => `(,path ,solution-name))
+     (stub omnisharp--check-alive-status-worker => nil)
+     (mock (omnisharp-start-omnisharp-server "/solution/directory/first-solution.sln"))
+     (omnisharp-mode))))
+
+(ert-deftest omnisharp--write-quickfixes-to-compilation-buffer--has-expected-contents ()
+  "Writing QuickFixes to the compilation buffer should have the
+expected output in that buffer"
+  (save-excursion
+    (let ((buffer-name "test-buffer-name")
+          (quickfixes-to-write
+           '(((Text . "public class MyClass")
+              (EndColumn . 0)
+              (EndLine . 0)
+              (Column . 18)
+              (Line . 5)
+              (FileName . "/project/MyClass.cs")
+              (LogLevel . nil)))))
+
+      (omnisharp--write-quickfixes-to-compilation-buffer
+       quickfixes-to-write
+       buffer-name
+       "test-buffer-header\n\n")
+      (switch-to-buffer buffer-name)
+
+      (let ((contents (buffer-string)))
+        (should (s-contains? "test-buffer-header" contents))
+        (should (s-contains? "/project/MyClass.cs:5:18:" contents))
+        (should (s-contains? "public class MyClass" contents))))))
+
+
+(ert-deftest
+    omnisharp--write-quickfixes-to-compilation-buffer-doesnt-mess-with-find-tag-marker-ring ()
+
+  (with-mock
+    (stub ring-insert => (error "must not be called"))
+    (save-excursion
+      (omnisharp--write-quickfixes-to-compilation-buffer
+       '()
+       "buffer-name"
+       "test-buffer-header\n\n"
+       ;; don't save old position to find-tag-marker-ring
+       t))))
+
+(ert-deftest omnisharp-stop-server-calls-correct-api ()
+  (with-mock
+    (let ((omnisharp-host "host/"))
+      (mock (omnisharp-post-message-curl-async "host/stopserver" * *))
+      (omnisharp-stop-server))))
+
+(ert-deftest omnisharp--convert-auto-complete-json-to-popup-format-shows-correct-data ()
+  (let* ((description "Verbosity Verbose; - description")
+         (completion-text "Verbose - completion text")
+         (auto-completions
+          `[((Snippet . "Verbose$0")
+             (ReturnType . "OmniSharp.Verbosity")
+             (MethodHeader . nil)
+             (RequiredNamespaceImport . nil)
+             (DisplayText . "Verbosity Verbose - display text")
+             (Description . ,description)
+             (CompletionText . ,completion-text))])
+         (converted-popup-item
+          (nth 0
+               (omnisharp--convert-auto-complete-json-to-popup-format
+                auto-completions))))
+
+    (should (equal description (popup-item-document converted-popup-item)))
+    (should (equal completion-text (popup-item-value converted-popup-item)))
+    ;; TODO figure out how to verify popup item DisplayText.
+    ;; An item looked like this:
+    ;; #("Verbosity Verbose - display text" 0 32 (document "Verbosity Verbose; - description" value "Verbose - completion text"))
+    ))
