@@ -267,4 +267,30 @@ moving point."
       t
     :json-false))
 
+(defun omnisharp--server-process-sentinel (process event)
+  (if (string-match "^exited abnormally" event)
+      (error (concat "OmniSharp server process " event))))
+
+(defun omnisharp--valid-solution-path-p (path-to-solution)
+  (or (string= (file-name-extension path-to-solution) "sln")
+      (file-directory-p path-to-solution)))
+
+(defun omnisharp--get-omnisharp-server-executable-command
+  (solution-file-path &optional server-exe-file-path)
+  (let* ((server-exe-file-path-arg (expand-file-name 
+				    (if (eq nil server-exe-file-path)
+					omnisharp-server-executable-path
+				      server-exe-file-path)))
+	 (solution-file-path-arg (expand-file-name solution-file-path))
+	 (args (list server-exe-file-path-arg
+		     "-s"
+		     solution-file-path-arg)))
+    (cond
+     ((or (equal system-type 'cygwin) ;; No mono needed on cygwin
+	  (equal system-type 'windows-nt))
+      args)
+     (t ; some kind of unix: linux or osx
+      (cons "mono" args)))))
+
+
 (provide 'omnisharp-utils)

@@ -30,7 +30,9 @@
 (require 'flycheck)
 
 (add-to-list 'load-path (expand-file-name "./src/"))
+(add-to-list 'load-path (expand-file-name "./src/actions/"))
 (require 'omnisharp-utils)
+(require 'omnisharp-server-actions)
 
 (defgroup omnisharp ()
   "Omnisharp-emacs is a port of the awesome OmniSharp server to
@@ -237,19 +239,6 @@ server backend."
       (make-local-variable 'eldoc-documentation-function)
       (setq eldoc-documentation-function 'omnisharp-eldoc-function))))
 
-(defun omnisharp--start-omnisharp-server-for-solution-in-parent-directory ()
-  (unless (omnisharp--check-alive-status-worker)
-    (-let [(directory file . rest) (omnisharp--find-solution-files)]
-      (when directory
-	(omnisharp-start-omnisharp-server
-	 (if (null rest) ; only one solution found
-	     (concat directory file)
-	   (read-file-name "Select solution for current file: "
-			   directory
-			   nil
-			   t
-			   file)))))))
-
 (easy-menu-define omnisharp-mode-menu omnisharp-mode-map
   "Menu for omnisharp-mode"
   '("OmniSharp"
@@ -316,17 +305,6 @@ solution files were found."
 	   (setq solutions (cons (file-name-as-directory file)
 				 dir-files))))))
     solutions))
-
-(defun omnisharp-reload-solution ()
-  "Reload the current solution."
-  (interactive)
-  (message (concat "Reloading the server. Calls to the server will not"
-                   " work until the server has reloaded."))
-  (omnisharp-post-message-curl-async
-    (omnisharp--get-api-url "reloadsolution")
-    nil ; no params needed
-    (lambda (_)
-      (message "OmniSharpServer solution reloaded"))))
 
 (defun omnisharp-go-to-definition (&optional other-window)
   "Jump to the definition of the symbol under point. With prefix
@@ -527,15 +505,6 @@ renames require interactive confirmation from the user."
     ;; Keep point in the buffer that initialized the rename so that
     ;; the user deos not feel disoriented
     (omnisharp-go-to-file-line-and-column location-before-rename)))
-
-(defun omnisharp-stop-server ()
-  "Stop the current omnisharp instance."
-  (interactive)
-  (omnisharp-post-message-curl-async
-    (concat (omnisharp-get-host) "stopserver")
-    nil
-    (lambda (_)
-      (message "OmniSharpServer stopped."))))
 
 ;; TODO create omnisharp-add-to-solution that lets user choose which
 ;; file to add.
@@ -1949,102 +1918,6 @@ result."
             (omnisharp--eldoc-default))))
     (error nil
            (omnisharp--eldoc-default))))
-
-;; define a method to nicely start the server
-;;;###autoload
-(defun omnisharp-start-omnisharp-server (path-to-solution)
-  "Starts an OmniSharpServer for a given path to a solution file or a directory"
-   (interactive
-    (list
-     (-let [(directory filename . rest) (omnisharp--find-solution-files)]
-       (read-file-name "Start OmniSharpServer.exe for solution: "
-		       directory
-		       nil
-		       t
-		       filename))))
-  (setq BufferName "*Omni-Server*")
-  (omnisharp--find-and-cache-omnisharp-server-executable-path)
-  (if (equal nil omnisharp-server-executable-path)
-      (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
-    (if (omnisharp--valid-solution-path-p path-to-solution)
-        (progn
-          (if (string= (file-name-extension path-to-solution) "sln")
-              (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
-            (message (format "Starting OmniSharpServer using folder mode in: %s" path-to-solution)))
-          (when (not (eq nil (get-buffer BufferName)))
-            (kill-buffer BufferName))
-          (let ((process (apply
-                          'start-process
-                          "Omni-Server"
-                          (get-buffer-create BufferName)
-                          (omnisharp--get-omnisharp-server-executable-command path-to-solution))))
-            (set-process-sentinel process 'omnisharp--server-process-sentinel)
-            (unless omnisharp-debug ;; ignore process output if debug flag not set
-              (set-process-filter process (lambda (process string))))))
-      (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
-
-(defun omnisharp--valid-solution-path-p (path-to-solution)
-  (or (string= (file-name-extension path-to-solution) "sln")
-      (file-directory-p path-to-solution)))
-
-(defun omnisharp--server-process-sentinel (process event)
-  (if (string-match "^exited abnormally" event)
-      (error (concat "OmniSharp server process " event))))
-
-(defun omnisharp--find-and-cache-omnisharp-server-executable-path ()
-  "Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
-  (when (equal nil omnisharp-server-executable-path)
-    (setq omnisharp-server-executable-path (executable-find "OmniSharp"))))
-
-(defun omnisharp--get-omnisharp-server-executable-command
-  (solution-file-path &optional server-exe-file-path)
-  (let* ((server-exe-file-path-arg (expand-file-name 
-				    (if (eq nil server-exe-file-path)
-					omnisharp-server-executable-path
-				      server-exe-file-path)))
-	 (solution-file-path-arg (expand-file-name solution-file-path))
-	 (args (list server-exe-file-path-arg
-		     "-s"
-		     solution-file-path-arg)))
-    (cond
-     ((or (equal system-type 'cygwin) ;; No mono needed on cygwin
-	  (equal system-type 'windows-nt))
-      args)
-     (t ; some kind of unix: linux or osx
-      (cons "mono" args)))))
-
-;;;###autoload
-(defun omnisharp-check-alive-status ()
-  "Shows a message to the user describing whether the
-OmniSharpServer process specified in the current configuration is
-alive.
-\"Alive\" means it is running and not stuck. It also means the connection
-to the server is functional - I.e. The user has the correct host and
-port specified."
-  (interactive)
-  (if (omnisharp--check-alive-status-worker)
-      (message "Server is alive and well. Happy coding!")
-    (message "Server is not alive")))
-
-(defun omnisharp--check-alive-status-worker ()
-  (let ((result (omnisharp-post-message-curl-as-json
-		 (concat (omnisharp-get-host) "checkalivestatus"))))
-    (eq result t)))
-
-;;;###autoload
-(defun omnisharp-check-ready-status ()
-  "Shows a message to the user describing whether the
-OmniSharpServer process specified in the current configuration has
-finished loading the solution."
-  (interactive)
-  (if (omnisharp--check-ready-status-worker)
-      (message "Server is ready")
-    (message "Server is not ready yet")))
-
-(defun omnisharp--check-ready-status-worker ()
-  (let ((result (omnisharp-post-message-curl-as-json
-		 (concat (omnisharp-get-host) "checkreadystatus"))))
-    (eq result t)))
 
 ;;;###autoload
 (defun omnisharp-fix-code-issue-at-point ()
