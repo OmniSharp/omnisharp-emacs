@@ -19,5 +19,5 @@ before_script:
     - cask
     
 script:
-    ./run-integration-tests.sh
     ./run-tests.sh
+    ./run-integration-tests.sh
