@@ -31,6 +31,7 @@
 
 (add-to-list 'load-path (expand-file-name "./src/"))
 (add-to-list 'load-path (expand-file-name "./src/actions/"))
+
 (require 'omnisharp-utils)
 (require 'omnisharp-server-actions)
 (require 'omnisharp-auto-complete-actions)
@@ -49,9 +50,6 @@ instance that works in the background."
   :group 'omnisharp
   :type 'string)
 
-(defvar omnisharp-auto-complete-popup-want-isearch t
-  "Whether to automatically start isearch when auto-completing.")
-
 (defvar omnisharp--find-usages-buffer-name "* OmniSharp : Usages *"
   "The name of the temporary buffer that is used to display the
 results of a 'find usages' call.")
@@ -66,65 +64,6 @@ results of a 'find implementations' call.")
 (defvar omnisharp--ambiguous-symbols-buffer-name "* OmniSharp : Ambiguous unresolved symbols *"
   "The name of the temporary buffer that is used to display any 
 ambiguous unresolved symbols of a 'fix usings' call.")
-
-(defvar omnisharp--last-auto-complete-result-buffer-name
-  "* OmniSharp : Last auto-complete result *"
-  "The name of the temporary buffer that is used to display the
-results of an auto-complete call.")
-
-(defvar omnisharp--last-auto-complete-result-buffer-header
-  (concat
-   "Last auto-complete result:"
-   "\n\n")
-  "The header for the temporary buffer that is used to display the
-results of an auto-complete call.")
-
-(defcustom omnisharp-auto-complete-popup-help-delay nil
-  "The timeout after which the auto-complete popup will show its help
-  popup. Disabled by default because the help is often scrambled and
-  looks bad."
-  :group 'omnisharp
-  :type '(choice (const :tag "disabled" nil)
-                 integer))
-
-(defcustom omnisharp-auto-complete-popup-persist-help t
-  "Whether to keep the help window (accessed by pressing f1 while the
-popup window is active) open after any other key is
-pressed. Defaults to true."
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-(defvar-local
-  omnisharp--last-buffer-specific-auto-complete-result
-  nil
-  "Contains the last result of an autocomplete query.")
-
-(defcustom omnisharp-auto-complete-want-documentation t
-  "Whether to include auto-complete documentation for each and every
-response. This may be set to nil to get a speed boost for
-completions."
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-(defcustom omnisharp-auto-complete-want-importable-types nil
-  "Whether to search for autocompletions in all available
-namespaces. If a match is found for a new namespace, the namespace is
-automatically imported. This variable may be set to nil to get a speed
-boost for completions."
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-		 (const :tag "No" nil)))
-
-(defvar omnisharp-auto-complete-popup-keymap
-  (let ((keymap (make-sparse-keymap)))
-    (set-keymap-parent keymap popup-menu-keymap)
-
-    (define-key keymap (kbd "<f2>") 'omnisharp--popup-to-ido)
-    keymap)
-  "The keymap used when displaying an autocomplete result in a popup
-menu.")
 
 (defvar omnisharp-find-usages-header
   (concat "Usages in the current solution:"
@@ -145,32 +84,6 @@ options for fixing them."
           "\n\n")
   "This is shown at the top of the result buffer when
 there are ambiguous unresolved symbols after running omnisharp-fix-usings")
-
-(defvar omnisharp--auto-complete-display-backend
-  'popup
-  "Defines what auto-complete result displaying backend to use when
-showing autocomplete results to the user. Valid values are found in
-omnisharp--auto-complete-display-backends-alist.")
-
-(defvar omnisharp--auto-complete-display-backends-alist
-  '((popup . omnisharp--auto-complete-display-function-popup)
-    (ido . omnisharp--auto-complete-display-function-ido))
-  "Holds an alist of all available auto-complete display backends.
-See the documentation for the variable
-omnisharp--auto-complete-display-backend for more information.")
-
-(defvar omnisharp--show-last-auto-complete-result-frontend
-  'plain-buffer
-  "Defines the function that is used for displaying the last
-auto-complete result with various functions. Valid values are found in
-omnisharp--auto-complete-display-backends-alist.")
-
-(defvar omnisharp--show-last-auto-complete-result-frontends-alist
-  '((plain-buffer . omnisharp--show-last-auto-complete-result-in-plain-buffer))
-  "Holds an alist of all available frontends for displaying the last
-auto-complete result.  See the documentation for the variable
-omnisharp--show-last-auto-complete-result-frontend for more
-information.")
 
 (defcustom omnisharp-code-format-expand-tab t
   "Whether to expand tabs to spaces in code format requests."
@@ -722,125 +635,6 @@ Returns the curl process"
                            output))))))
     process))
 
-(defun omnisharp--auto-complete-display-function-popup
-  (json-result-alist)
-  "Gets an association list such as this:
- (((DisplayText    . \"Gender\")
-   (Description    . \"int Gender { get; set; }\")
-   (CompletionText . \"Gender\")))
-
-Displays a popup.el popup menu, and inserts the chosen element in the
-current buffer."
-  (if (equalp 0 (length json-result-alist))
-      (progn (message "No completions.")
-             nil)
-
-    (setq json-result-alist
-          (omnisharp--vector-to-list json-result-alist))
-    (let* ((display-list
-            (omnisharp--convert-auto-complete-json-to-popup-format
-             json-result-alist))
-
-           (completion-texts
-            (mapcar 'omnisharp--completion-result-item-get-display-text
-                    json-result-alist))
-
-           (max-width (omnisharp--get-max-item-length
-                       completion-texts))
-           (result-completion-text
-            (popup-menu* display-list
-                         :width max-width
-                         :keymap omnisharp-auto-complete-popup-keymap
-                         :margin-left 1
-                         :margin-right 1
-                         :scroll-bar t
-                         :isearch
-                         omnisharp-auto-complete-popup-want-isearch
-                         :help-delay
-                         omnisharp-auto-complete-popup-help-delay))
-
-           ;; A performance improvement may be gained here by using
-           ;; hashtables if this seems too slow.
-           ;;
-           ;; Get the full item so we can then get the
-           ;; RequiredNamespaceImport value from it
-           (completed-item
-            (-first (lambda (a)
-                      (equal result-completion-text
-                             (cdr (assoc 'CompletionText a))))
-                    json-result-alist))
-           (required-namespace-import
-            (cdr (assoc 'RequiredNamespaceImport
-                        completed-item))))
-
-      (omnisharp--replace-symbol-in-buffer-with
-       (omnisharp--current-word-or-empty-string)
-       result-completion-text)
-
-      (when required-namespace-import
-        (omnisharp--insert-namespace-import required-namespace-import)))))
-
-(defun omnisharp--auto-complete-display-function-ido
-  (json-result-alist)
-  "Use ido style completion matching with autocomplete candidates. Ido
-is a more sophisticated matching framework than what popup.el offers."
-
-  (if (equalp 0 (length json-result-alist))
-      (progn (message "No completions.")
-             nil)
-
-    (let* ((candidates (omnisharp--vector-to-list json-result-alist))
-
-           (display-texts
-            (mapcar 'omnisharp--completion-result-item-get-display-text
-                    candidates))
-
-           ;; This is only the display text. The text to be inserted
-           ;; in the buffer will be fetched with this
-           ;;
-           ;; TODO does ido-completing-read allow a custom format that
-           ;; could store these, as with popup-make-item ?
-           (user-chosen-display-text
-            (ido-completing-read
-             "Complete: "
-             display-texts))
-
-           ;; Get the chosen candidate by getting the index of the
-           ;; chosen DisplayText. The candidate with the same index is
-           ;; the one we want.
-           (json-result-element-index-with-user-chosen-text
-            (position-if (lambda (element)
-                           (equal element
-                                  user-chosen-display-text))
-                         display-texts))
-           (chosen-candidate
-            (nth json-result-element-index-with-user-chosen-text
-                 candidates))
-
-           (completion-text-to-insert
-            (cdr (assoc 'CompletionText
-                        chosen-candidate)))
-           (required-namespace-import
-            (cdr (assoc 'RequiredNamespaceImport
-                        chosen-candidate))))
-
-      (omnisharp--replace-symbol-in-buffer-with
-       (omnisharp--current-word-or-empty-string)
-       completion-text-to-insert)
-
-      (when required-namespace-import
-        (omnisharp--insert-namespace-import required-namespace-import)))))
-
-(defun omnisharp--convert-auto-complete-json-to-popup-format
-  (json-result-alist)
-  (mapcar
-   (-lambda ((&alist 'DisplayText display-text
-                     'CompletionText completion-text
-                     'Description description))
-            (popup-make-item display-text
-                             :value completion-text
-                             :document description))
-   json-result-alist))
 
 (defun omnisharp--completion-result-item-get-completion-text (item)
   (cdr (assoc 'CompletionText item)))
