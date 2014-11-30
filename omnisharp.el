@@ -49,12 +49,6 @@ instance that works in the background."
   :group 'omnisharp
   :type 'string)
 
-(defcustom omnisharp-timeout 1
-  "Timeout, in seconds, after which to abort stalling queries to the
-OmniSharp server."
-  :group 'omnisharp
-  :type 'integer)
-
 (defvar omnisharp-auto-complete-popup-want-isearch t
   "Whether to automatically start isearch when auto-completing.")
 
@@ -837,7 +831,6 @@ is a more sophisticated matching framework than what popup.el offers."
       (when required-namespace-import
         (omnisharp--insert-namespace-import required-namespace-import)))))
 
-;; TODO Use a plist. This is ridiculous.
 (defun omnisharp--convert-auto-complete-json-to-popup-format
   (json-result-alist)
   (mapcar
