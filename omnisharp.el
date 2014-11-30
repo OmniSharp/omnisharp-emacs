@@ -341,7 +341,7 @@ its only argument."
   (omnisharp-post-message-curl-as-json-async
    (concat (omnisharp-get-host) "findusages")
    request
-   (-lambda ((&list 'QuickFixes quickfixes))
+   (-lambda ((&alist 'QuickFixes quickfixes))
             (apply callback (list (omnisharp--vector-to-list quickfixes))))))
 
 (defun omnisharp--find-usages-show-response (quickfixes)
@@ -841,7 +841,7 @@ is a more sophisticated matching framework than what popup.el offers."
 (defun omnisharp--convert-auto-complete-json-to-popup-format
   (json-result-alist)
   (mapcar
-   (-lambda ((&list 'DisplayText display-text
+   (-lambda ((&alist 'DisplayText display-text
                      'CompletionText completion-text
                      'Description description))
             (popup-make-item display-text
