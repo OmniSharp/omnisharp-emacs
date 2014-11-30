@@ -126,7 +126,7 @@ the OmniSharp server understands."
 
 (defun omnisharp--buffer-exists-for-file-name (file-name)
   (let ((all-open-buffers-list
-         (-map 'buffer-file-name (buffer-list))))
+         (-map 'buffer-file-name (-non-nil (buffer-list)))))
     (--any? (string-equal file-name it)
             all-open-buffers-list)))
 
