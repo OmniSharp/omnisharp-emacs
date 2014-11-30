@@ -1,4 +1,8 @@
 
+;; Path to the server
+(defcustom omnisharp-server-executable-path nil
+  "Path to OmniSharpServer. If its value is nil, search for the server in the exec-path")
+
 (defun omnisharp--start-omnisharp-server-for-solution-in-parent-directory ()
   (unless (omnisharp--check-alive-status-worker)
     (-let [(directory file . rest) (omnisharp--find-solution-files)]
