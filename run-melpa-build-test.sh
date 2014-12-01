@@ -11,16 +11,16 @@ fi
 
 git clone https://github.com/milkypostman/melpa
 
+# Custom recipe that uses the melpa-testing branch instead of the
+# usual develop, to showcase a minimal broken setup.
+cp ./melpa-testing.recipe melpa/recipes/omnisharp
+
 cd melpa
 git pull
 make clean
 make recipes/omnisharp
 
 cd ..
-
-# Custom recipe that uses the melpa-testing branch instead of the
-# usual develop, to showcase a minimal broken setup.
-cp ./melpa-testing.recipe melpa/recipes/omnisharp
 
 # No cask here. Use a fresh emacs so installation is as natural as possible
 emacs -Q \
