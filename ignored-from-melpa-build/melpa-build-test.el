@@ -11,7 +11,7 @@
 (package-refresh-contents)
 
 (let ((file (expand-file-name
-             (car (file-expand-wildcards "../melpa/packages/omnisharp-*.tar")))))
+             (car (file-expand-wildcards "melpa/packages/omnisharp-*.tar")))))
   (message "installing file %s" file)
   (package-install-file file))
 

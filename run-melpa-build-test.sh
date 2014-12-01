@@ -16,7 +16,6 @@ git clone https://github.com/milkypostman/melpa
 cp ./melpa-testing.recipe melpa/recipes/omnisharp
 
 cd melpa
-git pull
 make clean
 make recipes/omnisharp
 
