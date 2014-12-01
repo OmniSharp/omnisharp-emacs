@@ -11,4 +11,11 @@ cd melpa
 git pull
 make clean
 make recipes/omnisharp
-emacs -Q --script ../ignored-from-melpa-build/melpa-build-test.el
+
+cd ..
+
+# No cask here. Use a fresh emacs so installation is as natural as possible
+emacs -Q \
+    --eval '(setq user-emacs-directory "./sandbox")' \
+    -l package \
+    --script ignored-from-melpa-build/melpa-build-test.el
