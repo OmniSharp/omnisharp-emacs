@@ -4,7 +4,7 @@
 ;; Author: Mika Vilpas
 ;; Version: 3.4
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
-;; Package-Requires: ((json "1.2") (dash "2.4.0") (popup "0.5.1") (auto-complete "1.4") (flycheck "0.21") (csharp-mode "0.8.7"))
+;; Package-Requires: ((json "1.2") (flycheck "0.21") (dash "2.4.0") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
 
 ;;; Commentary:
