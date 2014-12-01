@@ -1,3 +1,11 @@
+(require 'popup)
+(require 'dash)
+
+(funcall
+ (-lambda ((&alist 'Foo display-text))
+          display-text)
+ '((Foo . 3)))
+
 (defvar omnisharp-auto-complete-popup-want-isearch t
   "Whether to automatically start isearch when auto-completing.")
 
@@ -623,8 +631,7 @@ is a more sophisticated matching framework than what popup.el offers."
       (when required-namespace-import
         (omnisharp--insert-namespace-import required-namespace-import)))))
 
-(defun omnisharp--convert-auto-complete-json-to-popup-format
-  (json-result-alist)
+(defun omnisharp--convert-auto-complete-json-to-popup-format (json-result-alist)
   (mapcar
    (-lambda ((&alist 'DisplayText display-text
                      'CompletionText completion-text
