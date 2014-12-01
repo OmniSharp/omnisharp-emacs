@@ -5,6 +5,10 @@
 # case we should update dependency versions and/or file issues to the
 # relative projects.
 
+if [ -d melpa ]; then
+    rm -rf melpa
+fi
+
 git clone https://github.com/milkypostman/melpa
 
 cd melpa
@@ -13,6 +17,10 @@ make clean
 make recipes/omnisharp
 
 cd ..
+
+# Custom recipe that uses the melpa-testing branch instead of the
+# usual develop, to showcase a minimal broken setup.
+cp ./melpa-testing.recipe melpa/recipes/omnisharp
 
 # No cask here. Use a fresh emacs so installation is as natural as possible
 emacs -Q \
