@@ -13,7 +13,15 @@ git clone https://github.com/milkypostman/melpa
 
 # Custom recipe that uses the melpa-testing branch instead of the
 # usual develop, to showcase a minimal broken setup.
-cp ./melpa-testing.recipe melpa/recipes/omnisharp
+recipeFile=./melpa-testing.recipe
+if [ $TRAVIS_BRANCH ]; then
+    echo "Running build for travis branch: $TRAVIS_BRANCH"
+    sed --in-place 's/:branch "develop"/:branch "$TRAVIS_BRANCH"/' $recipeFile
+else
+    echo "Running build for travis branch: develop"
+fi
+
+cp $recipeFile ./melpa-testing.recipe melpa/recipes/omnisharp
 
 cd melpa
 make clean

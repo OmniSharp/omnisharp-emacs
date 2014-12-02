@@ -1,6 +1,10 @@
 (require 'package)
 (require 'files)
 
+(let ((travis-branch (getenv "TRAVIS_BRANCH")))
+  (print "Current branch")
+  (print (or travis-branch "develop")))
+
 ;; should be run in the repo root directory
 
 (setq package-archives
