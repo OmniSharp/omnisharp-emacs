@@ -19,4 +19,4 @@ before_script:
     - cask
     
 script:
-    ./run-entire-melpa-build.sh
+    ./run-entire-travis-build.sh
