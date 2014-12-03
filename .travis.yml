@@ -19,5 +19,4 @@ before_script:
     - cask
     
 script:
-    ./run-integration-tests.sh
-    ./run-tests.sh
+    ./run-entire-travis-build.sh
