@@ -867,10 +867,7 @@ If not on windows, returns COMMAND unchanged."
   (if (equal system-type 'windows-nt)
       ;; Compiler path fix. C:\Path is interpreted as C:Path
       (omnisharp--convert-backslashes-to-forward-slashes
-       ;; Compiler parameter fix. Emacs thinks "/m" refers to the path
-       ;; /m - that is, (root)/m
-       (omnisharp--convert-slashes-to-double-slashes
-        command))
+       command)
 
     ;; Not on windows. Do not change.
     command))
