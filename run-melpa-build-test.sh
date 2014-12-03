@@ -1,4 +1,6 @@
-#! /bin/sh
+#! /bin/bash -e
+set -o pipefail
+
 # Tests that the program can be installed without an error from melpa.
 # 
 # Will break if dependencies are not configured correctly, in which
@@ -14,14 +16,21 @@ git clone https://github.com/milkypostman/melpa
 # Custom recipe that uses the melpa-testing branch instead of the
 # usual develop, to showcase a minimal broken setup.
 recipeFile=./melpa-testing.recipe
+git checkout -- $recipeFile
+
 if [ $TRAVIS_BRANCH ]; then
     echo "Running build for travis branch: $TRAVIS_BRANCH"
-    sed --in-place 's/:branch "develop"/:branch "$TRAVIS_BRANCH"/' $recipeFile
+    sed --in-place 's/:branch "develop"/:branch "'$TRAVIS_BRANCH'"/' $recipeFile
 else
-    echo "Running build for travis branch: develop"
+    gitCurrentBranch="$(git rev-parse --abbrev-ref HEAD)"
+    echo "Running build for non-travis branch:" $gitCurrentBranch
+    sed --in-place 's/:branch "develop"/:branch "'$gitCurrentBranch'"/' $recipeFile
 fi
 
-cp $recipeFile ./melpa-testing.recipe melpa/recipes/omnisharp
+echo ""
+cat $recipeFile
+
+cp $recipeFile ./melpa/recipes/omnisharp
 
 cd melpa
 make clean

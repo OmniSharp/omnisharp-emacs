@@ -3,7 +3,7 @@
 
 (let ((travis-branch (getenv "TRAVIS_BRANCH")))
   (print "Current branch")
-  (print (or travis-branch "develop")))
+  (print (shell-command-to-string "git rev-parse --abbrev-ref HEAD")))
 
 ;; should be run in the repo root directory
 
@@ -17,5 +17,3 @@
              (car (file-expand-wildcards "melpa/packages/omnisharp-*.tar")))))
   (message "installing file %s" file)
   (package-install-file file))
-
-
