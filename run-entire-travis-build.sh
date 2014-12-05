@@ -10,6 +10,9 @@ assertTestPasses() {
     eval $1
 }
 
+# https://github.com/cask/cask/issues/241
+find .cask -name "*.elc" | xargs rm
+
 assertTestPasses "./run-tests.sh"
 assertTestPasses "./run-integration-tests.sh"
 assertTestPasses "./run-melpa-build-test.sh"
