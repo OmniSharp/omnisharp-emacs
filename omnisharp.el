@@ -127,9 +127,9 @@ server backend."
   (omnisharp--start-omnisharp-server-for-solution-in-parent-directory)
 
   ;; These are selected automatically when flycheck is enabled
-  (--each '('csharp-omnisharp-curl
-            'csharp-omnisharp-curl-code-issues
-            'csharp-omnisharp-curl-semantic-errors)
+  (--each '(csharp-omnisharp-curl
+            csharp-omnisharp-curl-code-issues
+            csharp-omnisharp-curl-semantic-errors)
 
     (add-to-list 'flycheck-checkers it)))
 
