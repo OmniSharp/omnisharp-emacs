@@ -246,7 +246,7 @@ triggers a completion immediately"
 
 (defun company-omnisharp (command &optional arg &rest ignored)
   "`company-mode' completion back-end using OmniSharp."
-  (case command
+  (cl-case command
     (prefix (and omnisharp-mode
                  (not (company-in-string-or-comment))
                  (omnisharp-company--prefix)))
@@ -523,7 +523,7 @@ result."
 
 Displays a popup.el popup menu, and inserts the chosen element in the
 current buffer."
-  (if (equalp 0 (length json-result-alist))
+  (if (eql 0 (length json-result-alist))
       (progn (message "No completions.")
              nil)
 
@@ -577,7 +577,7 @@ current buffer."
   "Use ido style completion matching with autocomplete candidates. Ido
 is a more sophisticated matching framework than what popup.el offers."
 
-  (if (equalp 0 (length json-result-alist))
+  (if (eql 0 (length json-result-alist))
       (progn (message "No completions.")
              nil)
 
@@ -601,10 +601,10 @@ is a more sophisticated matching framework than what popup.el offers."
            ;; chosen DisplayText. The candidate with the same index is
            ;; the one we want.
            (json-result-element-index-with-user-chosen-text
-            (position-if (lambda (element)
-                           (equal element
-                                  user-chosen-display-text))
-                         display-texts))
+            (cl-position-if (lambda (element)
+                              (equal element
+                                     user-chosen-display-text))
+                            display-texts))
            (chosen-candidate
             (nth json-result-element-index-with-user-chosen-text
                  candidates))

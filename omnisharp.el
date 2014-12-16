@@ -4,7 +4,7 @@
 ;; Author: Mika Vilpas
 ;; Version: 3.4
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
-;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.19") (csharp-mode "0.8.7"))
+;; Package-Requires: ((json "1.2") (dash "1.8.0") (popup "0.5") (auto-complete "1.4") (flycheck "0.19") (csharp-mode "0.8.7") (cl-lib "0.5"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
 
 ;;; Commentary:
@@ -17,8 +17,7 @@
 
 ;; Work in progress! Judge gently!
 (require 'json)
-(with-no-warnings
-  (require 'cl))
+(require 'cl-lib)
 (require 'files)
 (require 'ido)
 (require 'thingatpt)
@@ -273,7 +272,7 @@ to select one (or more) to jump to."
 
             ;; Go directly to the implementation if there only is one
             ((equal 1 (length quickfixes))
-             (omnisharp-go-to-file-line-and-column (first quickfixes)))
+             (omnisharp-go-to-file-line-and-column (car quickfixes)))
 
             (t
              (omnisharp--write-quickfixes-to-compilation-buffer
@@ -516,7 +515,7 @@ user is less likely to lose data."
                                actions-list
                                t))
                (chosen-action-index
-                (position chosen-action actions-list)))
+                (cl-position chosen-action actions-list)))
 
           (omnisharp-run-code-action-refactoring-worker
            chosen-action-index))))))
@@ -655,7 +654,7 @@ Returns the curl process"
   "Returns the length of the longest completion in 'completions'."
   (if (null completions)
       0
-    (reduce 'max (mapcar 'length completions))))
+    (cl-reduce 'max (mapcar 'length completions))))
 
 (defun omnisharp--get-common-params ()
   "Get common parameters used in the base request class Request."
@@ -1113,9 +1112,9 @@ ido-completing-read. Returns the chosen element."
            ;; scenario.
            quickfix-choices))
          (chosen-quickfix-index
-          (position-if (lambda (quickfix-text)
-                         (equal quickfix-text chosen-quickfix-text))
-                       quickfix-choices)))
+          (cl-position-if (lambda (quickfix-text)
+                            (equal quickfix-text chosen-quickfix-text))
+                          quickfix-choices)))
     (nth chosen-quickfix-index quickfixes)))
 
 (defun omnisharp-navigate-to-type-in-current-file ()
