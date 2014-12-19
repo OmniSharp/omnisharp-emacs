@@ -1,11 +1,6 @@
 (require 'popup)
 (require 'dash)
 
-(funcall
- (-lambda ((&alist 'Foo display-text))
-          display-text)
- '((Foo . 3)))
-
 (defvar omnisharp-auto-complete-popup-want-isearch t
   "Whether to automatically start isearch when auto-completing.")
 
