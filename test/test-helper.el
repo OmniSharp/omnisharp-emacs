@@ -4,6 +4,7 @@
 (require 'ert)
 (require 'ert-async)
 (require 's)
+(require 'cl)
 
 ;; these are run in the omnisharp source code root directory
 (add-to-list 'load-path (expand-file-name "./"))
