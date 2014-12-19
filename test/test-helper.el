@@ -11,4 +11,5 @@
 (require 'omnisharp)
 (require 'evil) ; some tests test evil functionality specifically
 (require 'el-mock)
+(require 'noflet)
 

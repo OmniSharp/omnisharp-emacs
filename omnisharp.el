@@ -191,9 +191,9 @@ server backend."
      ["Fix code issue at point" omnisharp-fix-code-issue-at-point])
 
     ("Unit tests"
-     ["Run test at point" (lambda() (interactive) (omnisharp-unit-test "single"))]
-     ["Run test fixture" (lambda() (interactive) (omnisharp-unit-test "fixture"))]
-     ["Run all tests in project" (lambda() (interactive) (omnisharp-unit-test "all"))])
+     ["Run test at point" omnisharp-unit-test-single]
+     ["Run test fixture" omnisharp-unit-test-fixture]
+     ["Run all tests in project" omnisharp-unit-test-all])
 
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
     ["Run code format on current buffer" omnisharp-code-format]
@@ -1301,9 +1301,20 @@ contents with the issue at point fixed."
 (add-to-list 'compilation-error-regexp-alist
              '(" in \\(.+\\):line \\([0-9]+\\)" 1 2))
 
-(defun omnisharp-unit-test (mode)
-  "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'" 
+(defun omnisharp-unit-test-single ()
   (interactive)
+  (omnisharp-unit-test-worker "single"))
+
+(defun omnisharp-unit-test-fixture ()
+  (interactive)
+  (omnisharp-unit-test-worker "fixture"))
+
+(defun omnisharp-unit-test-all ()
+  (interactive)
+  (omnisharp-unit-test-worker "all"))
+
+(defun omnisharp-unit-test-worker (mode)
+  "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'" 
   (let ((build-command
          (omnisharp--fix-build-command-if-on-windows
           (omnisharp-get-build-command)))
@@ -1313,7 +1324,8 @@ contents with the issue at point fixed."
           (cdr (assoc 'TestCommand
                       (omnisharp-post-message-curl-as-json
                        (concat (omnisharp-get-host) "gettestcontext") 
-                       (cons `("Type" . ,mode) (omnisharp--get-common-params))))))))
+                       (cons `("Type" . ,mode)
+                             (omnisharp--get-common-params))))))))
 
     (compile build-command)
     ;; User can answer yes straight away if they don't want to
