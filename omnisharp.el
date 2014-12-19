@@ -1124,8 +1124,7 @@ ido-completing-read. Returns the chosen element."
          (omnisharp-post-message-curl-as-json
           (concat (omnisharp-get-host) "currentfiletopleveltypes")
           request)))
-    (omnisharp--choose-and-go-to-quickfix-ido
-     quickfixes)))
+    (omnisharp--choose-and-go-to-quickfix-ido quickfixes)))
 
 ;; No need for a worker pattern since findsymbols takes no arguments
 (defun omnisharp-navigate-to-solution-member
