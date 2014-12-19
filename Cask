@@ -3,6 +3,7 @@
 (package-file "omnisharp.el")
 
 (development
+ (depends-on "cl-lib")
  (depends-on "ecukes")
  (depends-on "ert-async")
  (depends-on "noflet")
