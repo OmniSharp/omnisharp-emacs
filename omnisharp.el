@@ -199,20 +199,6 @@ server backend."
     ["Run code format on current buffer" omnisharp-code-format]
     ["Fix using statements" omnisharp-fix-usings]))
 
-(defun omnisharp--find-solution-files ()
-  "Find solution files in parent directories. Returns a list
-containing the directory and matching filenames, or nil if no
-solution files were found."
-  (let ((solutions nil))
-    (when buffer-file-name
-      (locate-dominating-file
-       (file-name-directory buffer-file-name)
-       (lambda (file)
-	 (-when-let (dir-files (directory-files file nil "\\.sln$"))
-	   (setq solutions (cons (file-name-as-directory file)
-				 dir-files))))))
-    solutions))
-
 (defun omnisharp-go-to-definition (&optional other-window)
   "Jump to the definition of the symbol under point. With prefix
 argument, use another window."

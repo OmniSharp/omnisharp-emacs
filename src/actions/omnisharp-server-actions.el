@@ -3,6 +3,20 @@
 (defcustom omnisharp-server-executable-path nil
   "Path to OmniSharpServer. If its value is nil, search for the server in the exec-path")
 
+(defun omnisharp--find-solution-files ()
+  "Find solution files in parent directories. Returns a list
+containing the directory and matching filenames, or nil if no
+solution files were found."
+  (let ((solutions nil))
+    (when buffer-file-name
+      (locate-dominating-file
+       (file-name-directory buffer-file-name)
+       (lambda (file)
+	 (-when-let (dir-files (directory-files file nil "\\.sln$"))
+	   (setq solutions (cons (file-name-as-directory file)
+				 dir-files))))))
+    solutions))
+
 (defun omnisharp--start-omnisharp-server-for-solution-in-parent-directory ()
   (unless (omnisharp--check-alive-status-worker)
     (-let [(directory file . rest) (omnisharp--find-solution-files)]
