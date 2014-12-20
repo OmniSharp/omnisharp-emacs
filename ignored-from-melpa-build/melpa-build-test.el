@@ -8,7 +8,8 @@
 ;; should be run in the repo root directory
 
 (setq package-archives
-      '(("melpa" . "http://melpa.org/packages/")))
+      '(("melpa" . "http://melpa.org/packages/")
+        ("gnu elpa" . "http://elpa.gnu.org/packages/")))
 
 (package-initialize)
 (package-refresh-contents)
