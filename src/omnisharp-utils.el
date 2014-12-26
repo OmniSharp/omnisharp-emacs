@@ -195,7 +195,7 @@ communicate with the API."
   `(:command
     ,omnisharp--curl-executable-path
     :arguments
-    ("--ipv4" "--silent" "-H" "Content-type: application/json"
+    ("-L" "--ipv4" "--silent" "-H" "Content-type: application/json"
      "--data"
      ,(json-encode params)
      ,url)))
