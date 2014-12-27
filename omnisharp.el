@@ -917,7 +917,7 @@ type errors."
                                         ; flycheck-csharp-omnisharp-curl-executable if it
                                         ; is set
             (eval
-             (omnisharp--get-curl-command-executable-string-for-api-name
+             (omnisharp--get-curl-command-arguments-string-for-api-name
               (omnisharp--get-common-params)
               "syntaxerrors")))
 
@@ -939,7 +939,7 @@ type errors."
 then accept and have fixed automatically."
   :command ("curl"
             (eval
-             (omnisharp--get-curl-command-executable-string-for-api-name
+             (omnisharp--get-curl-command-arguments-string-for-api-name
               (omnisharp--get-common-params)
               "getcodeissues")))
 
@@ -959,7 +959,7 @@ then accept and have fixed automatically."
 compilation."
   :command ("curl"
             (eval
-             (omnisharp--get-curl-command-executable-string-for-api-name
+             (omnisharp--get-curl-command-arguments-string-for-api-name
               (omnisharp--get-common-params)
               "semanticerrors")))
 
