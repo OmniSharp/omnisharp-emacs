@@ -29,8 +29,8 @@
 (require 'etags)
 (require 'flycheck)
 
-(add-to-list 'load-path (expand-file-name "./src/"))
-(add-to-list 'load-path (expand-file-name "./src/actions/"))
+(add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/")))
+(add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/actions")))
 
 (require 'omnisharp-utils)
 (require 'omnisharp-server-actions)
