@@ -247,6 +247,7 @@ triggers a completion immediately"
           symbol)
       'stop)))
 
+;;;###autoload
 (defun company-omnisharp (command &optional arg &rest ignored)
   "`company-mode' completion back-end using OmniSharp."
   (cl-case command
