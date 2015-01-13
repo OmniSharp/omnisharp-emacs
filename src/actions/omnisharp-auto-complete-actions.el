@@ -251,7 +251,7 @@ triggers a completion immediately"
 (defun company-omnisharp (command &optional arg &rest ignored)
   "`company-mode' completion back-end using OmniSharp."
   (cl-case command
-    (prefix (and omnisharp-mode
+    (prefix (bound-and-true-p omnisharp-mode
                  (not (company-in-string-or-comment))
                  (omnisharp-company--prefix)))
 
