@@ -1112,6 +1112,15 @@ ido-completing-read. Returns the chosen element."
           request)))
     (omnisharp--choose-and-go-to-quickfix-ido quickfixes)))
 
+(defun omnisharp-format-symbol (item) 
+  (cons
+   (cons
+    (car (car item))
+    (mapconcat
+     'identity
+     (reverse (delete "in" (split-string (cdr (car item)) "[\t\n ()]" t))) "."))
+   (cdr item)))
+
 ;; No need for a worker pattern since findsymbols takes no arguments
 (defun omnisharp-navigate-to-solution-member
   (&optional other-window)
@@ -1121,8 +1130,9 @@ ido-completing-read. Returns the chosen element."
           (concat (omnisharp-get-host) "findsymbols")
           nil)))
     (omnisharp--choose-and-go-to-quickfix-ido
-     (omnisharp--vector-to-list
-      (cdr (assoc 'QuickFixes quickfix-response)))
+     (mapcar 'omnisharp-format-symbol
+	     (omnisharp--vector-to-list
+	      (cdr (assoc 'QuickFixes quickfix-response))))
      other-window)))
 
 (defun omnisharp-navigate-to-solution-member-other-window ()
