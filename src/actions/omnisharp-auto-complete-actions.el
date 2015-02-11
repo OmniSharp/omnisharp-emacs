@@ -148,6 +148,13 @@ information.")
   :type '(choice (const :tag "Yes" t)
                  (const :tag "No" nil)))
 
+(defcustom omnisharp-company-do-server-matching nil
+  "If t, let the server handle all matching, and disable 
+   prefix matching"
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
 (defun omnisharp-auto-complete (&optional invert-importable-types-setting)
   "If called with a prefix argument, will complete types that are not
 present in the current namespace or imported namespaces, inverting the
@@ -258,7 +265,11 @@ triggers a completion immediately"
     (candidates (omnisharp--get-company-candidates arg))
 
     ;; because "" doesn't return everything
-    (no-cache (equal arg ""))
+    (no-cache (or (equal arg "") omnisharp-company-do-server-matching))
+
+    (match (if omnisharp-company-do-server-matching
+               0
+             nil))
 
     (annotation (omnisharp--company-annotation arg))
 
@@ -399,9 +410,12 @@ company-mode-friendly"
          (params
           (omnisharp--get-auto-complete-params))
          (json-result-auto-complete-response
-          (omnisharp-auto-complete-worker params)))
-    (all-completions pre (mapcar #'omnisharp--make-company-completion
-                                 json-result-auto-complete-response))))
+          (omnisharp-auto-complete-worker params))
+         (completion-list (mapcar #'omnisharp--make-company-completion
+                                  json-result-auto-complete-response)))
+    (if omnisharp-company-do-server-matching
+        completion-list
+      (all-completions pre completion-list))))
 
 (defun omnisharp--company-annotation (candidate)
   (get-text-property 0 'omnisharp-ann candidate))
