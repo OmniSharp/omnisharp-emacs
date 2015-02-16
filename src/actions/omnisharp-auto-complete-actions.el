@@ -148,12 +148,14 @@ information.")
   :type '(choice (const :tag "Yes" t)
                  (const :tag "No" nil)))
 
-(defcustom omnisharp-company-do-server-matching nil
-  "If t, let the server handle all matching, and disable 
-   prefix matching"
+(defcustom omnisharp-company-match-type 'company-match-simple
+  "Simple defaults to company's normal prefix matching (fast).
+   Server allows the omnisharp-server to do the matching (slow but does fuzzy matching).
+   Flex is experimental, and uses the flx library to match (fastish, good fuzzy matching)."
   :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
+  :type '(choice (const :tag "Simple" 'company-match-simple)
+                 (const :tag "Server" 'company-match-server)
+                 (const :tag "Flex" 'company-match-flx)))
 
 (defun omnisharp-auto-complete (&optional invert-importable-types-setting)
   "If called with a prefix argument, will complete types that are not
@@ -254,6 +256,18 @@ triggers a completion immediately"
           symbol)
       'stop)))
 
+(defun flx-score-filter-list (query l)
+  (let ((matches nil))
+    (dolist (elt l)
+      (let ((flx-val (flx-score elt query)))
+        (when (not (null flx-val))
+          (add-to-list 'matches (cons elt flx-val)))))
+    ;; (message "%s" matches)
+    (let ((sorted-matches (sort matches (lambda (el1 el2) (> (nth 1 el1) (nth 1 el2))))))
+      (mapcar (lambda (el1) (car el1)) sorted-matches))))
+
+(defvar current-match-list nil)
+(defvar current-arg-being-matched nil)
 ;;;###autoload
 (defun company-omnisharp (command &optional arg &rest ignored)
   "`company-mode' completion back-end using OmniSharp."
@@ -262,14 +276,43 @@ triggers a completion immediately"
             (not (company-in-string-or-comment))
             (omnisharp-company--prefix))
 
-    (candidates (omnisharp--get-company-candidates arg))
+    (candidates (if (eq omnisharp-company-match-type 'company-match-flx)
+                    (progn
+                      (let ((current-matches nil))
+                        ;; If the completion arg is empty, just return what the server sends
+                        (if (string= arg "")
+                            (omnisharp--get-company-candidates arg)
+                          ;; If this is a new arg, cache the results
+                          (message "Doing flex 1")
+                          (when (or (null current-arg-being-matched) (not (string-match-p current-arg-being-matched arg )))
+                            (message "Doing flex 2")
+                            (setq current-match-list (omnisharp--get-company-candidates arg))
+                            (setq current-arg-being-matched arg))
+
+                          ;; Let flex sort the results
+                          (setq current-matches (flx-score-filter-list arg current-match-list))
+
+                          ;; (when (null current-matches)
+                          ;;   (setq current-match-list (omnisharp--get-company-candidates arg))
+                          ;;   (setq current-matches (flx-score-filter-list arg current-match-list))
+                          ;;   (setq current-arg-being-matched arg))
+                          current-matches)))
+                    (omnisharp--get-company-candidates arg)))
+
+
+                
+     (when (null current-match-list)
+                  (omnisharp--get-company-candidates arg))
 
     ;; because "" doesn't return everything
-    (no-cache (or (equal arg "") omnisharp-company-do-server-matching))
+    (no-cache (or (equal arg "") (not (eq omnisharp-company-match-type 'company-match-simple))))
+    ;; (no-cache t)
 
-    (match (if omnisharp-company-do-server-matching
-               0
-             nil))
+    ;; (match 0)
+
+    (match (message "%s" arg)(if (eq omnisharp-company-do-server-matching 'company-match-simple)
+               nil
+             0))
 
     (annotation (omnisharp--company-annotation arg))
 
@@ -286,10 +329,11 @@ triggers a completion immediately"
 
     (ignore-case omnisharp-company-ignore-case)
 
-    (sorted omnisharp-company-sort-results)
+    (sorted t);;omnisharp-company-sort-results)
 
     ;; Check to see if we need to do any templating
-    (post-completion (let* ((json-result (get-text-property 0 'omnisharp-item arg))
+    (post-completion (setq current-arg-being-matched nil)
+                     (let* ((json-result (get-text-property 0 'omnisharp-item arg))
                             (allow-templating (get-text-property 0 'omnisharp-allow-templating arg)))
                        (omnisharp--tag-text-with-completion-info arg json-result)
                        (when allow-templating
@@ -413,9 +457,9 @@ company-mode-friendly"
           (omnisharp-auto-complete-worker params))
          (completion-list (mapcar #'omnisharp--make-company-completion
                                   json-result-auto-complete-response)))
-    (if omnisharp-company-do-server-matching
-        completion-list
-      (all-completions pre completion-list))))
+    (if (eq omnisharp-company-match-type 'company-match-simple)
+        (all-completions pre completion-list)
+        completion-list)))
 
 (defun omnisharp--company-annotation (candidate)
   (get-text-property 0 'omnisharp-ann candidate))
