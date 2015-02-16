@@ -305,7 +305,7 @@ triggers a completion immediately"
     ;; because "" doesn't return everything
     (no-cache (or (equal arg "") (not (eq omnisharp-company-match-type 'company-match-simple))))
 
-    (match (if (eq omnisharp-company-do-server-matching 'company-match-simple)
+    (match (if (eq omnisharp-company-match-type 'company-match-simple)
                nil
              0))
 
