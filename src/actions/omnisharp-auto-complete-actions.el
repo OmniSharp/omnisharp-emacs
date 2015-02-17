@@ -256,10 +256,12 @@ triggers a completion immediately"
           symbol)
       'stop)))
 
-(defun omnisharp-company-flx-score-filter-list (query l)
+(defun omnisharp-company-flx-score-filter-list (query l cache)
   (let ((matches nil))
     (dolist (elt l)
-      (let ((flx-val (flx-score elt query)))
+      (let* ((completion-text (omnisharp--get-company-candidate-data elt 'CompletionText))
+             (flx-val (flx-score completion-text query cache)))
+      ;; (let ((flx-val (flx-score elt query)))
         (when (not (null flx-val))
           (add-to-list 'matches (cons elt flx-val)))))
     (let ((sorted-matches (sort matches (lambda (el1 el2) (> (nth 1 el1) (nth 1 el2))))))
@@ -268,6 +270,7 @@ triggers a completion immediately"
 (defvar omnisharp-company-current-flx-match-list nil)
 (defvar omnisharp-company-current-flx-arg-being-matched nil)
 (defvar omnisharp-company-checked-for-flex nil)
+(defvar omnisharp-company-flx-cache nil)
 
 ;;;###autoload
 (defun company-omnisharp (command &optional arg &rest ignored)
@@ -296,7 +299,7 @@ triggers a completion immediately"
                             (setq omnisharp-company-current-flx-arg-being-matched arg))
 
                           ;; Let flex sort the results
-                          (setq current-matches (omnisharp-company-flx-score-filter-list arg omnisharp-company-current-flx-match-list))
+                          (setq current-matches (omnisharp-company-flx-score-filter-list arg omnisharp-company-current-flx-match-list omnisharp-company-flx-cache))
 
                           current-matches)))
                     (omnisharp--get-company-candidates arg)))
@@ -324,13 +327,16 @@ triggers a completion immediately"
 
     (ignore-case omnisharp-company-ignore-case)
 
-    (sorted t)
-    ;; (sorted omnisharp-company-sort-results)
+    ;; (sorted t)
+    (sorted (if (eq omnisharp-company-match-type 'company-match-simple)
+                (not omnisharp-company-sort-results)
+            t))
 
     ;; Check to see if we need to do any templating
     (post-completion (setq omnisharp-company-current-flx-arg-being-matched nil)
                      (let* ((json-result (get-text-property 0 'omnisharp-item arg))
                             (allow-templating (get-text-property 0 'omnisharp-allow-templating arg)))
+
                        (omnisharp--tag-text-with-completion-info arg json-result)
                        (when allow-templating
                          ;; Do yasnippet completion
@@ -456,7 +462,7 @@ company-mode-friendly"
                                   json-result-auto-complete-response)))
     (if (eq omnisharp-company-match-type 'company-match-simple)
         (all-completions pre completion-list)
-        completion-list)))
+      completion-list)))
 
 (defun omnisharp--company-annotation (candidate)
   (get-text-property 0 'omnisharp-ann candidate))
