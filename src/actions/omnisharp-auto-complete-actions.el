@@ -157,6 +157,13 @@ information.")
                  (const :tag "Server" 'company-match-server)
                  (const :tag "Flex" 'company-match-flx)))
 
+(defcustom omnisharp-company-match-sort-by-flx-score nil
+  "If omnisharp-company-match-type is 'company-match-flx', 
+   set this to 't' to order search results by the flx match score"
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
 (defun omnisharp-auto-complete (&optional invert-importable-types-setting)
   "If called with a prefix argument, will complete types that are not
 present in the current namespace or imported namespaces, inverting the
@@ -261,11 +268,14 @@ triggers a completion immediately"
     (dolist (elt l)
       (let* ((completion-text (omnisharp--get-company-candidate-data elt 'CompletionText))
              (flx-val (flx-score completion-text query cache)))
-      ;; (let ((flx-val (flx-score elt query)))
         (when (not (null flx-val))
-          (add-to-list 'matches (cons elt flx-val)))))
-    (let ((sorted-matches (sort matches (lambda (el1 el2) (> (nth 1 el1) (nth 1 el2))))))
-      (mapcar (lambda (el1) (car el1)) sorted-matches))))
+          (setq matches (cons (cons elt flx-val) matches)))))
+
+    (if omnisharp-company-match-sort-by-flx-score
+        (setq matches (sort matches (lambda (el1 el2) (> (nth 1 el1) (nth 1 el2)))))
+      (setq matches (reverse matches)))
+    
+    (mapcar (lambda (el1) (car el1)) matches)))
 
 (defvar omnisharp-company-current-flx-match-list nil)
 (defvar omnisharp-company-current-flx-arg-being-matched nil)
@@ -288,20 +298,21 @@ triggers a completion immediately"
               (omnisharp-company--prefix)))
 
     (candidates (if (and (fboundp 'flx-score) (eq omnisharp-company-match-type 'company-match-flx))
+                    ;;flx matching
                     (progn
-                      (let ((current-matches nil))
                         ;; If the completion arg is empty, just return what the server sends
                         (if (string= arg "")
                             (omnisharp--get-company-candidates arg)
                           ;; If this is a new arg, cache the results
-                          (when (or (null omnisharp-company-current-flx-arg-being-matched) (not (string-match-p omnisharp-company-current-flx-arg-being-matched arg )))
+                          (when (or (null omnisharp-company-current-flx-arg-being-matched)
+                                    (not (string-match-p omnisharp-company-current-flx-arg-being-matched arg)))
                             (setq omnisharp-company-current-flx-match-list (omnisharp--get-company-candidates arg))
                             (setq omnisharp-company-current-flx-arg-being-matched arg))
 
                           ;; Let flex sort the results
-                          (setq current-matches (omnisharp-company-flx-score-filter-list arg omnisharp-company-current-flx-match-list omnisharp-company-flx-cache))
-
-                          current-matches)))
+                          (omnisharp-company-flx-score-filter-list arg
+                                                                   omnisharp-company-current-flx-match-list
+                                                                   omnisharp-company-flx-cache)))
                     (omnisharp--get-company-candidates arg)))
 
 
@@ -327,10 +338,10 @@ triggers a completion immediately"
 
     (ignore-case omnisharp-company-ignore-case)
 
-    ;; (sorted t)
-    (sorted (if (eq omnisharp-company-match-type 'company-match-simple)
-                (not omnisharp-company-sort-results)
-            t))
+    (sorted omnisharp-company-sort-results)
+    ;; (sorted (if (eq omnisharp-company-match-type 'company-match-simple)
+    ;;             (not omnisharp-company-sort-results)
+    ;;           t))
 
     ;; Check to see if we need to do any templating
     (post-completion (setq omnisharp-company-current-flx-arg-being-matched nil)
