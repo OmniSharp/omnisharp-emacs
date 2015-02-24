@@ -277,6 +277,51 @@ asynchronously. On completions, CALLBACK is run with the quickfixes as its only 
      (apply callback (list (omnisharp--vector-to-list
                             (cdr (assoc 'QuickFixes quickfix-response))))))))
 
+(defun omnisharp-find-implementations-popup ()
+  "Show a popup containing all implementations of the interface under
+point, or classes derived from the class under point. Allow the user
+to select one (or more) to jump to."
+  (interactive)
+  (message "Finding implementations...")
+  (omnisharp-find-implementations-worker
+   (omnisharp--get-common-params)
+   (lambda (quickfixes)
+     (cond ((equal 0 (length quickfixes))
+	    (message "No implementations found."))
+
+	   ;; Go directly to the implementation if there only is one
+	   ((equal 1 (length quickfixes))
+	    (omnisharp-go-to-file-line-and-column (car quickfixes)))
+
+	   (t
+	    (omnisharp-navigate-to-implementations-popup quickfixes))))))
+
+(defun omnisharp-get-implementation-title (item)
+  "Get the human-readable class-name declaration from a list with
+information about implementations found in omnisharp-find-implementations-popup."
+  (cdr (car item)))
+
+(defun omnisharp-get-implementation-titles (items)
+  "Get a list of the human-readable class-name declaration from a list
+implementations found in omnisharp-find-implementations-popup."
+  (mapcar 'omnisharp-get-implementation-title items))
+
+(defun omnisharp-get-implementation-by-name (items title)
+  "Return the implementation-object which matches the provided title."
+  (let* ((current       (car items))
+	 (rest          (cdr items))
+	 (current-title (omnisharp-get-implementation-title current)))
+    (if (eq title current-title)
+	current
+      (omnisharp-get-implementation-by-name rest title))))
+
+(defun omnisharp-navigate-to-implementations-popup (items)
+  "Creates a navigate-to-implementation popup with the provided items
+and navigates to the selected one."
+  (let* ((chosen-title (popup-menu* (omnisharp-get-implementation-titles items)))
+	 (chosen-item  (omnisharp-get-implementation-by-name items chosen-title)))
+    (omnisharp-go-to-file-line-and-column chosen-item)))
+
 (defun omnisharp-fix-usings ()
   "Sorts usings, removes unused using statements and
 adds any missing usings. If there are any ambiguous unresolved symbols, they are
