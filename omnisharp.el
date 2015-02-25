@@ -297,9 +297,17 @@ to select one (or more) to jump to."
 	    (omnisharp-navigate-to-implementations-popup quickfixes))))))
 
 (defun omnisharp-get-implementation-title (item)
-  "Get the human-readable class-name declaration from a list with
+  "Get the human-readable class-name declaration from an alist with
 information about implementations found in omnisharp-find-implementations-popup."
-  (cdr (car item)))
+  (let* ((text (cdr (assoc 'Text item))))
+    (if (or (string-match-p " class " text)
+	      (string-match-p " interface " text))
+	text
+      (concat
+       (file-name-nondirectory (cdr (assoc 'FileName item)))
+       ":"
+       (number-to-string (cdr (assoc 'Line item))))
+      )))
 
 (defun omnisharp-get-implementation-titles (items)
   "Get a list of the human-readable class-name declaration from a list
