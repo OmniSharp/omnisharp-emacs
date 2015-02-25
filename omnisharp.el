@@ -319,7 +319,7 @@ implementations found in omnisharp-find-implementations-popup."
   (let* ((current       (car items))
 	 (rest          (cdr items))
 	 (current-title (omnisharp-get-implementation-title current)))
-    (if (eq title current-title)
+    (if (equal title current-title)
 	current
       (omnisharp-get-implementation-by-name rest title))))
 
