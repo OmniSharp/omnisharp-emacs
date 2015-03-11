@@ -309,24 +309,15 @@ information about implementations found in omnisharp-find-implementations-popup.
        (number-to-string (cdr (assoc 'Line item))))
       )))
 
-(defun omnisharp-get-implementation-titles (items)
-  "Get a list of the human-readable class-name declaration from a list
-implementations found in omnisharp-find-implementations-popup."
-  (mapcar 'omnisharp-get-implementation-title items))
-
 (defun omnisharp-get-implementation-by-name (items title)
   "Return the implementation-object which matches the provided title."
-  (let* ((current       (car items))
-	 (rest          (cdr items))
-	 (current-title (omnisharp-get-implementation-title current)))
-    (if (equal title current-title)
-	current
-      (omnisharp-get-implementation-by-name rest title))))
+  (--first (string= title (omnisharp-get-implementation-title it))
+	   items))
 
 (defun omnisharp-navigate-to-implementations-popup (items)
   "Creates a navigate-to-implementation popup with the provided items
 and navigates to the selected one."
-  (let* ((chosen-title (popup-menu* (omnisharp-get-implementation-titles items)))
+  (let* ((chosen-title (popup-menu* (mapcar 'omnisharp-get-implementation-title items)))
 	 (chosen-item  (omnisharp-get-implementation-by-name items chosen-title)))
     (omnisharp-go-to-file-line-and-column chosen-item)))
 
