@@ -1079,6 +1079,36 @@ cursor at that location"
     (error nil)))
 
 
+;; http://xahlee.blogspot.ru/2011/09/emacs-lisp-function-to-trim-string.html
+(defun trim-string (string)
+   "Remove white spaces in beginning and ending of STRING.
+           White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
+   (replace-regexp-in-string "\\`[ \t\n]*" "" (replace-regexp-in-string "[ \t\n]*\\'" "" string)))
+
+(defun omnisharp-format-usage-output-to-ido
+     (item)
+   (let ((filename (cdr (assoc 'FileName item))))
+     (cons
+      (cons
+       (car (car item))
+       (concat (car (last (split-string filename "/"))) ": " (trim-string (cdr (car item)))))
+      (cdr item))))
+
+(defun omnisharp-navigate-to-usage (&optional other-window)
+   (interactive "P")
+   (let ((quickfixes (omnisharp--vector-to-list
+                      (cdr (assoc 'QuickFixes (omnisharp-post-message-curl-as-json
+                                               (concat (omnisharp-get-host) "findusages")
+                                               (omnisharp--get-common-params)))))))
+     (cond ((equal 0 (length quickfixes))
+            (message "No usages found."))
+           ((equal 1 (length quickfixes))
+            (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
+           (t
+            (omnisharp--choose-and-go-to-quickfix-ido
+             (mapcar 'omnisharp-format-usage-output-to-ido quickfixes)
+             other-window)))))
+
 (defun omnisharp-navigate-to-current-file-member
   (&optional other-window)
   "Show a list of all members in the current file, and jump to the
