@@ -1079,7 +1079,7 @@ cursor at that location"
         imenu-list)
     (error nil)))
 
-(defun omnisharp-format-usage-output-to-ido (item)
+(defun omnisharp-format-find-output-to-ido (item)
   (let ((filename (cdr (assoc 'FileName item))))
      (cons
       (cons
@@ -1098,7 +1098,9 @@ cursor at that location"
              ((equal 1 (length quickfixes))
               (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
              (t
-              (omnisharp--choose-and-go-to-quickfix-ido quickfixes other-window)))))
+              (omnisharp--choose-and-go-to-quickfix-ido
+               (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
+               other-window)))))
 
 (defun omnisharp-navigate-to-usage (&optional other-window)
    (interactive "P")
@@ -1112,7 +1114,7 @@ cursor at that location"
             (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
            (t
             (omnisharp--choose-and-go-to-quickfix-ido
-             (mapcar 'omnisharp-format-usage-output-to-ido quickfixes)
+             (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
              other-window)))))
 
 (defun omnisharp-navigate-to-current-file-member
