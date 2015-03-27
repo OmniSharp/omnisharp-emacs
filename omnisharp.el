@@ -27,6 +27,7 @@
 (require 'popup)
 (require 'etags)
 (require 'flycheck)
+(require 's)
 
 (add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/")))
 (add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/actions")))
@@ -1078,18 +1079,12 @@ cursor at that location"
         imenu-list)
     (error nil)))
 
-;; http://xahlee.blogspot.ru/2011/09/emacs-lisp-function-to-trim-string.html
-(defun trim-string (string)
-   "Remove white spaces in beginning and ending of STRING.
-           White space here is any of: space, tab, emacs newline (line feed, ASCII 10)."
-   (replace-regexp-in-string "\\`[ \t\n]*" "" (replace-regexp-in-string "[ \t\n]*\\'" "" string)))
-
 (defun omnisharp-format-usage-output-to-ido (item)
   (let ((filename (cdr (assoc 'FileName item))))
      (cons
       (cons
        (car (car item))
-       (concat (car (last (split-string filename "/"))) ": " (trim-string (cdr (car item)))))
+       (concat (car (last (split-string filename "/"))) ": " (s-trim (cdr (car item)))))
       (cdr item))))
 
 (defun omnisharp-navigate-to-implementation (&optional other-window)
