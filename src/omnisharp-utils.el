@@ -212,7 +212,8 @@ api at URL using that file as the parameters."
                  )))
     `(:command ,omnisharp--curl-executable-path
                :arguments
-               ("--silent" "-H" "Content-type: application/json"
+               ("--noproxy" "localhost"
+                "--silent" "-H" "Content-type: application/json"
                 "--data-binary"
                 ;; @ specifies a file path to curl
                 ,path-with-curl-prefix
