@@ -27,6 +27,7 @@
 (require 'popup)
 (require 'etags)
 (require 'flycheck)
+(require 's)
 
 (add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/")))
 (add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/actions")))
@@ -1078,6 +1079,43 @@ cursor at that location"
         imenu-list)
     (error nil)))
 
+(defun omnisharp-format-find-output-to-ido (item)
+  (let ((filename (cdr (assoc 'FileName item))))
+     (cons
+      (cons
+       (car (car item))
+       (concat (car (last (split-string filename "/"))) ": " (s-trim (cdr (car item)))))
+      (cdr item))))
+
+(defun omnisharp-navigate-to-implementation (&optional other-window)
+  (interactive "P")
+  (let ((quickfixes (omnisharp--vector-to-list
+                     (cdr (assoc 'QuickFixes (omnisharp-post-message-curl-as-json
+                                              (concat (omnisharp-get-host) "findimplementations")
+                                              (omnisharp--get-common-params)))))))
+       (cond ((equal 0 (length quickfixes))
+              (message "No implementations found."))
+             ((equal 1 (length quickfixes))
+              (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
+             (t
+              (omnisharp--choose-and-go-to-quickfix-ido
+               (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
+               other-window)))))
+
+(defun omnisharp-navigate-to-usage (&optional other-window)
+   (interactive "P")
+   (let ((quickfixes (omnisharp--vector-to-list
+                      (cdr (assoc 'QuickFixes (omnisharp-post-message-curl-as-json
+                                               (concat (omnisharp-get-host) "findusages")
+                                               (omnisharp--get-common-params)))))))
+     (cond ((equal 0 (length quickfixes))
+            (message "No usages found."))
+           ((equal 1 (length quickfixes))
+            (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
+           (t
+            (omnisharp--choose-and-go-to-quickfix-ido
+             (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
+             other-window)))))
 
 (defun omnisharp-navigate-to-current-file-member
   (&optional other-window)
@@ -1442,7 +1480,6 @@ contents with the issue at point fixed."
                          'face 'helm-grep-file)
              (nth 0 (split-string (cdr (assoc 'Text candidate)) "(")))
      candidate)))
-
 
 (provide 'omnisharp)
 
