@@ -19,7 +19,7 @@
 (setenv "PATH" (concat "/opt/monodevelop/bin/:"
                        (getenv "PATH")
                        ":/home/mika/.cask/bin"
-                       "/home/mika/bin/"))
+                       ":/home/mika/bin/"))
 
 (let ((omni-dir "/home/mika/git/omnisharp-emacs/")
       (todomvc-lol-dir "/home/mika/git/todomvc-lol/")
