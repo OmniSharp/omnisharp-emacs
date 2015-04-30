@@ -27,6 +27,7 @@
 (require 'popup)
 (require 'etags)
 (require 'flycheck)
+(require 's)
 
 (add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/")))
 (add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/actions")))
@@ -176,7 +177,9 @@ server backend."
      ["Show documentation" omnisharp-current-type-documentation]
      ["Show type and add it to kill ring" omnisharp-current-type-information-to-kill-ring]
      ["Find usages" omnisharp-find-usages]
+     ["Find usages with ido" omnisharp-find-usages-with-ido]
      ["Find implementations" omnisharp-find-implementations]
+     ["Find implementations with ido" omnisharp-find-implementations-with-ido]
      ["Rename" omnisharp-rename]
      ["Rename interactively" omnisharp-rename-interactively])
 
@@ -276,6 +279,50 @@ asynchronously. On completions, CALLBACK is run with the quickfixes as its only 
    (lambda (quickfix-response)
      (apply callback (list (omnisharp--vector-to-list
                             (cdr (assoc 'QuickFixes quickfix-response))))))))
+
+(defun omnisharp-find-implementations-popup ()
+  "Show a popup containing all implementations of the interface under
+point, or classes derived from the class under point. Allow the user
+to select one (or more) to jump to."
+  (interactive)
+  (message "Finding implementations...")
+  (omnisharp-find-implementations-worker
+   (omnisharp--get-common-params)
+   (lambda (quickfixes)
+     (cond ((equal 0 (length quickfixes))
+	    (message "No implementations found."))
+
+	   ;; Go directly to the implementation if there only is one
+	   ((equal 1 (length quickfixes))
+	    (omnisharp-go-to-file-line-and-column (car quickfixes)))
+
+	   (t
+	    (omnisharp-navigate-to-implementations-popup quickfixes))))))
+
+(defun omnisharp-get-implementation-title (item)
+  "Get the human-readable class-name declaration from an alist with
+information about implementations found in omnisharp-find-implementations-popup."
+  (let* ((text (cdr (assoc 'Text item))))
+    (if (or (string-match-p " class " text)
+	      (string-match-p " interface " text))
+	text
+      (concat
+       (file-name-nondirectory (cdr (assoc 'FileName item)))
+       ":"
+       (number-to-string (cdr (assoc 'Line item))))
+      )))
+
+(defun omnisharp-get-implementation-by-name (items title)
+  "Return the implementation-object which matches the provided title."
+  (--first (string= title (omnisharp-get-implementation-title it))
+	   items))
+
+(defun omnisharp-navigate-to-implementations-popup (items)
+  "Creates a navigate-to-implementation popup with the provided items
+and navigates to the selected one."
+  (let* ((chosen-title (popup-menu* (mapcar 'omnisharp-get-implementation-title items)))
+	 (chosen-item  (omnisharp-get-implementation-by-name items chosen-title)))
+    (omnisharp-go-to-file-line-and-column chosen-item)))
 
 (defun omnisharp-fix-usings ()
   "Sorts usings, removes unused using statements and
@@ -1034,6 +1081,43 @@ cursor at that location"
         imenu-list)
     (error nil)))
 
+(defun omnisharp-format-find-output-to-ido (item)
+  (let ((filename (cdr (assoc 'FileName item))))
+     (cons
+      (cons
+       (car (car item))
+       (concat (car (last (split-string filename "/"))) ": " (s-trim (cdr (car item)))))
+      (cdr item))))
+
+(defun omnisharp-find-implementations-with-ido (&optional other-window)
+  (interactive "P")
+  (let ((quickfixes (omnisharp--vector-to-list
+                     (cdr (assoc 'QuickFixes (omnisharp-post-message-curl-as-json
+                                              (concat (omnisharp-get-host) "findimplementations")
+                                              (omnisharp--get-common-params)))))))
+    (cond ((equal 0 (length quickfixes))
+           (message "No implementations found."))
+          ((equal 1 (length quickfixes))
+           (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
+          (t
+           (omnisharp--choose-and-go-to-quickfix-ido
+            (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
+            other-window)))))
+
+(defun omnisharp-find-usages-with-ido (&optional other-window)
+  (interactive "P")
+  (let ((quickfixes (omnisharp--vector-to-list
+                     (cdr (assoc 'QuickFixes (omnisharp-post-message-curl-as-json
+                                              (concat (omnisharp-get-host) "findusages")
+                                              (omnisharp--get-common-params)))))))
+    (cond ((equal 0 (length quickfixes))
+           (message "No usages found."))
+          ((equal 1 (length quickfixes))
+           (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
+          (t
+           (omnisharp--choose-and-go-to-quickfix-ido
+            (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
+            other-window)))))
 
 (defun omnisharp-navigate-to-current-file-member
   (&optional other-window)
@@ -1112,6 +1196,15 @@ ido-completing-read. Returns the chosen element."
           request)))
     (omnisharp--choose-and-go-to-quickfix-ido quickfixes)))
 
+(defun omnisharp-format-symbol (item) 
+  (cons
+   (cons
+    (car (car item))
+    (mapconcat
+     'identity
+     (reverse (delete "in" (split-string (cdr (car item)) "[\t\n ()]" t))) "."))
+   (cdr item)))
+
 ;; No need for a worker pattern since findsymbols takes no arguments
 (defun omnisharp-navigate-to-solution-member
   (&optional other-window)
@@ -1121,8 +1214,9 @@ ido-completing-read. Returns the chosen element."
           (concat (omnisharp-get-host) "findsymbols")
           nil)))
     (omnisharp--choose-and-go-to-quickfix-ido
-     (omnisharp--vector-to-list
-      (cdr (assoc 'QuickFixes quickfix-response)))
+     (mapcar 'omnisharp-format-symbol
+	     (omnisharp--vector-to-list
+	      (cdr (assoc 'QuickFixes quickfix-response))))
      other-window)))
 
 (defun omnisharp-navigate-to-solution-member-other-window ()
@@ -1388,7 +1482,6 @@ contents with the issue at point fixed."
                          'face 'helm-grep-file)
              (nth 0 (split-string (cdr (assoc 'Text candidate)) "(")))
      candidate)))
-
 
 (provide 'omnisharp)
 
