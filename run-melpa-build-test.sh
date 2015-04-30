@@ -43,4 +43,10 @@ homeDir=`mktemp -d`
 HOME=$homeDir emacs -Q \
     --eval '(setq user-emacs-directory "./sandbox")' \
     -l package \
-    --script ignored-from-melpa-build/melpa-build-test.el
+    --script ignored-from-melpa-build/melpa-build-test.el 2>&1 | tee installation-output.txt
+
+# Return value hack. Emacs above does not report the correct exit code.
+#
+# Trying to match this line:
+# Wrote /tmp/tmp.uamD1cw2ao/.emacs.d/elpa/omnisharp-20150430.2150/omnisharp.elc
+grep "Wrote .*/omnisharp.elc" installation-output.txt
