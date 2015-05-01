@@ -46,7 +46,7 @@ HOME=$homeDir emacs -Q \
     --script ignored-from-melpa-build/melpa-build-test.el 2>&1 | tee installation-output.txt
 
 # Return value hack. Emacs above does not report the correct exit code.
+# Grep returns 0 when the searched line is found, see man grep.
 #
 # Trying to match this line:
-# Wrote /tmp/tmp.uamD1cw2ao/.emacs.d/elpa/omnisharp-20150430.2150/omnisharp.elc
-grep "Wrote .*/omnisharp.elc" installation-output.txt
+grep "Installation successful lololololol" installation-output.txt

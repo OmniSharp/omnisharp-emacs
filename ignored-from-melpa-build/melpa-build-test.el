@@ -17,4 +17,9 @@
 (let ((file (expand-file-name
              (car (file-expand-wildcards "melpa/packages/omnisharp-*.tar")))))
   (message "installing file %s" file)
-  (package-install-file file))
+  (package-install-file file)
+
+  (require 'omnisharp)
+  (if (featurep 'omnisharp)
+      (print "Installation successful lololololol")
+    (print "Installation failed")))
