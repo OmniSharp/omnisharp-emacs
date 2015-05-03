@@ -65,7 +65,7 @@ solution files were found."
 (defun omnisharp--find-and-cache-omnisharp-server-executable-path ()
   "Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
   (when (equal nil omnisharp-server-executable-path)
-    (setq omnisharp-server-executable-path (executable-find "OmniSharp"))))
+    (setq omnisharp-server-executable-path (executable-find "OmniSharp.exe"))))
 
 ;;;###autoload
 (defun omnisharp-check-alive-status ()
