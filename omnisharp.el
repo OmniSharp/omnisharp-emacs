@@ -977,7 +977,7 @@ type errors."
                    output checker buffer))
 
   :predicate (lambda () omnisharp-mode)
-  :next-checkers ((no-errors . csharp-omnisharp-curl-code-issues)))
+  :next-checkers ((warning . csharp-omnisharp-curl-code-issues)))
 
 (flycheck-define-checker csharp-omnisharp-curl-code-issues
   "Reports code issues (refactoring suggestions) that the user can
