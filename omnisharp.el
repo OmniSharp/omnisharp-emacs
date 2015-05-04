@@ -127,11 +127,7 @@ server backend."
   (omnisharp--start-omnisharp-server-for-solution-in-parent-directory)
 
   ;; These are selected automatically when flycheck is enabled
-  (--each '(csharp-omnisharp-curl
-            csharp-omnisharp-curl-code-issues
-            csharp-omnisharp-curl-semantic-errors)
-
-    (add-to-list 'flycheck-checkers it)))
+  (add-to-list 'flycheck-checkers 'csharp-omnisharp-codecheck))
 
 (defun omnisharp--init-imenu-support ()
   (when omnisharp-imenu-support
@@ -954,10 +950,9 @@ with the formatted result. Saves the file before starting."
 (setq flycheck-csharp-omnisharp-curl-executable
       omnisharp--curl-executable-path)
 
-(flycheck-define-checker csharp-omnisharp-curl
+(flycheck-define-checker csharp-omnisharp-codecheck
   "A csharp source syntax checker using curl to call an OmniSharp
-server process running in the background. Only checks the syntax - not
-type errors."
+server process running in the background."
   ;; This must be an external process. Currently flycheck does not
   ;; support using elisp functions as checkers.
   :command ("curl" ; this is overridden by
@@ -966,7 +961,7 @@ type errors."
             (eval
              (omnisharp--get-curl-command-arguments-string-for-api-name
               (omnisharp--get-common-params)
-              "syntaxerrors")))
+              "codecheck")))
 
   :error-patterns ((error line-start
                           (file-name) ":"
@@ -978,47 +973,6 @@ type errors."
                   (omnisharp--flycheck-error-parser-raw-json
                    output checker buffer))
 
-  :predicate (lambda () omnisharp-mode)
-  :next-checkers ((no-errors . csharp-omnisharp-curl-code-issues)))
-
-(flycheck-define-checker csharp-omnisharp-curl-code-issues
-  "Reports code issues (refactoring suggestions) that the user can
-then accept and have fixed automatically."
-  :command ("curl"
-            (eval
-             (omnisharp--get-curl-command-arguments-string-for-api-name
-              (omnisharp--get-common-params)
-              "getcodeissues")))
-
-  :error-patterns ((warning line-start
-                            (file-name) ":"
-                            line ":"
-                            column
-                            " "
-                            (message (one-or-more not-newline))))
-  :error-parser (lambda (output checker buffer)
-                  (omnisharp--flycheck-error-parser-raw-json
-                   output checker buffer 'info))
-  :predicate (lambda () omnisharp-mode))
-
-(flycheck-define-checker csharp-omnisharp-curl-semantic-errors
-  "Reports semantic errors (type errors) that prevent successful
-compilation."
-  :command ("curl"
-            (eval
-             (omnisharp--get-curl-command-arguments-string-for-api-name
-              (omnisharp--get-common-params)
-              "semanticerrors")))
-
-  :error-patterns ((error line-start
-                          (file-name) ":"
-                          line ":"
-                          column
-                          " "
-                          (message (one-or-more not-newline))))
-  :error-parser (lambda (output checker buffer)
-                  (omnisharp--flycheck-error-parser-raw-json
-                   output checker buffer 'info))
   :predicate (lambda () omnisharp-mode))
 
 (defun omnisharp--flycheck-error-parser-raw-json
