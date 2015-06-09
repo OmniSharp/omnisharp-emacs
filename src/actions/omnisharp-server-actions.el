@@ -1,7 +1,8 @@
 
 ;; Path to the server
-(defcustom omnisharp-server-executable-path nil
-  "Path to OmniSharpServer. If its value is nil, search for the server in the exec-path")
+(defcustom omnisharp-server-executable-path (executable-find "OmniSharp.exe")
+  "Path to OmniSharpServer. If its value is nil, search for the server in the exec-path"
+    :type '(choice (const :tag "Not Set" nil) string))
 
 (defun omnisharp--find-solution-files ()
   "Find solution files in parent directories. Returns a list
@@ -42,7 +43,6 @@ solution files were found."
                       t
                       filename))))
   (setq BufferName "*Omni-Server*")
-  (omnisharp--find-and-cache-omnisharp-server-executable-path)
   (if (equal nil omnisharp-server-executable-path)
       (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
     (if (omnisharp--valid-solution-path-p path-to-solution)
@@ -61,11 +61,6 @@ solution files were found."
             (unless omnisharp-debug ;; ignore process output if debug flag not set
               (set-process-filter process (lambda (process string))))))
       (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
-
-(defun omnisharp--find-and-cache-omnisharp-server-executable-path ()
-  "Tries to find OmniSharpServer in exec-path, if omnisharp-server-executable-path is not set"
-  (when (equal nil omnisharp-server-executable-path)
-    (setq omnisharp-server-executable-path (executable-find "OmniSharp"))))
 
 ;;;###autoload
 (defun omnisharp-check-alive-status ()

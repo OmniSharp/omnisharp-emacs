@@ -16,7 +16,7 @@ before_script:
     - curl -fsSkL https://raw.github.com/cask/cask/master/go | python
     - export PATH="/home/travis/.cask/bin:$PATH"
     - emacs --version
-    - cask --verbose --debug
+    - cask
     
 script:
     ./run-entire-travis-build.sh

@@ -4,7 +4,7 @@
 ;; Author: Mika Vilpas
 ;; Version: 3.4
 ;; Url: https://github.com/sp3ctum/omnisharp-emacs
-;; Package-Requires: ((json "1.2") (flycheck "0.21") (dash "20141201.2206") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5"))
+;; Package-Requires: ((json "1.2") (flycheck "0.21") (dash "20141201.2206") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.9.0"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
 
 ;;; Commentary:
@@ -127,11 +127,7 @@ server backend."
   (omnisharp--start-omnisharp-server-for-solution-in-parent-directory)
 
   ;; These are selected automatically when flycheck is enabled
-  (--each '(csharp-omnisharp-curl
-            csharp-omnisharp-curl-code-issues
-            csharp-omnisharp-curl-semantic-errors)
-
-    (add-to-list 'flycheck-checkers it)))
+  (add-to-list 'flycheck-checkers 'csharp-omnisharp-codecheck))
 
 (defun omnisharp--init-imenu-support ()
   (when omnisharp-imenu-support
@@ -177,7 +173,9 @@ server backend."
      ["Show documentation" omnisharp-current-type-documentation]
      ["Show type and add it to kill ring" omnisharp-current-type-information-to-kill-ring]
      ["Find usages" omnisharp-find-usages]
+     ["Find usages with ido" omnisharp-find-usages-with-ido]
      ["Find implementations" omnisharp-find-implementations]
+     ["Find implementations with ido" omnisharp-find-implementations-with-ido]
      ["Rename" omnisharp-rename]
      ["Rename interactively" omnisharp-rename-interactively])
 
@@ -952,10 +950,9 @@ with the formatted result. Saves the file before starting."
 (setq flycheck-csharp-omnisharp-curl-executable
       omnisharp--curl-executable-path)
 
-(flycheck-define-checker csharp-omnisharp-curl
+(flycheck-define-checker csharp-omnisharp-codecheck
   "A csharp source syntax checker using curl to call an OmniSharp
-server process running in the background. Only checks the syntax - not
-type errors."
+server process running in the background."
   ;; This must be an external process. Currently flycheck does not
   ;; support using elisp functions as checkers.
   :command ("curl" ; this is overridden by
@@ -964,7 +961,7 @@ type errors."
             (eval
              (omnisharp--get-curl-command-arguments-string-for-api-name
               (omnisharp--get-common-params)
-              "syntaxerrors")))
+              "codecheck")))
 
   :error-patterns ((error line-start
                           (file-name) ":"
@@ -976,47 +973,6 @@ type errors."
                   (omnisharp--flycheck-error-parser-raw-json
                    output checker buffer))
 
-  :predicate (lambda () omnisharp-mode)
-  :next-checkers ((no-errors . csharp-omnisharp-curl-code-issues)))
-
-(flycheck-define-checker csharp-omnisharp-curl-code-issues
-  "Reports code issues (refactoring suggestions) that the user can
-then accept and have fixed automatically."
-  :command ("curl"
-            (eval
-             (omnisharp--get-curl-command-arguments-string-for-api-name
-              (omnisharp--get-common-params)
-              "getcodeissues")))
-
-  :error-patterns ((warning line-start
-                            (file-name) ":"
-                            line ":"
-                            column
-                            " "
-                            (message (one-or-more not-newline))))
-  :error-parser (lambda (output checker buffer)
-                  (omnisharp--flycheck-error-parser-raw-json
-                   output checker buffer 'info))
-  :predicate (lambda () omnisharp-mode))
-
-(flycheck-define-checker csharp-omnisharp-curl-semantic-errors
-  "Reports semantic errors (type errors) that prevent successful
-compilation."
-  :command ("curl"
-            (eval
-             (omnisharp--get-curl-command-arguments-string-for-api-name
-              (omnisharp--get-common-params)
-              "semanticerrors")))
-
-  :error-patterns ((error line-start
-                          (file-name) ":"
-                          line ":"
-                          column
-                          " "
-                          (message (one-or-more not-newline))))
-  :error-parser (lambda (output checker buffer)
-                  (omnisharp--flycheck-error-parser-raw-json
-                   output checker buffer 'info))
   :predicate (lambda () omnisharp-mode))
 
 (defun omnisharp--flycheck-error-parser-raw-json
@@ -1087,35 +1043,35 @@ cursor at that location"
        (concat (car (last (split-string filename "/"))) ": " (s-trim (cdr (car item)))))
       (cdr item))))
 
-(defun omnisharp-navigate-to-implementation (&optional other-window)
+(defun omnisharp-find-implementations-with-ido (&optional other-window)
   (interactive "P")
   (let ((quickfixes (omnisharp--vector-to-list
                      (cdr (assoc 'QuickFixes (omnisharp-post-message-curl-as-json
                                               (concat (omnisharp-get-host) "findimplementations")
                                               (omnisharp--get-common-params)))))))
-       (cond ((equal 0 (length quickfixes))
-              (message "No implementations found."))
-             ((equal 1 (length quickfixes))
-              (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
-             (t
-              (omnisharp--choose-and-go-to-quickfix-ido
-               (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
-               other-window)))))
+    (cond ((equal 0 (length quickfixes))
+           (message "No implementations found."))
+          ((equal 1 (length quickfixes))
+           (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
+          (t
+           (omnisharp--choose-and-go-to-quickfix-ido
+            (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
+            other-window)))))
 
-(defun omnisharp-navigate-to-usage (&optional other-window)
-   (interactive "P")
-   (let ((quickfixes (omnisharp--vector-to-list
-                      (cdr (assoc 'QuickFixes (omnisharp-post-message-curl-as-json
-                                               (concat (omnisharp-get-host) "findusages")
-                                               (omnisharp--get-common-params)))))))
-     (cond ((equal 0 (length quickfixes))
-            (message "No usages found."))
-           ((equal 1 (length quickfixes))
-            (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
-           (t
-            (omnisharp--choose-and-go-to-quickfix-ido
-             (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
-             other-window)))))
+(defun omnisharp-find-usages-with-ido (&optional other-window)
+  (interactive "P")
+  (let ((quickfixes (omnisharp--vector-to-list
+                     (cdr (assoc 'QuickFixes (omnisharp-post-message-curl-as-json
+                                              (concat (omnisharp-get-host) "findusages")
+                                              (omnisharp--get-common-params)))))))
+    (cond ((equal 0 (length quickfixes))
+           (message "No usages found."))
+          ((equal 1 (length quickfixes))
+           (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
+          (t
+           (omnisharp--choose-and-go-to-quickfix-ido
+            (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
+            other-window)))))
 
 (defun omnisharp-navigate-to-current-file-member
   (&optional other-window)

@@ -43,4 +43,10 @@ homeDir=`mktemp -d`
 HOME=$homeDir emacs -Q \
     --eval '(setq user-emacs-directory "./sandbox")' \
     -l package \
-    --script ignored-from-melpa-build/melpa-build-test.el
+    --script ignored-from-melpa-build/melpa-build-test.el 2>&1 | tee installation-output.txt
+
+# Return value hack. Emacs above does not report the correct exit code.
+# Grep returns 0 when the searched line is found, see man grep.
+#
+# Trying to match this line:
+grep "Installation successful lololololol" installation-output.txt
