@@ -262,8 +262,9 @@ expected output in that buffer"
 (ert-deftest omnisharp--convert-auto-complete-json-to-popup-format-shows-correct-data ()
   (let* ((description "Verbosity Verbose; - description")
          (completion-text "Verbose - completion text")
+         (snippet-text "Verbose$0")
          (auto-completions
-          `[((Snippet . "Verbose$0")
+          `[((Snippet . ,snippet-text)
              (ReturnType . "OmniSharp.Verbosity")
              (MethodHeader . nil)
              (RequiredNamespaceImport . nil)
@@ -277,6 +278,7 @@ expected output in that buffer"
 
     (should (equal description (popup-item-document converted-popup-item)))
     (should (equal completion-text (popup-item-value converted-popup-item)))
+    (should (equal snippet-text (get-text-property 0 'Snippet (popup-item-value converted-popup-item))))
     ;; TODO figure out how to verify popup item DisplayText.
     ;; An item looked like this:
     ;; #("Verbosity Verbose - display text" 0 32 (document "Verbosity Verbose; - description" value "Verbose - completion text"))

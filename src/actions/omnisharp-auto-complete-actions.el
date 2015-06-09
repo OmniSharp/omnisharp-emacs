@@ -1,5 +1,6 @@
 (require 'popup)
 (require 'dash)
+(require 'yasnippet)
 
 (defvar omnisharp-auto-complete-popup-want-isearch t
   "Whether to automatically start isearch when auto-completing.")
@@ -635,18 +636,14 @@ current buffer."
            ;;
            ;; Get the full item so we can then get the
            ;; RequiredNamespaceImport value from it
-           (completed-item
-            (-first (lambda (a)
-                      (equal result-completion-text
-                             (cdr (assoc 'CompletionText a))))
-                    json-result-alist))
+           (completion-snippet
+            (get-text-property 0 'Snippet result-completion-text))
            (required-namespace-import
-            (cdr (assoc 'RequiredNamespaceImport
-                        completed-item))))
+            (get-text-property 0 'RequiredNamespaceImport result-completion-text)))
 
-      (omnisharp--replace-symbol-in-buffer-with
-       (omnisharp--current-word-or-empty-string)
-       result-completion-text)
+      (if completion-snippet
+          (yas-expand-snippet completion-snippet (search-backward (omnisharp--current-word-or-empty-string)))
+        (omnisharp--replace-symbol-in-buffer-with (omnisharp--current-word-or-empty-string) result-completion-text))
 
       (when required-namespace-import
         (omnisharp--insert-namespace-import required-namespace-import)))))
@@ -706,9 +703,11 @@ is a more sophisticated matching framework than what popup.el offers."
   (mapcar
    (-lambda ((&alist 'DisplayText display-text
                      'CompletionText completion-text
-                     'Description description))
+                     'Description description
+                     'Snippet snippet
+                     'RequiredNamespaceImport require-ns-import))
             (popup-make-item display-text
-                             :value completion-text
+                             :value (propertize completion-text 'Snippet snippet 'RequiredNamespaceImport require-ns-import)
                              :document description))
    json-result-alist))
 
