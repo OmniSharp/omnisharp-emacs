@@ -285,8 +285,9 @@ moving point."
 		     "-s"
 		     solution-file-path-arg)))
     (cond
-     ((or (equal system-type 'cygwin) ;; No mono needed on cygwin
-	  (equal system-type 'windows-nt))
+     ((or (equal system-type 'cygwin) ;; No mono needed on cygwin or if using omnisharp-roslyn
+          (equal system-type 'windows-nt)
+          (not (s-ends-with? ".exe" server-exe-file-path-arg)))
       args)
      (t ; some kind of unix: linux or osx
       (cons "mono" args)))))
