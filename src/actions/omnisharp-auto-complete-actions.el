@@ -1,6 +1,5 @@
 (require 'popup)
 (require 'dash)
-(require 'yasnippet)
 
 (defvar omnisharp-auto-complete-popup-want-isearch t
   "Whether to automatically start isearch when auto-completing.")
@@ -641,8 +640,8 @@ current buffer."
            (required-namespace-import
             (get-text-property 0 'RequiredNamespaceImport result-completion-text)))
 
-      (if completion-snippet
-          (yas-expand-snippet completion-snippet (search-backward (omnisharp--current-word-or-empty-string)))
+      (if (and completion-snippet omnisharp-company-template-use-yasnippet (fboundp 'yas/expand-snippet))
+          (yas/expand-snippet completion-snippet (search-backward (omnisharp--current-word-or-empty-string)))
         (omnisharp--replace-symbol-in-buffer-with (omnisharp--current-word-or-empty-string) result-completion-text))
 
       (when required-namespace-import
