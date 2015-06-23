@@ -848,11 +848,21 @@ ring."
   (interactive)
   (omnisharp-current-type-information t))
 
-(defun omnisharp-get-build-command ()
+(defun omnisharp-get-build-command (&optional target)
   "Retrieve the shell command to build the current solution."
-  (omnisharp-post-message-curl
-   (concat (omnisharp-get-host) "buildcommand")
-   nil))
+  (if (null target)
+      (omnisharp-post-message-curl
+       (concat (omnisharp-get-host) "buildcommand")
+       nil)
+
+    (let ((json-result
+    (omnisharp-post-message-curl-as-json
+     (concat (omnisharp-get-host) "buildtarget")
+     (->> (omnisharp--get-common-params)
+          (cons `(Project . , target))
+          (cons `(Type   . ,"Build"))
+          (cons `(Configuration     . ,"Debug"))))))
+      (cdr (assoc 'Command json-result)))))
 
 (defun omnisharp-build-in-emacs ()
   "Build the current solution in a non-blocking fashion inside emacs.
@@ -861,8 +871,15 @@ Uses the standard compilation interface (compile)."
   ;; Build command contains backslashes on Windows systems. Work
   ;; around this by using double backslashes. Other systems are not
   ;; affected.
+  (omnisharp-build))
+
+(defun omnisharp-build-project (target)
+  (interactive "sEnter project name: ")
+  (omnisharp-build target))
+
+(defun omnisharp-build (&optional target)
   (let ((build-command (omnisharp--fix-build-command-if-on-windows
-                        (omnisharp-get-build-command))))
+                        (omnisharp-get-build-command target))))
     (omnisharp--recognize-mono-compilation-error-format)
     (compile build-command)
     (add-to-list 'compile-history build-command)))
