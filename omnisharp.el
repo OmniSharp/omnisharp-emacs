@@ -85,6 +85,9 @@ options for fixing them."
   "This is shown at the top of the result buffer when
 there are ambiguous unresolved symbols after running omnisharp-fix-usings")
 
+(defvar omnisharp-build-configuration "Debug"
+  "The build configuration used when building specific project via omnisharp-build-project. (e.g: Debug, Release)")
+
 (defcustom omnisharp-code-format-expand-tab t
   "Whether to expand tabs to spaces in code format requests."
   :group 'omnisharp
@@ -861,7 +864,7 @@ ring."
      (->> (omnisharp--get-common-params)
           (cons `(Project . , target))
           (cons `(Type   . ,"Build"))
-          (cons `(Configuration     . ,"Debug"))))))
+          (cons `(Configuration     . , omnisharp-build-configuration))))))
       (cdr (assoc 'Command json-result)))))
 
 (defun omnisharp-build-in-emacs ()
