@@ -204,24 +204,24 @@ to select one (or more) to jump to."
   (interactive)
   (message "Finding implementations...")
   (omnisharp-find-implementations-worker
-   (omnisharp--get-common-params)
-   (lambda (quickfixes)
-     (cond ((equal 0 (length quickfixes))
-	    (message "No implementations found."))
+    (omnisharp--get-common-params)
+    (lambda (quickfixes)
+      (cond ((equal 0 (length quickfixes))
+             (message "No implementations found."))
 
-	   ;; Go directly to the implementation if there only is one
-	   ((equal 1 (length quickfixes))
-	    (omnisharp-go-to-file-line-and-column (car quickfixes)))
+            ;; Go directly to the implementation if there only is one
+            ((equal 1 (length quickfixes))
+             (omnisharp-go-to-file-line-and-column (car quickfixes)))
 
-	   (t
-	    (omnisharp-navigate-to-implementations-popup quickfixes))))))
+            (t
+             (omnisharp-navigate-to-implementations-popup quickfixes))))))
 
 (defun omnisharp-get-implementation-title (item)
   "Get the human-readable class-name declaration from an alist with
 information about implementations found in omnisharp-find-implementations-popup."
   (let* ((text (cdr (assoc 'Text item))))
     (if (or (string-match-p " class " text)
-	      (string-match-p " interface " text))
+            (string-match-p " interface " text))
 	text
       (concat
        (file-name-nondirectory (cdr (assoc 'FileName item)))
@@ -557,8 +557,8 @@ run-action-params: original parameters sent to /runcodeaction API."
   "Posts message to curl at URL with PARAMS asynchronously.
 On completion, the curl output is parsed as json and passed into CALLBACK."
   (omnisharp-post-message-curl-async url params
-    (lambda (str)
-      (funcall callback (omnisharp--json-read-from-string str)))))
+                                     (lambda (str)
+                                       (funcall callback (omnisharp--json-read-from-string str)))))
 
 (defun omnisharp-post-message-curl-async (url params callback)
   "Post json stuff to url asynchronously with --data set to given params.
@@ -958,11 +958,11 @@ cursor at that location"
 
 (defun omnisharp-format-find-output-to-ido (item)
   (let ((filename (cdr (assoc 'FileName item))))
+    (cons
      (cons
-      (cons
-       (car (car item))
-       (concat (car (last (split-string filename "/"))) ": " (s-trim (cdr (car item)))))
-      (cdr item))))
+      (car (car item))
+      (concat (car (last (split-string filename "/"))) ": " (s-trim (cdr (car item)))))
+     (cdr item))))
 
 (defun omnisharp-find-implementations-with-ido (&optional other-window)
   (interactive "P")
@@ -1164,28 +1164,28 @@ file. With prefix argument uses another window."
   (let ((start-point (point))
         (found-point (point))
         (found-start nil))
-     (save-excursion
-       (let ((test-point (point)))
-         (while (not found-start)
-           (search-backward-regexp "(\\|;\\|{")
-           (cond ((eq (point) test-point)
-                  (setq found-start t))
+    (save-excursion
+      (let ((test-point (point)))
+        (while (not found-start)
+          (search-backward-regexp "(\\|;\\|{")
+          (cond ((eq (point) test-point)
+                 (setq found-start t))
 
-                 ((looking-at-p "(")
-                  (setq test-point (point))
+                ((looking-at-p "(")
+                 (setq test-point (point))
 
-                  ;; forward-sexp will throw an error if the sexp is unbalanced
-                  (condition-case nil
-                      (forward-sexp)
-                    (error nil))
-                  
-                  (when (> (point) start-point)
-                    (setq found-point test-point)
-                    (setq found-start t))
-                  (goto-char test-point))
+                 ;; forward-sexp will throw an error if the sexp is unbalanced
+                 (condition-case nil
+                     (forward-sexp)
+                   (error nil))
+                 
+                 (when (> (point) start-point)
+                   (setq found-point test-point)
+                   (setq found-start t))
+                 (goto-char test-point))
 
-                 (t (setq found-start t))))))
-     (goto-char found-point)))
+                (t (setq found-start t))))))
+    (goto-char found-point)))
 
 (defun omnisharp--eldoc-default ()
   "Tries to find completion information about the method before point"
@@ -1196,8 +1196,8 @@ file. With prefix argument uses another window."
            (type-info (omnisharp--completion-result-get-item json-result 'DisplayText)))
 
       (if (and type-info (not (string= "" type-info)))
-        (omnisharp--eldoc-fontify-string type-info)
-      nil))))
+          (omnisharp--eldoc-fontify-string type-info)
+        nil))))
 
 
 (defun omnisharp--eldoc-worker ()
@@ -1318,8 +1318,8 @@ contents with the issue at point fixed."
     (interactive)
     (message "Helm Finding usages...")
     (omnisharp-find-usages-worker
-     (omnisharp--get-common-params)
-     'omnisharp--helm-got-usages))
+      (omnisharp--get-common-params)
+      'omnisharp--helm-got-usages))
 
   (defun omnisharp--helm-jump-to-candidate (json-result)
     (omnisharp-go-to-file-line-and-column json-result)
