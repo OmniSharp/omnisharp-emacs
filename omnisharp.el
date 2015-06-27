@@ -14,8 +14,6 @@
 ;; that works in the background.
 ;;
 ;; See the project home page for more information.
-
-;; Work in progress! Judge gently!
 (require 'json)
 (require 'cl-lib)
 (require 'files)
