@@ -1,3 +1,18 @@
+;; If you use the prodigy plugin for emacs, you can quickly adapt this
+;; file to set up emacs as an interface to start background processes
+;; and run test for this project.
+;;
+;; To use this file as such do the following:
+;; - Configure the file and set the paths right
+;; - Load this file's code into emacs somehow, e.g. from your init file do
+;;     (load-file "/home/mika/git/omnisharp-emacs/ignored-from-melpa-build/prodigy-example-config.el")
+;; - Then run M-x prodigy. You will be shown the services defined in
+;;   this file. Start a service with "s" and view its output with "$"
+;;   (once it starts generating output). For more info, see the
+;;   prodigy site below
+;;
+;; For prodigy:
+;; https://github.com/rejeep/prodigy.el
 (require 'prodigy)
 
 ;; omnisharp-emacs development hacks
