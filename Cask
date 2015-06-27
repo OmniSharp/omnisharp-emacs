@@ -5,6 +5,7 @@
 
 (development
  (depends-on "cl-lib")
+ (depends-on "prodigy")
  (depends-on "ecukes")
  (depends-on "ert-async")
  (depends-on "noflet")
