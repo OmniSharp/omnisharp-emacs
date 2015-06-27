@@ -851,7 +851,7 @@ ring."
   (interactive)
   (omnisharp-current-type-information t))
 
-(defun omnisharp-get-build-command (&optional target)
+(defun omnisharp-get-build-command (&optional target build)
   "Retrieve the shell command to build the current solution."
   (if (null target)
       (omnisharp-post-message-curl
@@ -863,7 +863,7 @@ ring."
      (concat (omnisharp-get-host) "buildtarget")
      (->> (omnisharp--get-common-params)
           (cons `(Project . , target))
-          (cons `(Type   . ,"Build"))
+          (cons `(Type   . , build))
           (cons `(Configuration     . , omnisharp-build-configuration))))))
       (cdr (assoc 'Command json-result)))))
 
@@ -876,13 +876,21 @@ Uses the standard compilation interface (compile)."
   ;; affected.
   (omnisharp-build))
 
+(defun omnisharp-rebuild-project (target)
+  (interactive "sEnter project name: ")
+  (omnisharp-build target "Rebuild"))
+
+(defun omnisharp-clean-project (target)
+  (interactive "sEnter project name: ")
+  (omnisharp-build target "Clean"))
+
 (defun omnisharp-build-project (target)
   (interactive "sEnter project name: ")
-  (omnisharp-build target))
+  (omnisharp-build target "Build"))
 
-(defun omnisharp-build (&optional target)
+(defun omnisharp-build (&optional target build)
   (let ((build-command (omnisharp--fix-build-command-if-on-windows
-                        (omnisharp-get-build-command target))))
+                        (omnisharp-get-build-command target build))))
     (omnisharp--recognize-mono-compilation-error-format)
     (compile build-command)
     (add-to-list 'compile-history build-command)))
@@ -1456,6 +1464,28 @@ contents with the issue at point fixed."
                          'face 'helm-grep-file)
              (nth 0 (split-string (cdr (assoc 'Text candidate)) "(")))
      candidate)))
+
+(defun omnisharp-helm-find-projects-candidates ()
+  (let ((quickfix-response
+         (omnisharp-post-message-curl-as-json
+          (concat (omnisharp-get-host) "findprojects")
+          nil)))
+   (mapcar (lambda (x)
+             (cons (cdr (assoc 'Text x)) x))
+            (omnisharp--vector-to-list
+             (cdr (assoc 'QuickFixes quickfix-response))))))
+
+(defun omnisharp-helm-find-projects ()
+  (interactive)
+  (helm :sources (helm-make-source "Omnisharp - Find projects" 'helm-source-sync
+                   :candidates 'omnisharp-helm-find-projects-candidates
+                   :fuzzy-match t
+                   :action '(("build" . (lambda (x)
+                                          (omnisharp-build-project (cdr (car x)))))
+                             ("rebuild" . (lambda (x)
+                                            (omnisharp-rebuild-project (cdr (car x)))))
+                             ("clean" . (lambda (x)
+                                          (omnisharp-clean-project (cdr (car x)))))))))
 
 (provide 'omnisharp)
 
