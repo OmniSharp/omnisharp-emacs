@@ -1468,7 +1468,7 @@ contents with the issue at point fixed."
 (defun omnisharp-helm-find-projects-candidates ()
   (let ((quickfix-response
          (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "findprojects")
+          (concat (omnisharp-get-host) "projects")
           nil)))
    (mapcar (lambda (x)
              (cons (cdr (assoc 'Text x)) x))
