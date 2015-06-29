@@ -1469,11 +1469,12 @@ contents with the issue at point fixed."
   (let ((quickfix-response
          (omnisharp-post-message-curl-as-json
           (concat (omnisharp-get-host) "projects")
-          nil)))
-   (mapcar (lambda (x)
-             (cons (cdr (assoc 'Text x)) x))
-            (omnisharp--vector-to-list
-             (cdr (assoc 'QuickFixes quickfix-response))))))
+          (->> (omnisharp--get-common-params)
+               (cons `(IncludeSourceFiles . , "false"))
+               ))))
+ (mapcar (lambda (x)
+           (cons (cdr (assoc 'AssemblyName x)) x))
+   (cdr (assoc 'Projects (assoc 'MSBuild quickfix-response))))))
 
 (defun omnisharp-helm-find-projects ()
   (interactive)
