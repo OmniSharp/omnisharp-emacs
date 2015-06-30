@@ -1,7 +1,7 @@
 Feature: Find implementations
 
   Scenario: Jump to the only implementation
-    Given I open the Omnisharp server source file "minimal/MyClassContainer.cs"
+    Given I open the MinimalSolution source file "minimal/MyClassContainer.cs"
     When My buffer contents are, and my point is at $:
     """
     using System;
@@ -21,7 +21,7 @@ Feature: Find implementations
     Then point should be on a line containing "public class test : MyClass{}"
 
   Scenario: Show a list of implementations when there is more than one
-    Given I open the Omnisharp server source file "minimal/MyClassContainer.cs"
+    Given I open the MinimalSolution source file "minimal/MyClassContainer.cs"
     When My buffer contents are, and my point is at $:
     """
     using System;

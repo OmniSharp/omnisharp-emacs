@@ -55,7 +55,7 @@ line endings, so windows CRLF is considered the same as Unix LF."
 (And "^I save the buffer$"
      'save-buffer)
 
-(When "^I open the Omnisharp server source file \"\\([^\"]+\\)\"$"
+(When "^I open the MinimalSolution source file \"\\([^\"]+\\)\"$"
       (lambda (file-path-to-open)
         (find-file (f-join omnisharp-minimal-test-solution-path
                            file-path-to-open))))

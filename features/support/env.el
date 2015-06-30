@@ -17,8 +17,8 @@
           "OmniSharpServer/"))
 
 (defvar omnisharp-minimal-test-solution-path
-  (f-join omnisharp-server-root-path
-          "OmniSharp.Tests/Solution/minimal/"))
+  (f-join omnisharp-emacs-root-path
+          "test/MinimalSolution/"))
 
 (add-to-list 'load-path omnisharp-emacs-root-path)
 

@@ -1,7 +1,7 @@
 Feature: Find usages
 
   Scenario: Find usages of a symbol
-    Given I open the Omnisharp server source file "minimal/MyClassContainer.cs"
+    Given I open the MinimalSolution source file "minimal/MyClassContainer.cs"
     When My buffer contents are, and my point is at $:
     """
     using System;

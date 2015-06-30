@@ -3,7 +3,7 @@ Feature: Go to definition
   A user will need to navigate to the definiiton of the symbol at point
 
   Scenario: Go to definition in same file
-    Given I open the Omnisharp server source file "minimal/MyClassContainer.cs"
+    Given I open the MinimalSolution source file "minimal/MyClassContainer.cs"
     When My buffer contents are, and my point is at $:
     """
     using System;
@@ -21,7 +21,7 @@ Feature: Go to definition
     Then point should be on a line containing "public class Target"
 
   Scenario: Go to definition in another window
-    Given I open the Omnisharp server source file "minimal/MyClassContainer.cs"
+    Given I open the MinimalSolution source file "minimal/MyClassContainer.cs"
     When My buffer contents are, and my point is at $:
     """
     using System;
