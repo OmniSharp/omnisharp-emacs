@@ -5,3 +5,4 @@
 /test/MinimalSolution/minimal/.ecukes-failing-scenarios
 # backup files by emacs
 /test/MinimalSolution/minimal/#*
+/omnisharp-roslyn/

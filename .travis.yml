@@ -5,13 +5,15 @@ before_script:
     - sudo sh -c "echo 'deb http://download.mono-project.com/repo/debian wheezy-libtiff-compat main' >> /etc/apt/sources.list.d/mono-xamarin.list"
     - sudo add-apt-repository -y ppa:ubuntu-elisp/ppa
     - sudo apt-get update -qq
-    - sudo apt-get install --force-yes mono-devel emacs-snapshot emacs-snapshot-el npm
-    - npm i omnisharp-server-roslyn-binaries
-    - cd node_modules/omnisharp-server-roslyn-binaries
+    - sudo apt-get install --force-yes mono-devel emacs-snapshot emacs-snapshot-el
+    - mkdir omnisharp-roslyn
+    - cd omnisharp-roslyn
+    - wget https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.0.3/omnisharp.tar.gz
+    - tar xzvf omnisharp.tar.gz
+    - cd ..
     - mono --version
     - cd test/MinimalSolution
-    - ../../node_modules/omnisharp-server-roslyn-binaries/lib/server/omnisharp
-    - cd ..
+    - ./start-omnisharp-server-for-integration-tests.sh
     - curl -fsSkL https://raw.github.com/cask/cask/master/go | python
     - export PATH="/home/travis/.cask/bin:$PATH"
     - emacs --version
