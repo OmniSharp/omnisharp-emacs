@@ -876,16 +876,16 @@ Uses the standard compilation interface (compile)."
   ;; affected.
   (omnisharp-build))
 
-(defun omnisharp-rebuild-project (target)
-  (interactive "sEnter project name: ")
+(defun omnisharp-rebuild-target (target)
+  (interactive "sEnter target name: ")
   (omnisharp-build target "Rebuild"))
 
-(defun omnisharp-clean-project (target)
-  (interactive "sEnter project name: ")
+(defun omnisharp-clean-target (target)
+  (interactive "sEnter target name: ")
   (omnisharp-build target "Clean"))
 
-(defun omnisharp-build-project (target)
-  (interactive "sEnter project name: ")
+(defun omnisharp-build-target (target)
+  (interactive "sEnter target name: ")
   (omnisharp-build target "Build"))
 
 (defun omnisharp-build (&optional target build)
@@ -1469,12 +1469,11 @@ contents with the issue at point fixed."
   (let ((quickfix-response
          (omnisharp-post-message-curl-as-json
           (concat (omnisharp-get-host) "projects")
-          (->> (omnisharp--get-common-params)
-               (cons `(IncludeSourceFiles . , "false"))
-               ))))
- (mapcar (lambda (x)
-           (cons (cdr (assoc 'AssemblyName x)) x))
-   (cdr (assoc 'Projects (assoc 'MSBuild quickfix-response))))))
+          (cons `(ExcludeSourceFiles . , "true")
+                (omnisharp--get-common-params)))))
+    (mapcar (lambda (x)
+              (cons (cdr (assoc 'AssemblyName x)) x))
+            (cdr (assoc 'Projects (assoc 'MSBuild quickfix-response))))))
 
 (defun omnisharp-helm-find-projects ()
   (interactive)
@@ -1482,11 +1481,11 @@ contents with the issue at point fixed."
                    :candidates 'omnisharp-helm-find-projects-candidates
                    :fuzzy-match t
                    :action '(("build" . (lambda (x)
-                                          (omnisharp-build-project (cdr (car x)))))
+                                          (omnisharp-build-target (cdr (car x)))))
                              ("rebuild" . (lambda (x)
-                                            (omnisharp-rebuild-project (cdr (car x)))))
+                                            (omnisharp-rebuild-target (cdr (car x)))))
                              ("clean" . (lambda (x)
-                                          (omnisharp-clean-project (cdr (car x)))))))))
+                                          (omnisharp-clean-target (cdr (car x)))))))))
 
 (provide 'omnisharp)
 
