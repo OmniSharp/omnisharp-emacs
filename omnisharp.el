@@ -874,21 +874,21 @@ Uses the standard compilation interface (compile)."
   ;; Build command contains backslashes on Windows systems. Work
   ;; around this by using double backslashes. Other systems are not
   ;; affected.
-  (omnisharp-build))
+  (omnisharp-build-worker))
 
 (defun omnisharp-rebuild-target (target)
   (interactive "sEnter target name: ")
-  (omnisharp-build target "Rebuild"))
+  (omnisharp-build-worker target "Rebuild"))
 
 (defun omnisharp-clean-target (target)
   (interactive "sEnter target name: ")
-  (omnisharp-build target "Clean"))
+  (omnisharp-build-worker target "Clean"))
 
 (defun omnisharp-build-target (target)
   (interactive "sEnter target name: ")
-  (omnisharp-build target "Build"))
+  (omnisharp-build-worker target "Build"))
 
-(defun omnisharp-build (&optional target build)
+(defun omnisharp-build-worker (&optional target build)
   (let ((build-command (omnisharp--fix-build-command-if-on-windows
                         (omnisharp-get-build-command target build))))
     (omnisharp--recognize-mono-compilation-error-format)
