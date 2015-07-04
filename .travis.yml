@@ -13,7 +13,7 @@ before_script:
     - cd ..
     - ./travis-stuff/install-mono.sh
     - mono --version
-    - ./start-omnisharp-server-for-integration-tests.sh
+    - ./start-omnisharp-server-for-integration-tests.sh &
     - curl -fsSkL https://raw.github.com/cask/cask/master/go | python
     - export PATH="/home/travis/.cask/bin:$PATH"
     - emacs --version
