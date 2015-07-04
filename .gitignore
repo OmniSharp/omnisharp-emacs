@@ -6,3 +6,4 @@
 # backup files by emacs
 /test/MinimalSolution/minimal/#*
 /omnisharp-roslyn/
+/test/MinimalSolution/minimal/RenameFileTest.cs
