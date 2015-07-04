@@ -1,7 +1,7 @@
 Feature: Complete overrides
 
   Background:
-    Given I open temp file "some-file.cs"
+    Given I open the MinimalSolution source file "minimal/MyClassContainer.cs"
     Given The buffer is empty
 
   Scenario: Complete overrides in the current buffer with ido
