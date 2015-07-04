@@ -71,26 +71,37 @@ omnisharp--flycheck-error-parser-raw-json error parser"
      ;; This is the level that csharp-omnisharp-curl-code-issues uses
      'info)))
 
-(defmacro with-active-region-in-buffer (buffer-contents
-                                        code-to-run-in-buffer)
-  "Run CODE-TO-RUN-IN-BUFFER in a temp bufer with BUFFER-CONTENTS, and
-the region active between the markers region-starts-here and
-region-ends-here."
+(defmacro with-test-buffer-contents (buffer-contents
+                                     code-to-run-in-buffer)
   `(with-current-buffer (get-buffer-create "omnisharp-test-buffer")
      (switch-to-buffer (get-buffer-create "omnisharp-test-buffer"))
      (delete-region (point-min) (point-max))
      (--map (insert (concat it "\n")) ,buffer-contents)
      (beginning-of-buffer)
-     (re-search-forward "(region-starts-here)")
-     (replace-match "")
-     (setq region-start (point))
-     (re-search-forward "(region-ends-here)")
-     (replace-match "")
-     ;; select the text between the current position and the last one
-     (push-mark region-start)
-     (activate-mark)
 
      ,code-to-run-in-buffer))
+
+(defmacro with-active-region-in-buffer (buffer-contents
+                                        code-to-run-in-buffer)
+  "Run CODE-TO-RUN-IN-BUFFER in a temp bufer with BUFFER-CONTENTS, and
+the region active between the markers region-starts-here and
+region-ends-here."
+  `(with-test-buffer-contents
+    ,buffer-contents
+
+    (progn
+      ;; remove region-starts-here markers
+      (re-search-forward "(region-starts-here)")
+      (replace-match "")
+      (setq region-start (point))
+      (re-search-forward "(region-ends-here)")
+      (replace-match "")
+
+      ;; select the text between the current position and the last one
+      (push-mark region-start)
+      (activate-mark)
+
+      ,code-to-run-in-buffer)))
 
 ;; Region line and column helper tests.
 ;; Could be one test but on the other hand this way we know if only
