@@ -12,7 +12,6 @@ before_script:
     - tar xzvf omnisharp.tar.gz
     - cd ..
     - mono --version
-    - cd test/MinimalSolution
     - ./start-omnisharp-server-for-integration-tests.sh
     - curl -fsSkL https://raw.github.com/cask/cask/master/go | python
     - export PATH="/home/travis/.cask/bin:$PATH"
