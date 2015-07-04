@@ -209,11 +209,11 @@ number given"
 (ert-deftest activating-omnisharp-mode-should-not-start-server-if-running ()
   "When server is already running, a new server should not be started"
   (with-mock
-    (stub omnisharp--check-alive-status-worker => t)
-    (stub omnisharp-start-omnisharp-server)
-    (not-called start-process)
-    (not-called omnisharp--find-solution-file)
-    (omnisharp-mode)))
+   (stub omnisharp--check-alive-status-worker => t)
+   (stub omnisharp-start-omnisharp-server)
+   (not-called start-process)
+   (not-called omnisharp--find-solution-file)
+   (omnisharp-mode)))
 
 (ert-deftest activating-omnisharp-mode-should-start-server ()
   "Activating omnisharp-mode should start an OmniSharpServer"
@@ -255,20 +255,20 @@ expected output in that buffer"
     omnisharp--write-quickfixes-to-compilation-buffer-doesnt-mess-with-find-tag-marker-ring ()
 
   (with-mock
-    (stub ring-insert => (error "must not be called"))
-    (save-excursion
-      (omnisharp--write-quickfixes-to-compilation-buffer
-       '()
-       "buffer-name"
-       "test-buffer-header\n\n"
-       ;; don't save old position to find-tag-marker-ring
-       t))))
+   (stub ring-insert => (error "must not be called"))
+   (save-excursion
+     (omnisharp--write-quickfixes-to-compilation-buffer
+      '()
+      "buffer-name"
+      "test-buffer-header\n\n"
+      ;; don't save old position to find-tag-marker-ring
+      t))))
 
 (ert-deftest omnisharp-stop-server-calls-correct-api ()
   (with-mock
-    (let ((omnisharp-host "host/"))
-      (mock (omnisharp-post-message-curl-async "host/stopserver" * *))
-      (omnisharp-stop-server))))
+   (let ((omnisharp-host "host/"))
+     (mock (omnisharp-post-message-curl-async "host/stopserver" * *))
+     (omnisharp-stop-server))))
 
 (ert-deftest omnisharp--convert-auto-complete-json-to-popup-format-shows-correct-data ()
   (let* ((description "Verbosity Verbose; - description")
