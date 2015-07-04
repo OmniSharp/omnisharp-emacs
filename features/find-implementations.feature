@@ -1,6 +1,6 @@
 Feature: Find implementations
 
-  cenario: Jump to the only implementation
+  Scenario: Jump to the only implementation
     Given I open the MinimalSolution source file "minimal/MyClassContainer.cs"
     When My buffer contents are, and my point is at $:
     """
