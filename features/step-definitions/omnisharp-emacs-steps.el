@@ -30,13 +30,14 @@ line endings, so windows CRLF is considered the same as Unix LF."
     (sit-for (read seconds))))
 
 (When "^My buffer contents are, and my point is at $:$"
-  "Test setup. Only works reliably if there is one $ character"
-  (lambda (buffer-contents-to-insert)
-    (erase-buffer)
-    (insert buffer-contents-to-insert)
-    (beginning-of-buffer)
-    (search-forward "$")
-    (delete-backward-char 1)))
+      "Test setup. Only works reliably if there is one $ character"
+      (lambda (buffer-contents-to-insert)
+        (erase-buffer)
+        (insert buffer-contents-to-insert)
+        (beginning-of-buffer)
+        (search-forward "$")
+        (delete-backward-char 1)
+        (omnisharp--update-buffer)))
 
 (Then "^point should be on line number \"\\([^\"]+\\)\"$"
       (lambda (expected-line-number)

@@ -21,6 +21,22 @@ Feature: Go to definition
     Then point should be on a line containing "public class Target"
 
   Scenario: Go to definition in another window
+    Given I open the MinimalSolution source file "minimal/MyClass.cs"
+    Given My buffer contents are, and my point is at $:
+    """
+    using System;
+
+    namespace minimal
+    {
+        public class MyClass
+        {
+            public MyClass ()
+            {
+            }$
+        }
+    }
+    """
+
     Given I open the MinimalSolution source file "minimal/MyClassContainer.cs"
     When My buffer contents are, and my point is at $:
     """
