@@ -125,10 +125,9 @@ the OmniSharp server understands."
     (current-column)))
 
 (defun omnisharp--buffer-exists-for-file-name (file-name)
-  (let ((all-open-buffers-list
-         (-map 'buffer-file-name (-non-nil (buffer-list)))))
-    (--any? (string-equal file-name it)
-            all-open-buffers-list)))
+  (let ((all-open-buffers-list (-non-nil (buffer-list))))
+    (--first (string-equal file-name (buffer-file-name it))
+             all-open-buffers-list)))
 
 (defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
@@ -292,5 +291,11 @@ moving point."
      (t ; some kind of unix: linux or osx
       (cons "mono" args)))))
 
+(defun omnisharp--update-buffer (&optional buffer)
+  (when (equal nil buffer)
+    (setq buffer (current-buffer)))
+  (omnisharp-post-message-curl-as-json
+   (omnisharp--get-api-url "updatebuffer")
+   (omnisharp--get-common-params)))
 
 (provide 'omnisharp-utils)

@@ -300,31 +300,74 @@ name to rename to, defaulting to the current name of the symbol."
   (let* ((current-word (thing-at-point 'symbol))
          (rename-to (read-string "Rename to: " current-word))
          (rename-request
-          (cons `(RenameTo . ,rename-to)
-                (omnisharp--get-common-params)))
+          (->> (omnisharp--get-common-params)
+            (cons `(RenameTo . ,rename-to))
+            (cons `(WantsTextChanges . true))))
 
          (modified-file-responses
           (omnisharp-rename-worker rename-request))
          (location-before-rename
           (omnisharp--get-common-params-for-emacs-side-use)))
 
-    ;; save-excursion does not work here for some reason.
+    ;; TODO show ErrorMessage if it's given
 
-    ;; Set all modified files' contents to what the server thinks they
-    ;; now contain. Doing this will make the user see the results of
-    ;; the rename.
+    ;; The server will possibly update some files that are currently open.
+    ;; Save all buffers to avoid conflicts / losing changes
+    (save-some-buffers t)
+
     (--each modified-file-responses
-      (omnisharp--set-buffer-contents-to
-       (cdr (assoc 'FileName it))
-       (cdr (assoc 'Buffer it))))
+      (-let (((&alist 'Changes changes
+                      'FileName file-name) it))
+        (omnisharp--update-files-with-text-changes
+         file-name
+         (omnisharp--vector-to-list changes))))
 
     ;; Keep point in the buffer that initialized the rename so that
-    ;; the user deos not feel disoriented
+    ;; the user does not feel disoriented
     (omnisharp-go-to-file-line-and-column location-before-rename)
 
     (message "Rename complete in files: \n%s"
              (-interpose "\n" (--map (cdr (assoc 'FileName it))
                                      modified-file-responses)))))
+
+(defun omnisharp--update-files-with-text-changes (file-name text-changes)
+  (-if-let (buffer (omnisharp--buffer-exists-for-file-name file-name))
+      (with-current-buffer buffer
+        (-map 'omnisharp--apply-text-change text-changes))
+    (progn
+      ;; this loads only the text but runs no file hooks and no syntax
+      ;; highlighting etc.
+      (let ((file (find-file-literally file-name)))
+        (-map 'omnisharp--apply-text-change text-changes)
+        (save-buffer)
+        (kill-buffer)))))
+
+(defun omnisharp--apply-text-change (text-change)
+  "Takes a LinePositionSpanTextChange and applies it to the current
+buffer."
+  (save-excursion
+    (-let (((&alist 'NewText new-text
+                    'StartLine start-line
+                    'StartColumn start-column
+                    'EndLine end-line
+                    'EndColumn end-column) text-change))
+
+      (let ((start-point
+             (progn
+               (omnisharp--go-to-line-and-column
+                start-line
+                (- start-column 1))
+               (point)))
+            (end-point
+             (progn
+               (omnisharp--go-to-line-and-column
+                end-line
+                (- end-column 1))
+               (point))))
+
+        (delete-region start-point end-point)
+        (goto-char start-point)
+        (insert new-text)))))
 
 (defun omnisharp-rename-worker (rename-request)
   "Given a RenameRequest, returns a list of ModifiedFileResponse
@@ -647,6 +690,11 @@ QuickFix class json result."
    (cdr (assoc 'FileName json-result))
    other-window))
 
+(defun omnisharp--go-to-line-and-column (line column)
+  (with-no-warnings
+    (goto-line line))
+  (move-to-column column))
+
 (defun omnisharp-go-to-file-line-and-column-worker (line
                                                     column
                                                     &optional filename
@@ -666,10 +714,7 @@ messing with the ring."
                                                      other-window))
 
     ;; calling goto-line directly results in a compiler warning.
-    (with-no-warnings
-      (goto-line line))
-
-    (move-to-column column)
+    (omnisharp--go-to-line-and-column line column)
 
     (unless dont-save-old-pos
       (omnisharp--save-position-to-find-tag-marker-ring
