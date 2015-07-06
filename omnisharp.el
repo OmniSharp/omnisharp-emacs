@@ -309,26 +309,28 @@ name to rename to, defaulting to the current name of the symbol."
          (location-before-rename
           (omnisharp--get-common-params-for-emacs-side-use)))
 
-    ;; TODO show ErrorMessage if it's given
+    (-if-let (error-message (cdr (assoc 'ErrorMessage modified-file-responses)))
+        (message error-message)
 
-    ;; The server will possibly update some files that are currently open.
-    ;; Save all buffers to avoid conflicts / losing changes
-    (save-some-buffers t)
+      (progn
+        ;; The server will possibly update some files that are currently open.
+        ;; Save all buffers to avoid conflicts / losing changes
+        (save-some-buffers t)
 
-    (--each modified-file-responses
-      (-let (((&alist 'Changes changes
-                      'FileName file-name) it))
-        (omnisharp--update-files-with-text-changes
-         file-name
-         (omnisharp--vector-to-list changes))))
+        (--each modified-file-responses
+          (-let (((&alist 'Changes changes
+                          'FileName file-name) it))
+            (omnisharp--update-files-with-text-changes
+             file-name
+             (omnisharp--vector-to-list changes))))
 
-    ;; Keep point in the buffer that initialized the rename so that
-    ;; the user does not feel disoriented
-    (omnisharp-go-to-file-line-and-column location-before-rename)
+        ;; Keep point in the buffer that initialized the rename so that
+        ;; the user does not feel disoriented
+        (omnisharp-go-to-file-line-and-column location-before-rename)
 
-    (message "Rename complete in files: \n%s"
-             (-interpose "\n" (--map (cdr (assoc 'FileName it))
-                                     modified-file-responses)))))
+        (message "Rename complete in files: \n%s"
+                 (-interpose "\n" (--map (cdr (assoc 'FileName it))
+                                         modified-file-responses)))))))
 
 (defun omnisharp--update-files-with-text-changes (file-name text-changes)
   (-if-let (buffer (omnisharp--buffer-exists-for-file-name file-name))
