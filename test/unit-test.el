@@ -62,14 +62,13 @@ omnisharp--flycheck-error-parser-raw-json error parser"
   (let ((quickfix-in-json-format
          "{\"QuickFixes\":[{\"Text\":\"Parameter can be demoted to base class\",
                             \"Line\":22,
+                            \"LogLevel\":\"Info\",
                             \"Column\":20,
                             \"FileName\":\"/foo/OmniSharpServer/OmniSharp/Common/QuickFix.cs\"}]}"))
     (omnisharp--flycheck-error-parser-raw-json
      quickfix-in-json-format
      'checker
-     (get-buffer-create "some.cs")
-     ;; This is the level that csharp-omnisharp-curl-code-issues uses
-     'info)))
+     (get-buffer-create "some.cs"))))
 
 (defmacro with-test-buffer-contents (buffer-contents
                                      code-to-run-in-buffer)
