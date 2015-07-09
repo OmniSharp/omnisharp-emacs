@@ -286,6 +286,7 @@ triggers a completion immediately"
 
 ;;;###autoload
 (defun company-omnisharp (command &optional arg &rest ignored)
+  (interactive '(interactive))
   "`company-mode' completion back-end using OmniSharp."
 
   ;; If flx isn't installed, turn off flex matching
@@ -296,6 +297,7 @@ triggers a completion immediately"
       (setq omnisharp-company-match-type 'company-match-simple)))
 
   (cl-case command
+    (interactive (company-begin-backend 'company-omnisharp))
     (prefix (when (and (bound-and-true-p omnisharp-mode)
                        (not (company-in-string-or-comment)))
               (omnisharp-company--prefix)))
