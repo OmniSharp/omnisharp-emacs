@@ -896,8 +896,7 @@ server process running in the background."
 
   :predicate (lambda () omnisharp-mode))
 
-(defun omnisharp--flycheck-error-parser-raw-json
-  (output checker buffer &optional error-level)
+(defun omnisharp--flycheck-error-parser-raw-json (output checker buffer)
   "Takes either a QuickFixResponse or a SyntaxErrorsResponse as a
 json string. Returns flycheck errors created based on the locations in
 the json."
@@ -921,7 +920,9 @@ the json."
                  ;; A CodeIssues response has Text instead of Message
                  :message (cdr (or (assoc 'Message it)
                                    (assoc 'Text it)))
-                 :level (or error-level 'error)))
+                 :level (if (equal (cdr (assoc 'LogLevel it)) "Warning")
+                            'warning
+                          'error)))
               errors))))
 
 (defun omnisharp--imenu-make-marker (element)
