@@ -68,7 +68,9 @@ its type."
              (omnisharp--log (format "<-- %s %s: %s"
                                      request-seq
                                      command
-                                     body)))))))
+                                     body))))
+          (t (omnisharp--log (format "Received an unknown server packet: %s"
+                                     (prin1-to-string packet)))))))
 
 (defun omnisharp--at-full-line? ()
   ;; all platforms use \n as newline in emacs
