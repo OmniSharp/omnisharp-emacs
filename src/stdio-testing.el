@@ -37,9 +37,38 @@
 ;;; when a response ("Type": "response") arrives, call function associated with that Request_seq
 ;;; also remove the response handler
 (defun omnisharp--handle-server-message (process message-part)
-  (let ((messages-from-server (omnisharp--read-lines-from-process-output
-                               process message-part)))
-    messages-from-server))
+  (let* ((messages-from-server (omnisharp--read-lines-from-process-output
+                                process message-part))
+         (error-message (concat
+                         "The server sent an unknown json message. "
+                         "Inspect the omnisharp-server process buffer "
+                         "to view recent messages from the server. "
+                         "Set `omnisharp-debug' to t and inspect the "
+                         "*omnisharp-debug* buffer to this error specifically."))
+         (json-messages (--map (omnisharp--json-read-from-string it error-message)
+                               messages-from-server)))
+    (-map 'omnisharp--handle-server-event json-messages)))
+
+(defun omnisharp--handle-server-event (packet)
+  "Takes an alist representing some kind of Packet, possibly a
+ResponsePacket or an EventPacket, and processes it depending on
+its type."
+  (-let [(&alist 'Type type) packet]
+    (cond ((equal "event" type)
+           (-let [(&alist 'LogLevel log-level
+                          'Message message) (cdr (assoc 'Body packet))]
+             (omnisharp--log (format "%s: %s" log-level message))))
+          ((equal "response" type)
+           (-let [(&alist 'Success success
+                          'Message message
+                          'Body body
+                          'Command command
+                          'Request_seq request-seq) packet]
+             ;; todo actually do something useful on the emacs side
+             (omnisharp--log (format "<-- %s %s: %s"
+                                     request-seq
+                                     command
+                                     body)))))))
 
 (defun omnisharp--at-full-line? ()
   ;; all platforms use \n as newline in emacs
@@ -47,9 +76,9 @@
                 (substring-no-properties (or (thing-at-point 'line)
                                              ""))))
 
-(defun omnisharp--marker-at-full-line? (marker)
+(defun omnisharp--marker-at-full-line? (position-or-marker)
   (save-excursion
-    (goto-char marker)
+    (goto-char position-or-marker)
     (omnisharp--at-full-line?)))
 
 (defun omnisharp--read-lines-from-process-output (process message-part)
@@ -81,8 +110,9 @@ have not been returned before."
                 ;; get the start of the last inserted line
                 (goto-char previous-text-marker)
                 (beginning-of-line)
-                (s-lines (buffer-substring-no-properties
-                          (point) (process-mark process)))))))))))
+                (--filter (not (s-blank? it))
+                          (s-lines (buffer-substring-no-properties
+                                    (point) (process-mark process))))))))))))
 
 (defvar omnisharp--server-info
   (make-omnisharp--server-info

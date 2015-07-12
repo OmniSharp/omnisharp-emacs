@@ -19,7 +19,7 @@
   ;; A single message in its entirety. Should return the message.
   (with-test-omnisharp-roslyn-process
    process
-   (should (equal '("{Some: Json}" "")
+   (should (equal '("{Some: Json}")
                   (omnisharp--read-lines-from-process-output
                    process
                    ;; fake json does not confuse emacs syntax
@@ -51,7 +51,7 @@
       process
       "{Message start")
      (should (equal
-              '("{Message start, and message end}" "")
+              '("{Message start, and message end}")
               (omnisharp--read-lines-from-process-output
                process
                ", and message end}\n")))))
@@ -65,8 +65,7 @@
      (omnisharp--read-lines-from-process-output process "{Message start")
      (should (equal
               '("{Message start, message end}"
-                "{Second message}"
-                "")
+                "{Second message}")
               (omnisharp--read-lines-from-process-output
                process
                ", message end}\n{Second message}\n")))))
@@ -80,8 +79,7 @@
    (progn
      (omnisharp--read-lines-from-process-output process "{First message}\n{Second message start")
      (should (equal
-              '("{Second message start, second message end}"
-                "")
+              '("{Second message start, second message end}")
               (omnisharp--read-lines-from-process-output
                process
                ", second message end}\n"))))))
