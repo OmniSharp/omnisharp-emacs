@@ -8,11 +8,12 @@
 
 (setq omnisharp-debug t)
 
-(defun omnisharp--send-command-to-server (server-info api-name payload)
+(defun omnisharp--send-command-to-server (api-name payload)
   ;; make RequestPacket with request-id
   ;; send request
   ;; store response handler associated with the request id
-  (-let* (((&alist :process process
+  (-let* ((server-info omnisharp--server-info)
+          ((&alist :process process
                    :request-id request-id) server-info)
           (request (omnisharp--make-request-packet api-name
                                                    payload
@@ -116,22 +117,10 @@ have not been returned before."
                           (s-lines (buffer-substring-no-properties
                                     (point) (process-mark process))))))))))))
 
-(defvar omnisharp--server-info
-  (make-omnisharp--server-info
-   ;; use a pipe for the connection instead of a pty
-   (let ((process-connection-type nil)
-         (process (start-process
-                   "omnisharp-server"             ; process name
-                   "omnisharp-server"             ; buffer name
-                   "/home/mika/git/omnisharp-emacs/omnisharp-roslyn/omnisharp"
-                   ;; "-v"
-                   "-s" "/home/mika/git/omnisharp-emacs/test/MinimalSolution/" "--stdio")))
-     (set-process-filter process 'omnisharp--handle-server-message)
-     (set-process-sentinel process 'omnisharp--server-process-sentinel)
-     (set-process-coding-system process 'utf-8-unix 'utf-8-unix)
-     process)
-   1))
+(defvar omnisharp--server-info nil)
 
 ;;; - how can I set up listeners for different types of messages?
 
 ;;; todo stop-process
+
+(provide 'omnisharp-server-management)

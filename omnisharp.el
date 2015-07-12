@@ -34,6 +34,7 @@
 (require 'omnisharp-server-actions)
 (require 'omnisharp-auto-complete-actions)
 (require 'omnisharp-settings)
+(require 'omnisharp-server-management)
 
 ;;; Code:
 ;;;###autoload

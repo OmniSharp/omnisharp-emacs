@@ -86,14 +86,12 @@ port specified."
 OmniSharpServer process specified in the current configuration has
 finished loading the solution."
   (interactive)
-  (if (omnisharp--check-ready-status-worker)
-      (message "Server is ready")
-    (message "Server is not ready yet")))
-
-(defun omnisharp--check-ready-status-worker ()
-  (let ((result (omnisharp-post-message-curl-as-json
-		 (concat (omnisharp-get-host) "checkreadystatus"))))
-    (eq result t)))
+  (omnisharp--send-command-to-server
+   "checkreadystatus"
+   (lambda (ready?)
+     (if ready?
+         (message "Server is ready")
+       (message "Server is not ready yet")))))
 
 (defun omnisharp-reload-solution ()
   "Reload the current solution."
