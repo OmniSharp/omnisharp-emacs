@@ -50,17 +50,28 @@ solution files were found."
           (if (string= (file-name-extension path-to-solution) "sln")
               (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
             (message (format "Starting OmniSharpServer using folder mode in: %s" path-to-solution)))
+
           (when (not (eq nil (get-buffer BufferName)))
             (kill-buffer BufferName))
-          (let ((process (apply
-                          'start-process
-                          "Omni-Server"
-                          (get-buffer-create BufferName)
-                          (omnisharp--get-omnisharp-server-executable-command path-to-solution))))
-            (set-process-sentinel process 'omnisharp--server-process-sentinel)
-            (unless omnisharp-debug ;; ignore process output if debug flag not set
-              (set-process-filter process (lambda (process string))))))
-      (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
+
+          (setq omnisharp--server-info
+                (make-omnisharp--server-info
+                 ;; use a pipe for the connection instead of a pty
+                 (let ((process-connection-type nil)
+                       (process (start-process
+                                 "Omni-Server" ; process name
+                                 "Omni-Server" ; buffer name
+                                 omnisharp-server-executable-path
+                                 ;; remaining arguments
+                                 ;; "-v"
+                                 "-s" path-to-solution "--stdio")))
+                   (set-process-filter process 'omnisharp--handle-server-message)
+                   (set-process-sentinel process 'omnisharp--server-process-sentinel)
+                   (set-process-coding-system process 'utf-8-unix 'utf-8-unix)
+                   process)))
+          (unless omnisharp-debug ;; ignore process output if debug flag not set
+            (set-process-filter process (lambda (process string)))))
+      (error (format "Path does not lead to a valid solution path: %s" path-to-solution)))))
 
 ;;;###autoload
 (defun omnisharp-check-alive-status ()

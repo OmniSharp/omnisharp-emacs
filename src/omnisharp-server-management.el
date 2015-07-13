@@ -1,10 +1,10 @@
 ;; this is a testing / development file only. don't use this.
 
-(defun make-omnisharp--server-info (process request-id)
+(defun make-omnisharp--server-info (process)
   `((:process . ,process)
     ;; This is incremented for each request. Do not modify it in other
     ;; places.
-    (:request-id . ,request-id)
+    (:request-id . 1)
     ;; alist of (request-id . response-handler)
     (:response-handlers '(()))))
 
@@ -14,22 +14,25 @@
   ;; make RequestPacket with request-id
   ;; send request
   ;; store response handler associated with the request id
-  (-let* ((server-info omnisharp--server-info)
-          ((&alist :process process
-                   :request-id request-id) server-info)
-          (request (omnisharp--make-request-packet api-name
-                                                   payload
-                                                   request-id)))
-    (when omnisharp-debug
-      (omnisharp--log (format "--> %s" (prin1-to-string request))))
+  (if (equal nil omnisharp--server-info)
+      (message (concat "OmniSharp server not running. "
+                       "Start it with `omnisharp-start-omnisharp-server' first"))
+    (-let* ((server-info omnisharp--server-info)
+            ((&alist :process process
+                     :request-id request-id) server-info)
+            (request (omnisharp--make-request-packet api-name
+                                                     payload
+                                                     request-id)))
+      (when omnisharp-debug
+        (omnisharp--log (format "--> %s" (prin1-to-string request))))
 
-    ;; update current request-id and associate a response-handler for
-    ;; this request
-    (setcdr (assoc :request-id server-info) (+ 1 request-id))
-    (setcdr (assoc :response-handlers server-info)
-            (assoc `(,request-id . response-handler)
-                   (cdr (assoc :response-handlers server-info))))
-    (process-send-string process request)))
+      ;; update current request-id and associate a response-handler for
+      ;; this request
+      (setcdr (assoc :request-id server-info) (+ 1 request-id))
+      (setcdr (assoc :response-handlers server-info)
+              (assoc `(,request-id . response-handler)
+                     (cdr (assoc :response-handlers server-info))))
+      (process-send-string process request))))
 
 (defun omnisharp--make-request-packet (api-name payload request-id)
   (let ((response (-concat payload `((Command . ,api-name)
