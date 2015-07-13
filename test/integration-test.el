@@ -45,26 +45,10 @@ default message 'json-readtable-error'"
       (should (equal "Error communicating to the OmniSharpServer instance"
                      response-json-string))))))
 
-(ert-deftest check-alive-status-worker-should-return-server-result ()
-  (with-working-server-configuration
-   (should (equal t (omnisharp--check-alive-status-worker))))
-
-  (with-broken-server-configuration
-   (should (equal nil
-                  (omnisharp--check-alive-status-worker)))))
-
-(ert-deftest check-ready-worker-should-return-server-result ()
-  (with-working-server-configuration
-   (should (equal t (omnisharp--check-ready-status-worker))))
-
-  (with-broken-server-configuration
-   (should (equal nil
-                  (omnisharp--check-ready-status-worker)))))
-
 ;; had some issues with refactoring and this function
 (ert-deftest-async omnisharp-post-message-curl-async-doesnt-crash (done-function)
-  (with-working-server-configuration
-   (omnisharp-post-message-curl-async
-     (omnisharp--get-api-url "checkreadystatus")
-     nil ; no params needed
-     (lambda (_) (funcall done-function)))))
+                   (with-working-server-configuration
+                    (omnisharp-post-message-curl-async
+                     (omnisharp--get-api-url "checkreadystatus")
+                     nil ; no params needed
+                     (lambda (_) (funcall done-function)))))

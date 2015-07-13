@@ -71,14 +71,13 @@ alive.
 to the server is functional - I.e. The user has the correct host and
 port specified."
   (interactive)
-  (if (omnisharp--check-alive-status-worker)
-      (message "Server is alive and well. Happy coding!")
-    (message "Server is not alive")))
-
-(defun omnisharp--check-alive-status-worker ()
-  (let ((result (omnisharp-post-message-curl-as-json
-		 (concat (omnisharp-get-host) "checkalivestatus"))))
-    (eq result t)))
+  (omnisharp--send-command-to-server
+   "checkalivestatus"
+   nil
+   (lambda (alive?)
+     (if alive?
+         (message "Server is alive and well. Happy coding!")
+       (message "Server is not alive")))))
 
 ;;;###autoload
 (defun omnisharp-check-ready-status ()
@@ -88,6 +87,7 @@ finished loading the solution."
   (interactive)
   (omnisharp--send-command-to-server
    "checkreadystatus"
+   nil
    (lambda (ready?)
      (if ready?
          (message "Server is ready")

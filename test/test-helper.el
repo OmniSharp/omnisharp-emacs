@@ -13,3 +13,12 @@
 (require 'el-mock)
 (require 'noflet)
 
+(omnisharp--create-ecukes-test-server)
+
+(defmacro with-server-returning (called-api-name return-value &rest test-forms)
+  "Allows mocking calling the omnisharp-roslyn stdio server to test
+callback effects directly, without the need of a running
+omnisharp-roslyn process."
+  `(noflet ((omnisharp--send-command-to-server (_api-name _payload &optional response-handler)
+                                               (apply response-handler (list ,return-value))))
+           ,@test-forms))

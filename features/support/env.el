@@ -26,26 +26,10 @@
 (require 'espuds)
 (require 'ert)
 
-(defun omnisharp--create-ecukes-test-server ()
-  (setq omnisharp--server-info
-        (make-omnisharp--server-info
-         ;; use a pipe for the connection instead of a pty
-         (let ((process-connection-type nil)
-               (process (start-process
-                         "omnisharp-server"             ; process name
-                         "omnisharp-server"             ; buffer name
-                         "/home/mika/git/omnisharp-emacs/omnisharp-roslyn/omnisharp"
-                         ;; "-v"
-                         "-s" "/home/mika/git/omnisharp-emacs/test/MinimalSolution/" "--stdio")))
-           (set-process-filter process 'omnisharp--handle-server-message)
-           (set-process-sentinel process 'omnisharp--server-process-sentinel)
-           (set-process-coding-system process 'utf-8-unix 'utf-8-unix)
-           process)
-         1)))
-
 (Setup
  ;; Before anything has run
  (omnisharp--create-ecukes-test-server)
+ (print omnisharp--server-info)
  )
 
 (Before

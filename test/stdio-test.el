@@ -1,6 +1,6 @@
-(omnisharp--send-command-to-server omnisharp--server-info
-                                   "checkreadystatus"
-                                   nil)
+;; (omnisharp--send-command-to-server omnisharp--server-info
+;;                                    "checkreadystatus"
+;;                                    nil)
 
 (defmacro with-test-omnisharp-roslyn-process (process-symbol &rest test-forms)
   `(unwind-protect
@@ -58,28 +58,79 @@
 
   ;; Two lines arriving like this:
   ;; 1. Message 1 part a
-  ;; 2. Message 1 part b & message 2
+  ;; 2. Message 1 part b & message 2 and 3
   (with-test-omnisharp-roslyn-process
    process
    (progn
      (omnisharp--read-lines-from-process-output process "{Message start")
      (should (equal
               '("{Message start, message end}"
-                "{Second message}")
+                "{Second message}"
+                "{Third message}")
               (omnisharp--read-lines-from-process-output
                process
-               ", message end}\n{Second message}\n")))))
+               ", message end}\n{Second message}\n{Third message}\n")))))
 
-  ;; 1. Full message with partial message
+  ;; 1. Full messages with a partial message
   ;; 2. The rest of the partial message.
-  ;; The first full message will be returned with the first call, and
-  ;; the partial message will be returned after the second call.
+  ;; All messages will be returned after the second call.
   (with-test-omnisharp-roslyn-process
    process
    (progn
-     (omnisharp--read-lines-from-process-output process "{First message}\n{Second message start")
+     (omnisharp--read-lines-from-process-output
+      process "{First message}\n{Second message}\n{Third message start")
      (should (equal
-              '("{Second message start, second message end}")
+              '("{First message}"
+                "{Second message}"
+                "{Third message start, third message end}")
               (omnisharp--read-lines-from-process-output
                process
-               ", second message end}\n"))))))
+               ", third message end}\n")))
+
+     ;; a new message should not repeat any previous ones
+     (should (equal
+              '("{Fourth message}")
+              (omnisharp--read-lines-from-process-output
+               process
+               "{Fourth message}\n"))))))
+
+(ert-deftest omnisharp--handle-server-response-packet ()
+  ;; should call response-handler when a response with a matching
+  ;; request id is received
+  (let* ((response-body "lalala")
+         (response `((Success . t)
+                     (Message . "message")
+                     (Body . ,response-body)
+                     (Command . "getfoodata")
+                     (Request_seq . 1)))
+         (server-info
+          `((:process . nil)
+            (:request-id . 1)
+            (:response-handlers . ((1 . (lambda (body)
+                                          (should (equal body ,response-body)))))))))
+
+    (omnisharp--handle-server-response-packet response server-info)
+
+    ;; should have removed handlers for request-id 1 in server-info
+    (should (--none? (= (car it) 1)
+                     (cdr (assoc :response-handlers server-info)))))
+
+  ;; should not call handler when a response for another request is
+  ;; received (when there is no matching handler)
+  (let* ((response `((Success . t)
+                     (Message . "message")
+                     (Body . "not used")
+                     (Command . "getfoodata")
+                     (Request_seq . 1)))
+         (server-info
+          `((:process . nil)
+            (:request-id . 1)
+            (:response-handlers
+             . ((2 . (lambda (body)
+                       ;; just fail
+                       (should
+                        (equal nil
+                               "error: should not have been called")))))))))
+
+    (should (equal nil
+                   (omnisharp--handle-server-response-packet response server-info)))))

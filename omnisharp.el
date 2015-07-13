@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013 Mika Vilpas (GPLv3)
 ;; Author: Mika Vilpas
 ;; Version: 3.4
-;; Url: https://github.com/sp3ctum/omnisharp-emacs
+;; Url: https://github.com/Omnisharp/omnisharp-emacs
 ;; Package-Requires: ((json "1.2") (flycheck "0.21") (dash "20141201.2206") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.9.0"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
 
@@ -27,14 +27,15 @@
 (require 'flycheck)
 (require 's)
 
+;; these are for development only
 (add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/")))
 (add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/actions")))
 
+(require 'omnisharp-server-management)
 (require 'omnisharp-utils)
 (require 'omnisharp-server-actions)
 (require 'omnisharp-auto-complete-actions)
 (require 'omnisharp-settings)
-(require 'omnisharp-server-management)
 
 ;;; Code:
 ;;;###autoload
