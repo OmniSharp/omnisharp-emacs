@@ -8,7 +8,7 @@ Emacs text editor. It provides IDE-like features for editing files in
 C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
-## This requires the [OmniSharp][] Server program
+## This requires the [omnisharp-roslyn][] Server program
 The server must be at least the following version (expect this to be
 update to this guide whenever the required version changes):
 
@@ -255,23 +255,21 @@ This supports Emacs 24.3 and above at least. It has been tested on
 Ubuntu 12.04 (Precise), on Windows 7 and on OSX.
 
 To install, use [MELPA][].
-After MELPA is installed, use
+After MELPA is configured correctly, use
 
 ```
+M-x package-refresh-contents RET
 M-x package-install omnisharp RET
 ```
 to install.
 
-omnisharp-emacs depends on the external program `curl` for accessing
-the background OmniSharp server process. You need to ensure this is
-installed and can be found by Emacs. On Windows you should install the
-native curl program from [the curl website].
+Download omnisharp-roslyn and extract it to some location. Then point
+the variable `omnisharp-server-executable-path` to that location in
+your init file like so:
 
-To make sure omnisharp-emacs can find your curl, make your PATH
-environment variable contain the directory for curl, or set the
-`omnisharp--curl-executable-path` variable to the full path to the
-curl executable. The path may be e.g. `"C:\Program Files
-(x86)\Git\bin\curl.exe"` or `/usr/bin/curl`.
+```lisp
+(setq omnisharp-server-executable-path "/path/to/omnisharp-roslyn/omnisharp")
+```
 
 To automatically load omnisharp-emacs when editing csharp files, add
 something like this to your csharp-mode-hook:
@@ -280,14 +278,9 @@ something like this to your csharp-mode-hook:
 (add-hook 'csharp-mode-hook 'omnisharp-mode)
 ```
 
-Start an OmniSharp server process on a solution, and you should have
-access to all of this program's functions. To do this, you can use
-`M-x omnisharp-start-omnisharp-server` and navigate to a solution
-file. This will start the server and let emacs handle the server
-process's life.
-
-If you want to start the process externally so it's not killed when
-emacs is closed, see the instructions at [OmniSharp].
+Emacs will manage omnisharp-roslyn as a subprocess. To start it, use
+`M-x omnisharp-start-omnisharp-server RET`. The command will ask you
+for a solution file or a directory you want to code in.
 
 You probably need to create a custom configuration for accessing
 omnisharp-emacs in your normal coding sessions. There is an example
@@ -304,7 +297,7 @@ file to `config.json`.
 
 Pull requests welcome!
 
-[OmniSharp]: https://github.com/nosami/OmniSharpServer
+[omnisharp-roslyn]: https://github.com/OmniSharp/omnisharp-roslyn
 [popup.el]: https://github.com/auto-complete/popup-el
 [company-mode]: http://company-mode.github.io
 [ido-mode]: http://www.emacswiki.org/emacs/InteractivelyDoThings
