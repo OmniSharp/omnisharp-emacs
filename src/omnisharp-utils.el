@@ -162,11 +162,13 @@ the curl program. Depends on the operating system."
   (omnisharp--log (prin1-to-string curl-command)))
 
 (defun omnisharp--log (single-or-multiline-log-string)
-  (let* ((log-buffer (get-buffer-create "*omnisharp-debug*")))
-    (with-current-buffer log-buffer
-      (end-of-buffer)
-      (insert single-or-multiline-log-string)
-      (insert "\n"))))
+  (shut-up
+    (let* ((log-buffer (get-buffer-create "*omnisharp-debug*")))
+      (save-window-excursion
+        (with-current-buffer log-buffer
+          (end-of-buffer)
+          (insert single-or-multiline-log-string)
+          (insert "\n"))))))
 
 (defun omnisharp--get-curl-command-arguments-string-for-api-name
   (params api-name)

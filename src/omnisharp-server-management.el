@@ -49,14 +49,6 @@ handlers in the current omnisharp--server-info."
                                      (Seq . ,request-id)))))
     (json-encode response)))
 
-;;; read output
-;;;
-;;; Plan:
-;;;
-;;; read output, increment request-id
-;;; log events to process-buffer
-;;; when a response ("Type": "response") arrives, call function associated with that Request_seq
-;;; also remove the response handler
 (defun omnisharp--handle-server-message (process message-part)
   (condition-case maybe-error-data
       (let* ((messages-from-server (omnisharp--read-lines-from-process-output
@@ -153,24 +145,23 @@ have not been returned before."
       (let* ((previous-text-marker (save-excursion
                                      (goto-char (process-mark process))
                                      (point))))
-        (save-excursion
-          (progn
-            ;; Insert the text, advancing the process marker.
-            (goto-char (buffer-end 1))
-            (insert message-part)
-            ;; Return previous pending lines only when the latest line
-            ;; is complete. Might be slightly slower but easier to
-            ;; implement
-            (when (omnisharp--marker-at-full-line? (point))
-              (progn
-                (set-marker (process-mark process) (point))
-                ;; get the start of the last inserted line
-                (goto-char previous-text-marker)
-                (beginning-of-line)
-                (--filter (not (s-blank? it))
-                          (s-lines (buffer-substring-no-properties
-                                    (point)
-                                    (process-mark process))))))))))))
+        (progn
+          ;; Insert the text, advancing the process marker.
+          (goto-char (buffer-end 1))
+          (insert message-part)
+          ;; Return previous pending lines only when the latest line
+          ;; is complete. Might be slightly slower but easier to
+          ;; implement
+          (when (omnisharp--marker-at-full-line? (point))
+            (progn
+              (set-marker (process-mark process) (point))
+              ;; get the start of the last inserted line
+              (goto-char previous-text-marker)
+              (beginning-of-line)
+              (--filter (not (s-blank? it))
+                        (s-lines (buffer-substring-no-properties
+                                  (point)
+                                  (process-mark process)))))))))))
 
 (defvar omnisharp--server-info nil)
 
