@@ -296,6 +296,7 @@ moving point."
 
 ;; this is actually used in tests only
 (defun omnisharp--create-ecukes-test-server ()
-  (omnisharp-start-omnisharp-server "test/MinimalSolution/"))
+  (let ((omnisharp-server-executable-path (f-full "omnisharp-roslyn/omnisharp")))
+    (omnisharp-start-omnisharp-server "test/MinimalSolution/")))
 
 (provide 'omnisharp-utils)

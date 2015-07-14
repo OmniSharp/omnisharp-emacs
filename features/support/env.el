@@ -28,17 +28,14 @@
 
 (Setup
  ;; Before anything has run
- (omnisharp--create-ecukes-test-server)
- (print omnisharp--server-info)
- )
+ (omnisharp--create-ecukes-test-server))
 
 (Before
  ;; Before each scenario is run
 
  ;; evil's normal mode messes up point locations
  (when (fboundp 'evil-insert)
-   (evil-insert 1))
- )
+   (evil-insert 1)))
 
 (After
  ;; After each scenario is run
@@ -46,5 +43,4 @@
 
 (Teardown
  ;; After when everything has been run
- (kill-process "omnisharp-server")
- )
+ (kill-process "Omni-Server"))
