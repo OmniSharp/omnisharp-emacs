@@ -86,7 +86,7 @@ server backend."
      ["Region in current file" omnisharp-navigate-to-region])
 
     ("OmniSharp server"
-     ["Start OmniSharp server with solution (.sln) file" omnisharp-start-omnisharp-server]
+     ["Start OmniSharp server" omnisharp-start-omnisharp-server]
      ["Check alive status" omnisharp-check-alive-status]
      ["Check ready status" omnisharp-check-ready-status])
 
