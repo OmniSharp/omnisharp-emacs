@@ -3,7 +3,7 @@
     <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
 </a>
 
-omnisharp-emacs is a port of the awesome [OmniSharp][] server to the
+omnisharp-emacs is a port of the awesome [omnisharp-roslyn][] server to the
 Emacs text editor. It provides IDE-like features for editing files in
 C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
@@ -79,8 +79,6 @@ Lacks a better UI and a good default configuration.
       `omnisharp-fix-code-issue-at-point`
 * OmniSharp server instance manipulation
     * Start server
-    * Reload solution
-    * Stop server
 * Test runner
   * Can run test at point, fixture or all tests in project.
 
@@ -286,13 +284,6 @@ You probably need to create a custom configuration for accessing
 omnisharp-emacs in your normal coding sessions. There is an example
 configuration for evil-mode included in the project.
 
-### Using Cygwin on Windows?
-Cygwin paths need to be converted on the server side for the OmniSharp
-server to handle them correctly. See the server side configuration
-file [config-cygwin.json][] that has example configuration for Cygwin
-environments and use the example path replacements by renaming that
-file to `config.json`.
-
 * * * * *
 
 Pull requests welcome!
@@ -304,4 +295,3 @@ Pull requests welcome!
 [Flycheck]: https://github.com/lunaryorn/flycheck
 [MELPA]: https://github.com/milkypostman/melpa/#usage
 [the curl website]: http://curl.haxx.se/download.html
-[config-cygwin.json]: https://github.com/nosami/OmniSharpServer/blob/master/OmniSharp/config-cygwin.json
