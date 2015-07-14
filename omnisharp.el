@@ -119,7 +119,9 @@ server backend."
 
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
     ["Run code format on current buffer" omnisharp-code-format]
-    ["Fix using statements" omnisharp-fix-usings]))
+    ;; not implemented yet in omnisharp-roslyn
+    ;; ["Fix using statements" omnisharp-fix-usings]
+    ))
 
 (defun omnisharp-fix-usings ()
   "Sorts usings, removes unused using statements and
