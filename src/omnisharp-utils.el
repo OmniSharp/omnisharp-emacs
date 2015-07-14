@@ -299,4 +299,43 @@ moving point."
   (let ((omnisharp-server-executable-path (f-full "omnisharp-roslyn/omnisharp")))
     (omnisharp-start-omnisharp-server "test/MinimalSolution/")))
 
+(defun omnisharp--update-files-with-text-changes (file-name text-changes)
+  (-if-let (buffer (omnisharp--buffer-exists-for-file-name file-name))
+      (with-current-buffer buffer
+        (-map 'omnisharp--apply-text-change text-changes))
+    (progn
+      ;; this loads only the text but runs no file hooks and no syntax
+      ;; highlighting etc.
+      (let ((file (find-file-literally file-name)))
+        (-map 'omnisharp--apply-text-change text-changes)
+        (save-buffer)
+        (kill-buffer)))))
+
+(defun omnisharp--apply-text-change (text-change)
+  "Takes a LinePositionSpanTextChange and applies it to the current
+buffer."
+  (save-excursion
+    (-let (((&alist 'NewText new-text
+                    'StartLine start-line
+                    'StartColumn start-column
+                    'EndLine end-line
+                    'EndColumn end-column) text-change))
+
+      (let ((start-point
+             (progn
+               (omnisharp--go-to-line-and-column
+                start-line
+                (- start-column 1))
+               (point)))
+            (end-point
+             (progn
+               (omnisharp--go-to-line-and-column
+                end-line
+                (- end-column 1))
+               (point))))
+
+        (delete-region start-point end-point)
+        (goto-char start-point)
+        (insert new-text)))))
+
 (provide 'omnisharp-utils)
