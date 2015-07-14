@@ -3,6 +3,7 @@
 
 ;; For these tests, an OmniSharpServer process needs to be running.
 
+(require 'ert-async)
 
 ;; Test helpers
 (defmacro with-working-server-configuration (code)
@@ -25,7 +26,6 @@ to the OmniSharpServer instance."
     (should (equal "Error communicating to the OmniSharpServer instance"
                    ,code))))
 
-
 (ert-deftest json-requests-report-communication-errors-nicely ()
   "Human-readable error messages should be returned when doing
 calls to the OmniSharpServer and there is no working
@@ -47,8 +47,11 @@ default message 'json-readtable-error'"
 
 ;; had some issues with refactoring and this function
 (ert-deftest-async omnisharp-post-message-curl-async-doesnt-crash (done-function)
-                   (with-working-server-configuration
-                    (omnisharp-post-message-curl-async
-                     (omnisharp--get-api-url "checkreadystatus")
-                     nil ; no params needed
-                     (lambda (_) (funcall done-function)))))
+  (with-working-server-configuration
+   (omnisharp-post-message-curl-async
+    (omnisharp--get-api-url "checkreadystatus")
+    nil ; no params needed
+    (lambda (_) (funcall done-function)))))
+
+(ert-deftest server-running-stdio-doesnt-crash-test ()
+  (omnisharp-check-ready-status))

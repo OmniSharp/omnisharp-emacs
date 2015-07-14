@@ -8,7 +8,15 @@
     ;; alist of (request-id . response-handler)
     (:response-handlers '(()))))
 
+(setq omnisharp--server-info nil)
+
 (setq omnisharp-debug t)
+
+(defun omnisharp--clear-response-handlers ()
+  "For development time cleaning up impossible states of response
+handlers in the current omnisharp--server-info."
+  (setcdr (assoc :response-handlers omnisharp--server-info)
+          '(())))
 
 (defun omnisharp--send-command-to-server (api-name payload &optional response-handler)
   ;; make RequestPacket with request-id
@@ -24,20 +32,22 @@
                                                      payload
                                                      request-id)))
       (when omnisharp-debug
-        (omnisharp--log (format "--> %s" (prin1-to-string request))))
+        (omnisharp--log (format "--> %s %s"
+                                api-name
+                                (prin1-to-string request))))
 
       ;; update current request-id and associate a response-handler for
       ;; this request
       (setcdr (assoc :request-id server-info) (+ 1 request-id))
       (setcdr (assoc :response-handlers server-info)
-              (assoc `(,request-id . response-handler)
-                     (cdr (assoc :response-handlers server-info))))
-      (process-send-string process request))))
+              (-concat `((,request-id . ,response-handler))
+                       (cdr (assoc :response-handlers server-info))))
+      (process-send-string process (concat request "\n")))))
 
 (defun omnisharp--make-request-packet (api-name payload request-id)
   (let ((response (-concat payload `((Command . ,api-name)
                                      (Seq . ,request-id)))))
-    (concat (json-encode response) "\n")))
+    (json-encode response)))
 
 ;;; read output
 ;;;
@@ -48,25 +58,33 @@
 ;;; when a response ("Type": "response") arrives, call function associated with that Request_seq
 ;;; also remove the response handler
 (defun omnisharp--handle-server-message (process message-part)
-  (let* ((messages-from-server (omnisharp--read-lines-from-process-output
-                                process message-part))
-         (error-message (concat
-                         "The server sent an unknown json message. "
-                         "Inspect the omnisharp-server process buffer "
-                         "to view recent messages from the server. "
-                         "Set `omnisharp-debug' to t and inspect the "
-                         "*omnisharp-debug* buffer to this error specifically."))
-         (json-messages (--map (omnisharp--json-read-from-string it error-message)
-                               messages-from-server)))
-    (-map 'omnisharp--handle-server-event json-messages)))
+  (condition-case maybe-error-data
+      (let* ((messages-from-server (omnisharp--read-lines-from-process-output
+                                    process message-part))
+             (error-message (concat
+                             "The server sent an unknown json message. "
+                             "Inspect the omnisharp-server process buffer "
+                             "to view recent messages from the server. "
+                             "Set `omnisharp-debug' to t and inspect the "
+                             "*omnisharp-debug* buffer to this error specifically."))
+             (json-messages (--map (omnisharp--json-read-from-string it error-message)
+                                   messages-from-server)))
+        (-map 'omnisharp--handle-server-event json-messages))
+    (error (progn
+             (let ((msg (format "omnisharp--handle-server-message error: %s"
+                                (prin1-to-string maybe-error-data))))
+               (omnisharp--log msg)
+               (message msg))))))
 
 (defun omnisharp--handle-server-event (packet)
   "Takes an alist representing some kind of Packet, possibly a
 ResponsePacket or an EventPacket, and processes it depending on
 its type."
   (-let ((server-info omnisharp--server-info)
-         ((&alist 'Type type) packet))
-    (cond ((equal "event" type)
+         ((&alist 'Type type
+                  'Event event) packet))
+    (cond ((and (equal "event" type)
+                (equal "log" event))
            (-let [(&alist 'LogLevel log-level
                           'Message message) (cdr (assoc 'Body packet))]
              (omnisharp--log (format "%s: %s" log-level message))))
@@ -76,6 +94,8 @@ its type."
 
           (t (omnisharp--log (format "Received an unknown server packet: %s"
                                      (prin1-to-string packet)))))))
+(defmacro comment (&rest body) nil)
+(comment (omnisharp--clear-response-handlers))
 
 (defun omnisharp--handle-server-response-packet (packet server-info)
   "Calls the appropriate response callback for the received packet"
@@ -97,7 +117,7 @@ its type."
           ;; remove handler for this request
           (setcdr (assoc :response-handlers server-info)
                   (--remove (= (car it) request-seq)
-                            response-handlers))
+                            (-non-nil response-handlers)))
 
           (apply response-handler (list body)))
 
