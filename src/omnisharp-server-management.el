@@ -31,7 +31,8 @@ handlers in the current omnisharp--server-info."
                                                      payload
                                                      request-id)))
       (when omnisharp-debug
-        (omnisharp--log (format "--> %s %s"
+        (omnisharp--log (format "--> %s %s %s"
+                                request-id
                                 api-name
                                 (prin1-to-string request))))
 
@@ -62,7 +63,8 @@ handlers in the current omnisharp--server-info."
                                    messages-from-server)))
         (-map 'omnisharp--handle-server-event json-messages))
     (error (progn
-             (let ((msg (format "omnisharp--handle-server-message error: %s"
+             (let ((msg (format (concat "omnisharp--handle-server-message error: %s. "
+                                        "See the Omni-Server process buffer for detailed server output.")
                                 (prin1-to-string maybe-error-data))))
                (omnisharp--log msg)
                (message msg))))))
@@ -76,8 +78,11 @@ its type."
                   'Event event) packet))
     (cond ((and (equal "event" type)
                 (equal "log" event))
-           (-let [(&alist 'LogLevel log-level
-                          'Message message) (cdr (assoc 'Body packet))]
+           (-let (((&alist 'LogLevel log-level
+                           'Message message) (cdr (assoc 'Body packet))))
+             (when (equal log-level "ERROR")
+               (message (format "OmniSharp server error: %s"
+                                (-first-item (s-lines message)))))
              (omnisharp--log (format "%s: %s" log-level message))))
 
           ((equal "response" type)
