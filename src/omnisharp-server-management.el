@@ -1,14 +1,10 @@
-;; this is a testing / development file only. don't use this.
-
 (defun make-omnisharp--server-info (process)
   `((:process . ,process)
     ;; This is incremented for each request. Do not modify it in other
     ;; places.
     (:request-id . 1)
     ;; alist of (request-id . response-handler)
-    (:response-handlers '(()))))
-
-(setq omnisharp--server-info nil)
+    (:response-handlers . nil)))
 
 (setq omnisharp-debug t)
 
@@ -16,7 +12,10 @@
   "For development time cleaning up impossible states of response
 handlers in the current omnisharp--server-info."
   (setcdr (assoc :response-handlers omnisharp--server-info)
-          '(())))
+          nil))
+
+(defmacro comment (&rest body) nil)
+(comment (omnisharp--clear-response-handlers))
 
 (defun omnisharp--send-command-to-server (api-name payload &optional response-handler)
   ;; make RequestPacket with request-id
@@ -86,8 +85,11 @@ its type."
 
           (t (omnisharp--log (format "Received an unknown server packet: %s"
                                      (prin1-to-string packet)))))))
-(defmacro comment (&rest body) nil)
-(comment (omnisharp--clear-response-handlers))
+
+(defun omnisharp--remove-response-handler (server-info request-id)
+  (setcdr (assoc :response-handlers server-info)
+          (--remove (= (car it) request-id)
+                    (-non-nil response-handlers))))
 
 (defun omnisharp--handle-server-response-packet (packet server-info)
   "Calls the appropriate response callback for the received packet"
@@ -95,26 +97,22 @@ its type."
                   'Message message
                   'Body body
                   'Command command
-                  'Request_seq request-seq) packet)
+                  'Request_seq request-id) packet)
          ((&alist :response-handlers response-handlers) server-info))
 
     ;; try to find the matching response-handler
-    (-if-let (request-response (--first (= (car it) request-seq)
+    (-if-let (request-response (--first (= (car it) request-id)
                                         response-handlers))
         (-let (((request-id . response-handler) request-response))
           (omnisharp--log (format "<-- %s %s: %s"
-                                  request-seq
+                                  request-id
                                   command
                                   body))
-          ;; remove handler for this request
-          (setcdr (assoc :response-handlers server-info)
-                  (--remove (= (car it) request-seq)
-                            (-non-nil response-handlers)))
-
+          (omnisharp--remove-response-handler server-info request-id)
           (apply response-handler (list body)))
 
       (omnisharp--log (format "<-- %s %s: Warning: response could not be handled: %s"
-                              request-seq
+                              request-id
                               command
                               body)))))
 
