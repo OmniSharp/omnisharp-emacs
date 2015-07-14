@@ -1,3 +1,5 @@
+(defvar omnisharp--server-info nil)
+
 (defun make-omnisharp--server-info (process)
   `((:process . ,process)
     ;; This is incremented for each request. Do not modify it in other
@@ -17,7 +19,7 @@ handlers in the current omnisharp--server-info."
 (defmacro comment (&rest body) nil)
 (comment (omnisharp--clear-response-handlers))
 
-(defun omnisharp--send-command-to-server (api-name payload &optional response-handler)
+(defun omnisharp--send-command-to-server (api-name contents &optional response-handler)
   ;; make RequestPacket with request-id
   ;; send request
   ;; store response handler associated with the request id
@@ -28,7 +30,7 @@ handlers in the current omnisharp--server-info."
             ((&alist :process process
                      :request-id request-id) server-info)
             (request (omnisharp--make-request-packet api-name
-                                                     payload
+                                                     contents
                                                      request-id)))
       (when omnisharp-debug
         (omnisharp--log (format "--> %s %s %s"
@@ -44,12 +46,14 @@ handlers in the current omnisharp--server-info."
                        (cdr (assoc :response-handlers server-info))))
       (process-send-string process (concat request "\n")))))
 
-(defun omnisharp--make-request-packet (api-name payload request-id)
-  (let ((response (-concat payload `((Command . ,api-name)
-                                     (Seq . ,request-id)))))
+(defun omnisharp--make-request-packet (api-name contents request-id)
+  (let ((response (-concat contents `((Command . ,api-name)
+                                      (Seq . ,request-id)))))
     (json-encode response)))
 
 (defun omnisharp--handle-server-message (process message-part)
+  "Parse alists from accumulated json responses in the server's
+process buffer, and handle them as server events"
   (condition-case maybe-error-data
       (let* ((messages-from-server (omnisharp--read-lines-from-process-output
                                     process message-part))
@@ -145,28 +149,25 @@ have not been returned before."
       ;; previous-text-marker will change if it refers to the marker
       ;; and the marker is changed. Get it as an integer instead to
       ;; avoid mutation
-      (let* ((previous-text-marker (save-excursion
-                                     (goto-char (process-mark process))
-                                     (point))))
-        (progn
-          ;; Insert the text, advancing the process marker.
-          (goto-char (buffer-end 1))
-          (insert message-part)
-          ;; Return previous pending lines only when the latest line
-          ;; is complete. Might be slightly slower but easier to
-          ;; implement
-          (when (omnisharp--marker-at-full-line? (point))
-            (progn
-              (set-marker (process-mark process) (point))
-              ;; get the start of the last inserted line
-              (goto-char previous-text-marker)
-              (beginning-of-line)
-              (--filter (not (s-blank? it))
-                        (s-lines (buffer-substring-no-properties
-                                  (point)
-                                  (process-mark process)))))))))))
-
-(defvar omnisharp--server-info nil)
+      (let ((previous-text-marker (save-excursion
+                                    (goto-char (process-mark process))
+                                    (point))))
+        ;; Insert the text, advancing the process marker.
+        (goto-char (buffer-end 1))
+        (insert message-part)
+        ;; Return previous pending lines only when the latest line
+        ;; is complete. Might be slightly slower but easier to
+        ;; implement
+        (when (omnisharp--marker-at-full-line? (point))
+          (progn
+            (set-marker (process-mark process) (point))
+            ;; get the start of the last inserted line
+            (goto-char previous-text-marker)
+            (beginning-of-line)
+            (--filter (not (s-blank? it))
+                      (s-lines (buffer-substring-no-properties
+                                (point)
+                                (process-mark process))))))))))
 
 ;;; todo stop-process
 
