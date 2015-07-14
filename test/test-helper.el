@@ -13,6 +13,7 @@
 (require 'el-mock)
 (require 'noflet)
 
+;;; ensure there is a running server for ert tests
 (omnisharp--create-ecukes-test-server)
 
 (defmacro with-server-returning (called-api-name return-value &rest test-forms)

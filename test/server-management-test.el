@@ -1,7 +1,3 @@
-;; (omnisharp--send-command-to-server omnisharp--server-info
-;;                                    "checkreadystatus"
-;;                                    nil)
-
 (defmacro with-test-omnisharp-roslyn-process (process-symbol &rest test-forms)
   `(unwind-protect
        (progn

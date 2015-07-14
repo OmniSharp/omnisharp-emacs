@@ -86,8 +86,6 @@ server backend."
 
     ("OmniSharp server"
      ["Start OmniSharp server with solution (.sln) file" omnisharp-start-omnisharp-server]
-     ["Reload solution" omnisharp-reload-solution]
-     ["Stop OmniSharp server" omnisharp-stop-server]
      ["Check alive status" omnisharp-check-alive-status]
      ["Check ready status" omnisharp-check-ready-status])
 
