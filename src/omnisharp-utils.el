@@ -230,8 +230,8 @@ something goes wrong, return a human-readable warning."
      (when omnisharp-debug
        (omnisharp--log (concat "omnisharp--json-read-from-string error: "
                                (prin1-to-string json-string))))
-     (or error-message
-         "Error communicating to the OmniSharpServer instance"))))
+     (message (or error-message
+                  "Error communicating to the OmniSharpServer instance")))))
 
 (defun omnisharp-post-message-curl-as-json (url &optional params)
   (omnisharp--json-read-from-string
