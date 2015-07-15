@@ -45,13 +45,12 @@ handlers in the current omnisharp--server-info."
       (setcdr (assoc :response-handlers server-info)
               (-concat `((,request-id . ,response-handler))
                        (cdr (assoc :response-handlers server-info))))
-      (process-send-string process (concat request "\n")))))
+      (process-send-string process (concat (json-encode request) "\n")))))
 
 (defun omnisharp--make-request-packet (api-name contents request-id)
-  (let ((request-packet (-concat `((Arguments . ,contents))
-                                 `((Command . ,api-name)
-                                   (Seq . ,request-id)))))
-    (json-encode request-packet)))
+  (-concat `((Arguments . ,contents))
+           `((Command . ,api-name)
+             (Seq . ,request-id))))
 
 (defun omnisharp--handle-server-message (process message-part)
   "Parse alists from accumulated json responses in the server's
