@@ -1,16 +1,17 @@
+;; -*- lexical-binding: t -*-
 
 (defun omnisharp-go-to-definition (&optional other-window)
   "Jump to the definition of the symbol under point. With prefix
 argument, use another window."
   (interactive "P")
-  (let* ((json-result (omnisharp-post-message-curl-as-json
-                       (concat (omnisharp-get-host) "gotodefinition")
-                       (omnisharp--get-common-params)))
-         (filename (cdr (assoc 'FileName json-result))))
-    (if (null filename)
-        (message
-         "Cannot go to definition as none was returned by the API.")
-      (omnisharp-go-to-file-line-and-column json-result other-window))))
+  (omnisharp--send-command-to-server
+   "gotodefinition"
+   (omnisharp--get-common-params)
+   (lambda (response)
+     (if (null (cdr (assoc 'FileName response)))
+         (message
+          "Cannot go to definition as none was returned by the API.")
+       (omnisharp-go-to-file-line-and-column response other-window)))))
 
 (defun omnisharp-go-to-definition-other-window ()
   "Do `omnisharp-go-to-definition' displaying the result in a different window."
