@@ -64,7 +64,7 @@ solution files were found."
                                  omnisharp-server-executable-path
                                  ;; remaining arguments
                                  ;; "-v"
-                                 "-s" path-to-solution "--stdio")))
+                                 "--stdio" "-s" path-to-solution)))
                    (set-process-filter process 'omnisharp--handle-server-message)
                    (set-process-sentinel process 'omnisharp--server-process-sentinel)
                    (set-process-coding-system process 'utf-8-unix 'utf-8-unix)
