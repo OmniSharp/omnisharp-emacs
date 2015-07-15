@@ -290,14 +290,14 @@ moving point."
 (defun omnisharp--update-buffer (&optional buffer)
   (when (equal nil buffer)
     (setq buffer (current-buffer)))
-  (omnisharp-post-message-curl-as-json
-   (omnisharp--get-api-url "updatebuffer")
+  (omnisharp--send-command-to-server
+   "updatebuffer"
    (omnisharp--get-common-params)))
 
 ;; this is actually used in tests only
 (defun omnisharp--create-ecukes-test-server ()
   (let ((omnisharp-server-executable-path (f-full "omnisharp-roslyn/omnisharp")))
-    (omnisharp-start-omnisharp-server "test/MinimalSolution/")))
+    (omnisharp-start-omnisharp-server "test/MinimalSolution/minimal.sln")))
 
 (defun omnisharp--update-files-with-text-changes (file-name text-changes)
   (-if-let (buffer (omnisharp--buffer-exists-for-file-name file-name))

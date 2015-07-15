@@ -2,6 +2,7 @@
 ;; required, package state is reset between test runs, etc.
 (require 'f)
 (require 's)
+(require 'shut-up)
 
 (defvar omnisharp-emacs-support-path
   (f-dirname (f-this-file)))
@@ -22,13 +23,22 @@
 
 (add-to-list 'load-path omnisharp-emacs-root-path)
 
+(require 'ecukes)
 (require 'omnisharp)
 (require 'espuds)
 (require 'ert)
 
 (Setup
  ;; Before anything has run
- (omnisharp--create-ecukes-test-server))
+ (when (null omnisharp--server-info)
+   (omnisharp--log "TEST: starting test server in integration test Setup hook")
+   (omnisharp--create-ecukes-test-server))
+
+ ;; wait that the server is alive and ready before starting the test run
+ (with-timeout (2 ; seconds
+                (omnisharp--log "Server did not start in time"))
+   (while (not (equal t (cdr (assoc :started? omnisharp--server-info))))
+     (accept-process-output))))
 
 (Before
  ;; Before each scenario is run
@@ -43,4 +53,8 @@
 
 (Teardown
  ;; After when everything has been run
- (kill-process "Omni-Server"))
+ (omnisharp--log "TEST: shutting down test server in integration test Teardown hook")
+ (kill-process "Omni-Server")
+ (with-current-buffer "*omnisharp-debug*"
+   (print "Debug buffer contents:")
+   (print (buffer-string))))
