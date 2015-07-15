@@ -63,7 +63,7 @@ process buffer, and handle them as server events"
                              "Inspect the omnisharp-server process buffer "
                              "to view recent messages from the server. "
                              "Set `omnisharp-debug' to t and inspect the "
-                             "*omnisharp-debug* buffer to this error specifically."))
+                             "*omnisharp-debug* buffer for this error specifically."))
              (json-messages (--map (omnisharp--json-read-from-string it error-message)
                                    messages-from-server)))
         (-map 'omnisharp--handle-server-event json-messages))
@@ -99,7 +99,7 @@ its type."
            (message "The OmniSharp server is ready. Hacks and glory await!")
            (setcdr (assoc :started? server-info) t))
 
-          (t (omnisharp--log (format "Received an unknown server packet: %s"
+          (t (omnisharp--log (format "<-- Received an unknown server packet: %s"
                                      (prin1-to-string packet)))))))
 
 (defun omnisharp--remove-response-handler (server-info request-id)
