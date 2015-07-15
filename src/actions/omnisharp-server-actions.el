@@ -85,10 +85,12 @@ port specified."
   (omnisharp--send-command-to-server
    "checkalivestatus"
    nil
-   (lambda (alive?)
-     (if alive?
-         (message "Server is alive and well. Happy coding!")
-       (message "Server is not alive")))))
+   #'omnisharp-check-alive-status-worker))
+
+(defun omnisharp-check-alive-status-worker (alive?)
+  (if alive?
+      (message "Server is alive and well. Happy coding!")
+    (message "Server is not alive")))
 
 ;;;###autoload
 (defun omnisharp-check-ready-status ()
