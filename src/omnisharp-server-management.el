@@ -48,9 +48,10 @@ handlers in the current omnisharp--server-info."
       (process-send-string process (concat request "\n")))))
 
 (defun omnisharp--make-request-packet (api-name contents request-id)
-  (let ((response (-concat contents `((Command . ,api-name)
-                                      (Seq . ,request-id)))))
-    (json-encode response)))
+  (let ((request-packet (-concat `((Arguments . ,contents))
+                                 `((Command . ,api-name)
+                                   (Seq . ,request-id)))))
+    (json-encode request-packet)))
 
 (defun omnisharp--handle-server-message (process message-part)
   "Parse alists from accumulated json responses in the server's
