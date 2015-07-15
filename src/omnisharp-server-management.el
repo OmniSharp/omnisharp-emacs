@@ -6,9 +6,10 @@
     ;; places.
     (:request-id . 1)
     ;; alist of (request-id . response-handler)
-    (:response-handlers . nil)))
+    (:response-handlers . nil)
+    (:started? . nil)))
 
-(setq omnisharp-debug t)
+(setq omnisharp-debug t)                ; for now
 
 (defun omnisharp--clear-response-handlers ()
   "For development time cleaning up impossible states of response
@@ -91,6 +92,12 @@ its type."
 
           ((equal "response" type)
            (omnisharp--handle-server-response-packet packet server-info))
+
+          ((and (equal "event" type)
+                (equal "started" event))
+           (omnisharp--log "The server has started")
+           (message "The OmniSharp server is ready. Hacks and glory await!")
+           (setcdr (assoc :started? server-info) t))
 
           (t (omnisharp--log (format "Received an unknown server packet: %s"
                                      (prin1-to-string packet)))))))
