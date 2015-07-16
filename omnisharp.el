@@ -50,7 +50,6 @@ server backend."
   :keymap omnisharp-mode-map
   (omnisharp--init-imenu-support)
   (omnisharp--init-eldoc-support)
-  (omnisharp--start-omnisharp-server-for-solution-in-parent-directory)
 
   ;; These are selected automatically when flycheck is enabled
   (add-to-list 'flycheck-checkers 'csharp-omnisharp-codecheck))
