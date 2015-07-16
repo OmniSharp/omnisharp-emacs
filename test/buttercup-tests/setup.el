@@ -125,6 +125,15 @@ request id."
              expected-buffer-name
              (buffer-name)))
 
+(defun ot--i-should-see (text)
+  (cl-assert (s-contains? text
+                          (buffer-string))
+             nil
+             (concat "Expected the buffer to contain '%s' but it did not. "
+                     "The buffer contains '%s'")
+             text
+             (buffer-string)))
+
 ;;; Test suite setup. Start a test server process that can be used by
 ;;; all tests
 (omnisharp--create-ecukes-test-server)

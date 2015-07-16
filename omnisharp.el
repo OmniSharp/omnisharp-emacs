@@ -924,7 +924,6 @@ contents with the issue at point fixed."
     (omnisharp-go-to-file-line-and-column json-result)
     (helm-highlight-current-line nil nil nil nil t))
 
-
   ;;; Helm find symbols
   (defun omnisharp-helm-find-symbols ()
     (interactive)
