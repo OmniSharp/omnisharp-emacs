@@ -21,6 +21,12 @@ handlers in the current omnisharp--server-info."
 (comment (omnisharp--clear-response-handlers))
 
 (defun omnisharp--send-command-to-server (api-name contents &optional response-handler)
+  "Sends the given command to the server and associates a
+response-handler for it. The server will respond to this request
+later and the response handler will get called then.
+
+Returns the unique request id that the request is given before
+sending."
   ;; make RequestPacket with request-id
   ;; send request
   ;; store response handler associated with the request id
@@ -42,10 +48,17 @@ handlers in the current omnisharp--server-info."
       ;; update current request-id and associate a response-handler for
       ;; this request
       (setcdr (assoc :request-id server-info) (+ 1 request-id))
+
+      ;; requests that don't require handling are still added with a
+      ;; dummy handler. This means they are pending. This is required
+      ;; so that omnisharp--wait-until-request-completed can know when
+      ;; the requests have completed.
       (setcdr (assoc :response-handlers server-info)
-              (-concat `((,request-id . ,response-handler))
+              (-concat `((,request-id . ,(or response-handler #'identity)))
                        (cdr (assoc :response-handlers server-info))))
-      (process-send-string process (concat (json-encode request) "\n")))))
+
+      (process-send-string process (concat (json-encode request) "\n"))
+      request-id)))
 
 (defun omnisharp--make-request-packet (api-name contents request-id)
   (-concat `((Arguments . ,contents))
