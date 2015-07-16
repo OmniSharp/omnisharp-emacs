@@ -916,9 +916,11 @@ contents with the issue at point fixed."
     "Find usages for the symbol under point using Helm"
     (interactive)
     (message "Helm Finding usages...")
-    (omnisharp-find-usages-worker
-      (omnisharp--get-common-params)
-      'omnisharp--helm-got-usages))
+    (omnisharp--send-command-to-server
+     "findusages"
+     (omnisharp--get-common-params)
+     (-lambda ((&alist 'QuickFixes quickfixes))
+       (omnisharp--helm-got-usages quickfixes))))
 
   (defun omnisharp--helm-jump-to-candidate (json-result)
     (omnisharp-go-to-file-line-and-column json-result)
