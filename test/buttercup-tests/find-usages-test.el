@@ -1,6 +1,8 @@
 (describe "Find usages"
+  (before-each
+    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs"))
+
   (it "lists usages of the symbol under point"
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
     (ot--buffer-contents-and-point-at-$
      "using System;
 
@@ -11,6 +13,7 @@
               Targ$et foo;
           }
       }")
+
     (ot--evaluate-and-wait-for-server-response "(omnisharp-find-usages)")
     (ot--wait-for-seconds 1)
     (ot--switch-to-buffer "* OmniSharp : Usages *")
