@@ -1,8 +1,7 @@
 
-;; Path to the server
-(defcustom omnisharp-server-executable-path (executable-find "OmniSharp.exe")
-  "Path to OmniSharpServer. If its value is nil, search for the server in the exec-path"
-    :type '(choice (const :tag "Not Set" nil) string))
+(defcustom omnisharp-server-executable-path (executable-find "omnisharp")  ; omnisharp-roslyn
+  "Path to omnisharp-server. If its value is nil, search for the server in the exec-path"
+  :type '(choice (const :tag "Not Set" nil) string))
 
 (defun omnisharp--find-solution-files ()
   "Find solution files in parent directories. Returns a list
