@@ -1,5 +1,3 @@
-(require 'buttercup)
-
 (describe "Update buffer"
   (before-each
     (ot--open-the-minimal-solution-source-file "MyClass.cs")
