@@ -123,8 +123,8 @@ name to rename to, defaulting to the current name of the symbol."
          (rename-to (read-string "Rename to: " current-word))
          (rename-request
           (->> (omnisharp--get-common-params)
-            (cons `(RenameTo . ,rename-to))
-            (cons `(WantsTextChanges . true))))
+               (cons `(RenameTo . ,rename-to))
+               (cons `(WantsTextChanges . true))))
 
          (modified-file-responses
           (omnisharp-rename-worker rename-request))
