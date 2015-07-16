@@ -60,6 +60,12 @@ sending."
       (process-send-string process (concat (json-encode request) "\n"))
       request-id)))
 
+(defun omnisharp--send-command-to-server-sync (&rest args)
+  "Like `omnisharp--send-command-to-server' but will block until the
+request responded by the server."
+  (omnisharp--wait-until-request-completed
+   (apply 'omnisharp--send-command-to-server args)))
+
 (defun omnisharp--make-request-packet (api-name contents request-id)
   (-concat `((Arguments . ,contents))
            `((Command . ,api-name)
