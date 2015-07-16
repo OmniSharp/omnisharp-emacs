@@ -356,6 +356,7 @@ buffer."
                              request-id timeout-seconds)))
             (omnisharp--log msg)
             (error msg))))
-      (accept-process-output nil 0.01))))
+      (accept-process-output nil 0.01)))
+  request-id)
 
 (provide 'omnisharp-utils)
