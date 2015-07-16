@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 (defun omnisharp-current-type-information (&optional add-to-kill-ring)
   "Display information of the current type under point. With prefix
 argument, add the displayed result to the kill ring. This can be used
@@ -108,8 +110,8 @@ to select one (or more) to jump to."
   "Gets a list of QuickFix lisp objects from a findimplementations api call
 asynchronously. On completions, CALLBACK is run with the quickfixes as its only argument."
   (declare (indent defun))
-  (omnisharp-post-message-curl-as-json-async
-   (concat (omnisharp-get-host) "findimplementations")
+  (omnisharp--send-command-to-server
+   "findimplementations"
    request
    (lambda (quickfix-response)
      (apply callback (list (omnisharp--vector-to-list
