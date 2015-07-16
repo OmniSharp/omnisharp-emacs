@@ -22,13 +22,14 @@
 
 (defvar omnisharp-minimal-test-solution-path
   (f-join omnisharp-emacs-root-path
-          "test/MinimalSolution/"))
+          "test/MinimalSolution/minimal/"))
 
-(print omnisharp-emacs-root-path)
+(print omnisharp-minimal-test-solution-path)
 (add-to-list 'load-path omnisharp-emacs-root-path)
 
 ;;; the load-path has to contain omnisharp-emacs-root-path
 (require 'omnisharp)
+(require 'omnisharp-server-actions)
 (require 'omnisharp-utils)
 
 ;;; I grew tired of the omnisharp-- prefix so now I use ot--, standing
@@ -48,7 +49,7 @@
     (switch-to-buffer buffer)))
 
 (defun ot--wait-for-seconds (seconds)
-  (sit-for (read seconds)))
+  (sit-for seconds))
 
 (defun ot--buffer-contents-and-point-at-$ (buffer-contents-to-insert)
   "Test setup. Only works reliably if there is one $ character"
@@ -61,10 +62,8 @@
   (omnisharp--update-buffer))
 
 (defun ot--point-should-be-on-line-number (expected-line-number)
-  (let ((current-line-number (line-number-at-pos))
-        (expected-line-number (string-to-number expected-line-number)))
-    (cl-assert (= expected-line-number
-                  current-line-number)
+  (let ((current-line-number (line-number-at-pos)))
+    (cl-assert (= expected-line-number current-line-number)
                nil
                (concat
                 "Expected point to be on line number '%s'"
@@ -74,8 +73,8 @@
                (buffer-string))))
 
 (defun ot--open-the-minimal-solution-source-file (file-path-to-open)
-  (find-file (f-join omnisharp-minimal-test-solution-path
-                     file-path-to-open))
+  (find-file-literally (f-join omnisharp-minimal-test-solution-path
+                               file-path-to-open))
   (setq buffer-read-only nil))
 
 (defun ot--point-should-be-on-a-line-containing (expected-line-contents)
@@ -110,6 +109,17 @@
 (defun ot--switch-to-the-window-in-the-buffer (file-name)
   (select-window (get-buffer-window file-name)))
 
+;;; Test suite setup. Start a test server process that can be used by
+;;; all tests
 (omnisharp--create-ecukes-test-server)
+;; wait that the server is alive and ready before starting the test run
+(with-timeout (2 ; seconds
+               (omnisharp--log "Server did not start in time"))
+  (while (not (equal t (cdr (assoc :started? omnisharp--server-info))))
+    (accept-process-output)))
 
 (print "buttercup test setup file loaded.")
+
+;;; when reading the test output, make it easier to spot when test
+;;; setup noise ends and test results start
+(dotimes (i 5) (print "\n"))
