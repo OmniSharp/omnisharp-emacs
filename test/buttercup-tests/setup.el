@@ -42,6 +42,12 @@
 (defun ot--evaluate (command-to-execute)
   (eval (read command-to-execute)))
 
+(defun ot--evaluate-and-wait-for-server-response (command-to-execute)
+  "NB: Will crash when calling a command that doesn't respond with a
+request id."
+  (omnisharp--wait-until-request-completed
+   (eval (read command-to-execute))))
+
 (defun ot--switch-to-buffer (existing-buffer-name)
   (let ((buffer (get-buffer existing-buffer-name))
         (message "Expected the buffer %s to exist but it did not."))
@@ -108,6 +114,16 @@
 
 (defun ot--switch-to-the-window-in-the-buffer (file-name)
   (select-window (get-buffer-window file-name)))
+
+(defun ot--i-should-be-in-buffer-name (expected-buffer-name)
+  (cl-assert (equal (buffer-name)
+                    expected-buffer-name)
+             nil
+             (concat
+              "Expected to be in buffer %s "
+              "but was in buffer %s")
+             expected-buffer-name
+             (buffer-name)))
 
 ;;; Test suite setup. Start a test server process that can be used by
 ;;; all tests
