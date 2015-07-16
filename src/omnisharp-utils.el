@@ -289,11 +289,11 @@ moving point."
       (cons "mono" args)))))
 
 (defun omnisharp--update-buffer (&optional buffer)
-  (when (equal nil buffer)
-    (setq buffer (current-buffer)))
-  (omnisharp--send-command-to-server
-   "updatebuffer"
-   (omnisharp--get-common-params)))
+  (setq buffer (or buffer (current-buffer)))
+  (omnisharp--wait-until-request-completed
+   (omnisharp--send-command-to-server
+    "updatebuffer"
+    (omnisharp--get-common-params))))
 
 ;; this is actually used in tests only
 (defun omnisharp--create-ecukes-test-server ()
