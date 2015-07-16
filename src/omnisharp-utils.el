@@ -339,4 +339,23 @@ buffer."
         (goto-char start-point)
         (insert new-text)))))
 
+(defun omnisharp--handler-exists-for-request (request-id)
+  (--any? (= request-id (car it))
+          (cdr (assoc :response-handlers omnisharp--server-info))))
+
+(defun omnisharp--wait-until-request-completed (request-id
+                                                &optional timeout-seconds)
+  (setq timeout-seconds (or timeout-seconds 2))
+
+  (let ((start-time (current-time)))
+    (while (omnisharp--handler-exists-for-request request-id)
+      (when (> (cadr (time-subtract (current-time) start-time))
+               timeout-seconds)
+        (progn
+          (let ((msg (format "Request %s did not complete in %s seconds"
+                             request-id timeout-seconds)))
+            (omnisharp--log msg)
+            (error msg))))
+      (accept-process-output nil 0.01))))
+
 (provide 'omnisharp-utils)
