@@ -31,9 +31,15 @@
 (add-to-list 'load-path omnisharp-emacs-root-path)
 
 ;;; the load-path has to contain omnisharp-emacs-root-path
+(--each (f-files omnisharp-emacs-src-path
+                 (lambda (file)
+                   (equal "el" (f-ext file)))
+                 ;; recursive
+                 t)
+  (load-file it))
+
 (require 'omnisharp)
-(require 'omnisharp-server-actions)
-(require 'omnisharp-utils)
+(require 'buttercup)
 
 ;;; I grew tired of the omnisharp-- prefix so now I use ot--, standing
 ;;; for omnisharp test
