@@ -296,11 +296,12 @@ moving point."
     (omnisharp--get-common-params))))
 
 ;; this is actually used in tests only
-(defun omnisharp--create-ecukes-test-server ()
+(defun omnisharp--create-ecukes-test-server (omnisharp-emacs-root-path)
   (condition-case nil
       (kill-process "Omni-Server")
     (error nil))
-  (omnisharp-start-omnisharp-server "test/MinimalSolution/minimal.sln"))
+  (omnisharp-start-omnisharp-server (s-concat omnisharp-emacs-root-path
+                                              "/test/MinimalSolution/minimal.sln")))
 
 (defun omnisharp--update-files-with-text-changes (file-name text-changes)
   (-if-let (buffer (omnisharp--buffer-exists-for-file-name file-name))

@@ -16,9 +16,12 @@
 
 (defvar omnisharp-emacs-root-path
   (-> (f-this-file)
-    f-parent
-    f-parent
-    f-parent))
+      f-parent
+      f-parent
+      f-parent))
+
+(defvar omnisharp-emacs-src-path
+  (f-join omnisharp-emacs-root-path "src"))
 
 (defvar omnisharp-minimal-test-solution-path
   (f-join omnisharp-emacs-root-path
@@ -136,9 +139,9 @@ request id."
 
 ;;; Test suite setup. Start a test server process that can be used by
 ;;; all tests
-(let ((omnisharp-server-executable-path (f-join omnisharp-emacs-root-path
-                                                "omnisharp-roslyn/omnisharp")))
-  (omnisharp--create-ecukes-test-server))
+(let ((omnisharp-server-executable-path (concat omnisharp-emacs-root-path
+                                                "/omnisharp-roslyn/omnisharp")))
+  (omnisharp--create-ecukes-test-server omnisharp-emacs-root-path))
 ;; wait that the server is alive and ready before starting the test run
 (with-timeout (2 ; seconds
                (omnisharp--log "Server did not start in time"))
