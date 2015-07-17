@@ -125,45 +125,38 @@ name to rename to, defaulting to the current name of the symbol."
           (->> (omnisharp--get-common-params)
                (cons `(RenameTo . ,rename-to))
                (cons `(WantsTextChanges . true))))
-
-         (modified-file-responses
-          (omnisharp-rename-worker rename-request))
          (location-before-rename
           (omnisharp--get-common-params-for-emacs-side-use)))
+    (omnisharp--send-command-to-server-sync
+     "rename"
+     rename-request
+     (lambda (rename-response) (omnisharp--rename-worker
+                                rename-response
+                                location-before-rename)))))
 
-    (-if-let (error-message (cdr (assoc 'ErrorMessage modified-file-responses)))
-        (message error-message)
+(defun omnisharp--rename-worker (rename-response
+                                 location-before-rename)
+  (-if-let (error-message (cdr (assoc 'ErrorMessage rename-response)))
+      (message error-message)
+    (-let (((&alist 'Changes modified-file-responses) rename-response))
+      ;; The server will possibly update some files that are currently open.
+      ;; Save all buffers to avoid conflicts / losing changes
+      (save-some-buffers t)
 
-      (progn
-        ;; The server will possibly update some files that are currently open.
-        ;; Save all buffers to avoid conflicts / losing changes
-        (save-some-buffers t)
+      (--map (-let (((&alist 'Changes changes
+                             'FileName file-name) it))
+               (omnisharp--update-files-with-text-changes
+                file-name
+                (omnisharp--vector-to-list changes)))
+             modified-file-responses)
 
-        (--each modified-file-responses
-          (-let (((&alist 'Changes changes
-                          'FileName file-name) it))
-            (omnisharp--update-files-with-text-changes
-             file-name
-             (omnisharp--vector-to-list changes))))
+      ;; Keep point in the buffer that initialized the rename so that
+      ;; the user does not feel disoriented
+      (omnisharp-go-to-file-line-and-column location-before-rename)
 
-        ;; Keep point in the buffer that initialized the rename so that
-        ;; the user does not feel disoriented
-        (omnisharp-go-to-file-line-and-column location-before-rename)
-
-        (message "Rename complete in files: \n%s"
-                 (-interpose "\n" (--map (cdr (assoc 'FileName it))
-                                         modified-file-responses)))))))
-
-(defun omnisharp-rename-worker (rename-request)
-  "Given a RenameRequest, returns a list of ModifiedFileResponse
-objects."
-  (let* ((rename-responses
-          (omnisharp-post-message-curl-as-json
-           (concat (omnisharp-get-host) "rename")
-           rename-request))
-         (modified-files (omnisharp--vector-to-list
-                          (cdr (assoc 'Changes rename-responses)))))
-    modified-files))
+      (message "Rename complete in files: \n%s"
+               (-interpose "\n" (--map (cdr (assoc 'FileName it))
+                                       modified-file-responses))))))
 
 (defun omnisharp-rename-interactively ()
   "Rename the current symbol to a new name. Lets the user choose what

@@ -143,6 +143,18 @@ request id."
              text
              (buffer-string)))
 
+;;; this is a poor man's version of action chains in ecukes
+(defun ot--keyboard-input (&rest text-vectors)
+  "Simulates typing. Can be used to do interactive input, but
+detecting situations in the middle of input is impossible."
+  (execute-kbd-macro (reduce 'vconcat text-vectors)))
+
+(defun ot--type (text)
+  (string-to-vector text))
+
+(defun ot--press-key (key-or-chord)
+  (edmacro-parse-keys key-or-chord))
+
 ;;; Test suite setup. Start a test server process that can be used by
 ;;; all tests
 (let ((omnisharp-server-executable-path (concat omnisharp-emacs-root-path
@@ -159,3 +171,4 @@ request id."
 ;;; when reading the test output, make it easier to spot when test
 ;;; setup noise ends and test results start
 (dotimes (i 5) (print "\n"))
+
