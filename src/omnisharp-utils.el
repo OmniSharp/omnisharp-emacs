@@ -300,8 +300,7 @@ moving point."
   (condition-case nil
       (kill-process "Omni-Server")
     (error nil))
-  (let ((omnisharp-server-executable-path (f-full "omnisharp-roslyn/omnisharp")))
-    (omnisharp-start-omnisharp-server "test/MinimalSolution/minimal.sln")))
+  (omnisharp-start-omnisharp-server "test/MinimalSolution/minimal.sln"))
 
 (defun omnisharp--update-files-with-text-changes (file-name text-changes)
   (-if-let (buffer (omnisharp--buffer-exists-for-file-name file-name))

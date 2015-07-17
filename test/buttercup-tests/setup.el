@@ -136,7 +136,9 @@ request id."
 
 ;;; Test suite setup. Start a test server process that can be used by
 ;;; all tests
-(omnisharp--create-ecukes-test-server)
+(let ((omnisharp-server-executable-path (f-join omnisharp-emacs-root-path
+                                                "omnisharp-roslyn/omnisharp")))
+  (omnisharp--create-ecukes-test-server))
 ;; wait that the server is alive and ready before starting the test run
 (with-timeout (2 ; seconds
                (omnisharp--log "Server did not start in time"))
