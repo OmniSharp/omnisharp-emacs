@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 (require 'popup)
 (require 'dash)
 
@@ -174,21 +176,20 @@ value. Selecting one of these will import the required namespace."
          ;; json-false helps distinguish between null and false in
          ;; json. This is an emacs limitation.
 
-         ;; Invert the user configuration value if requested
-         (params
+         (auto-complete-request
           (let ((omnisharp-auto-complete-want-importable-types
+                 ;; Invert the user configuration value if requested
                  (if invert-importable-types-setting
                      (not omnisharp-auto-complete-want-importable-types)
                    omnisharp-auto-complete-want-importable-types)))
-            (omnisharp--get-auto-complete-params)))
+            (omnisharp--create-auto-complete-request))))
 
-         (display-function
-          (omnisharp--get-auto-complete-display-function))
-
-         (json-result-auto-complete-response
-          (omnisharp-auto-complete-worker params)))
-
-    (funcall display-function json-result-auto-complete-response)))
+    (omnisharp--wait-until-request-completed
+     (omnisharp-auto-complete-worker
+      auto-complete-request
+      (lambda (auto-complete-response)
+        (funcall (omnisharp--get-auto-complete-display-function)
+                 auto-complete-response))))))
 
 (defun omnisharp-add-dot-and-auto-complete ()
   "Adds a . character and calls omnisharp-auto-complete. Meant to be
@@ -198,7 +199,7 @@ and complete members."
   (insert ".")
   (omnisharp-auto-complete))
 
-(defun omnisharp--get-auto-complete-params ()
+(defun omnisharp--create-auto-complete-request ()
   "Return an AutoCompleteRequest for the current buffer state."
   (append `((WantDocumentationForEveryCompletionResult
              . ,(omnisharp--t-or-json-false
@@ -242,12 +243,12 @@ and complete members."
 (defun omnisharp--get-auto-complete-result-in-popup-format ()
   "Returns /autocomplete API results \(autocompletions\) as popup
 items."
-  (let* ((json-result-auto-complete-response
+  (let* ((auto-complete-response
           (omnisharp-auto-complete-worker
-           (omnisharp--get-auto-complete-params)))
+           (omnisharp--create-auto-complete-request)))
          (completions-in-popup-format
           (omnisharp--convert-auto-complete-json-to-popup-format
-           json-result-auto-complete-response)))
+           auto-complete-response)))
     completions-in-popup-format))
 
 (defun omnisharp-company--prefix ()
@@ -471,11 +472,11 @@ company-mode-friendly"
          ;; json. This is an emacs limitation.
          (completion-ignore-case omnisharp-company-ignore-case)
          (params
-          (omnisharp--get-auto-complete-params))
-         (json-result-auto-complete-response
+          (omnisharp--create-auto-complete-request))
+         (auto-complete-response
           (omnisharp-auto-complete-worker params))
          (completion-list (mapcar #'omnisharp--make-company-completion
-                                  json-result-auto-complete-response)))
+                                  auto-complete-response)))
     (if (eq omnisharp-company-match-type 'company-match-simple)
         (all-completions pre completion-list)
       completion-list)))
@@ -513,19 +514,21 @@ must take a single argument, the auto-complete result texts to show."
   (cdr (assoc omnisharp--show-last-auto-complete-result-frontend
               omnisharp--show-last-auto-complete-result-frontends-alist)))
 
-(defun omnisharp-auto-complete-worker (auto-complete-request)
+(defun omnisharp-auto-complete-worker (auto-complete-request callback)
   "Takes an AutoCompleteRequest and makes an autocomplete query with
 them.
 
-Returns the raw JSON result. Also caches that result as
-omnisharp--last-buffer-specific-auto-complete-result."
-  (let ((json-result
-         (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "autocomplete")
-          auto-complete-request)))
-    ;; Cache result so it may be juggled in different contexts easily
-    (setq omnisharp--last-buffer-specific-auto-complete-result
-          json-result)))
+Calls the given CALLBACK with the result. Also caches that result
+as omnisharp--last-buffer-specific-auto-complete-result.
+Returns the request-id for the auto-complete request to the server."
+  (omnisharp--send-command-to-server
+   "autocomplete"
+   auto-complete-request
+   (lambda (auto-complete-response)
+     ;; Cache result so it may be juggled in different contexts easily
+     (setq omnisharp--last-buffer-specific-auto-complete-result
+           auto-complete-response)
+     (funcall callback auto-complete-response))))
 
 (defun omnisharp-auto-complete-overrides ()
   (interactive)
@@ -592,7 +595,7 @@ result."
   (save-excursion
     (end-of-thing 'symbol)
     (omnisharp-auto-complete-worker
-     (omnisharp--get-auto-complete-params))
+     (omnisharp--create-auto-complete-request))
     (omnisharp-show-last-auto-complete-result)))
 
 (defun omnisharp--auto-complete-display-function-popup

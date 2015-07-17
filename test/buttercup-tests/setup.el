@@ -155,6 +155,9 @@ detecting situations in the middle of input is impossible."
 (defun ot--press-key (key-or-chord)
   (edmacro-parse-keys key-or-chord))
 
+(defmacro ot--set (symbol value)
+  `(setq symbol ,value))
+
 ;;; Test suite setup. Start a test server process that can be used by
 ;;; all tests
 (let ((omnisharp-server-executable-path (concat omnisharp-emacs-root-path
