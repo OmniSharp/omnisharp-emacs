@@ -357,7 +357,7 @@ triggers a completion immediately"
                        (omnisharp--tag-text-with-completion-info arg json-result)
                        (when allow-templating
                          ;; Do yasnippet completion
-                         (if (and omnisharp-company-template-use-yasnippet (fboundp 'yas/expand-snippet))
+                         (if (and omnisharp-company-template-use-yasnippet (fboundp 'yas-expand-snippet))
                              (progn
                                (let ((method-snippet (omnisharp--completion-result-item-get-method-snippet
                                                       json-result)))
@@ -398,7 +398,7 @@ triggers a completion immediately"
     (add-hook 'yas-after-exit-snippet-hook 'omnisharp--yasnippet-tag-text-with-completion-info))
   
   (delete-region (- (point) (length call)) (point))
-  (yas/expand-snippet snippet))
+  (yas-expand-snippet snippet))
 
 
 (defun omnisharp--get-method-base (json-result)
@@ -651,8 +651,8 @@ current buffer."
             (save-excursion
               (search-backward (omnisharp--current-word-or-empty-string)))))
 
-      (if (and completion-snippet omnisharp-company-template-use-yasnippet (fboundp 'yas/expand-snippet))
-          (yas/expand-snippet
+      (if (and completion-snippet omnisharp-company-template-use-yasnippet (fboundp 'yas-expand-snippet))
+          (yas-expand-snippet
            completion-snippet
            current-symbol-start-point
            current-symbol-end-point)
