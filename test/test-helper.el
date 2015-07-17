@@ -12,6 +12,7 @@
 (require 'evil) ; some tests test evil functionality specifically
 (require 'el-mock)
 (require 'noflet)
+(require 'buttercup)
 
 ;;; ensure there is a running server for ert tests
 (omnisharp--create-ecukes-test-server)
