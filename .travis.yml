@@ -1,4 +1,5 @@
 language: c
+sudo: false
 
 before_script:
     - sudo sh -c "echo 'deb http://download.mono-project.com/repo/debian wheezy main' > /etc/apt/sources.list.d/mono-xamarin.list"
