@@ -1,7 +1,9 @@
 (describe "Auto-complete using the popup interface"
-  (it "completes a member in the same file"
+  (before-each
     (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
-    (ot--set omnisharp--auto-complete-display-backend 'popup)
+    (ot--set omnisharp--auto-complete-display-backend 'popup))
+
+  (it "completes a member in the same file"
     (ot--buffer-contents-and-point-at-$
      "namespace Test {
           public class Awesome {
@@ -27,4 +29,44 @@
                   writer
               }
           }
-      }")))
+      }"))
+
+  (it "when yasnippet is loaded, completes a function that has parameters using snippets"
+    (load-library "yasnippet")
+    (ot--buffer-contents-and-point-at-$
+     "namespace Test {
+          public class Awesome {
+              public Awesome() {
+                  object.Equa$
+              }
+          }
+      }")
+
+    (ot--keyboard-input
+     (ot--press-key "M-x")
+     (ot--type "omnisharp-auto-complete")
+     (ot--press-key "RET")
+     ;; A pop-up.el menu is shown. Complete the first candidate.
+     (ot--press-key "RET")
+
+     ;; yasnippet will complete the current line to this:
+     ;; object.Equals(object objA, object objB)
+     ;;
+     ;; Typing anything now will replace the first parameter
+     (ot--type "this")
+     (ot--press-key "TAB")
+     ;; now fill the second parameter
+     (ot--type "new object()"))
+
+    (ot--buffer-should-contain
+     "namespace Test {
+          public class Awesome {
+              public Awesome() {
+                  object.Equals(this, new object())
+              }
+          }
+      }")
+
+    ;; if not done, other tests will fail due to "something something
+    ;; yas overlay is active"
+    (kill-buffer "MyClassContainer.cs")))
