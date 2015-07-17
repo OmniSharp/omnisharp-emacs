@@ -643,11 +643,22 @@ current buffer."
            (completion-snippet
             (get-text-property 0 'Snippet result-completion-text))
            (required-namespace-import
-            (get-text-property 0 'RequiredNamespaceImport result-completion-text)))
+            (get-text-property 0 'RequiredNamespaceImport result-completion-text))
+
+           (current-symbol-end-point (point))
+
+           (current-symbol-start-point
+            (save-excursion
+              (search-backward (omnisharp--current-word-or-empty-string)))))
 
       (if (and completion-snippet omnisharp-company-template-use-yasnippet (fboundp 'yas/expand-snippet))
-          (yas/expand-snippet completion-snippet (search-backward (omnisharp--current-word-or-empty-string)))
-        (omnisharp--replace-symbol-in-buffer-with (omnisharp--current-word-or-empty-string) result-completion-text))
+          (yas/expand-snippet
+           completion-snippet
+           current-symbol-start-point
+           current-symbol-end-point)
+        (omnisharp--replace-symbol-in-buffer-with
+         (omnisharp--current-word-or-empty-string)
+         result-completion-text))
 
       (when required-namespace-import
         (omnisharp--insert-namespace-import required-namespace-import)))))
