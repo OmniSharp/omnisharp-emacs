@@ -7,6 +7,13 @@ echo "deb http://download.mono-project.com/repo/debian wheezy main" | sudo tee /
 sudo apt-get update
 sudo apt-get install mono-complete
 
+# install dnvm
+# https://github.com/aspnet/Home/blob/dev/GettingStartedDeb.md
+sudo apt-get install unzip
+curl -sSL https://raw.githubusercontent.com/aspnet/Home/dev/dnvminstall.sh | DNX_BRANCH=dev sh && source ~/.dnx/dnvm/dnvm.sh
+# should show help text if installed successfully
+dnvm
+
 sudo apt-get install automake libtool curl
 curl -sSL https://github.com/libuv/libuv/archive/v1.4.2.tar.gz | sudo tar zxfv - -C /usr/local/src
 cd /usr/local/src/libuv-1.4.2
