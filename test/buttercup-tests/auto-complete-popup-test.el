@@ -3,6 +3,9 @@
     (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
     (ot--set omnisharp--auto-complete-display-backend 'popup))
 
+  (after-each
+    (yas-minor-mode nil))
+
   (it "completes a member in the same file"
     (ot--buffer-contents-and-point-at-$
      "namespace Test {
@@ -33,6 +36,7 @@
 
   (it "when yasnippet is loaded, completes a function that has parameters using snippets"
     (require 'yasnippet)
+    (yas-minor-mode)
     (ot--buffer-contents-and-point-at-$
      "namespace Test {
           public class Awesome {
