@@ -7,7 +7,6 @@
  (depends-on "cl-lib")
  (depends-on "yasnippet")
  (depends-on "prodigy")
- (depends-on "ecukes")
  (depends-on "buttercup")
  (depends-on "ert-async")
  (depends-on "noflet")
