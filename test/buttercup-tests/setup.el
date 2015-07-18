@@ -147,7 +147,9 @@ request id."
 (defun ot--keyboard-input (&rest text-vectors)
   "Simulates typing. Can be used to do interactive input, but
 detecting situations in the middle of input is impossible."
-  (execute-kbd-macro (reduce 'vconcat text-vectors)))
+  (condition-case error
+      (execute-kbd-macro (reduce 'vconcat text-vectors))
+    (error (print (format "ot--keyboard-input error: %s" error)))))
 
 (defun ot--type (text)
   (string-to-vector text))
