@@ -4,6 +4,7 @@
     (ot--set omnisharp--auto-complete-display-backend 'popup))
 
   (after-each
+    (require 'yasnippet)
     (yas-minor-mode nil))
 
   (it "completes a member in the same file"
@@ -35,7 +36,6 @@
       }"))
 
   (it "when yasnippet is loaded, completes a function that has parameters using snippets"
-    (require 'yasnippet)
     (yas-minor-mode)
     (ot--buffer-contents-and-point-at-$
      "namespace Test {
