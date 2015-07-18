@@ -135,17 +135,17 @@ the OmniSharp server understands."
 (defun omnisharp-post-message-curl (url &optional params)
   "Post json stuff to url with --data set to given params. Return
 result."
-  (let ((curl-command-plist
-         (omnisharp--get-curl-command url params)))
-    (with-temp-buffer
-      (apply 'call-process
-             (plist-get curl-command-plist :command)
-             nil ;; infile
-             (buffer-name);; destination
-             nil ;; display (no specialities needed)
-             ;; these are just args
-             (plist-get curl-command-plist :arguments))
-      (buffer-string))))
+  (comment (let ((curl-command-plist
+                  (omnisharp--get-curl-command url params)))
+             (with-temp-buffer
+               (apply 'call-process
+                      (plist-get curl-command-plist :command)
+                      nil  ;; infile
+                      (buffer-name) ;; destination
+                      nil ;; display (no specialities needed)
+                      ;; these are just args
+                      (plist-get curl-command-plist :arguments))
+               (buffer-string)))))
 
 (defun omnisharp--get-curl-command (url params)
   "Returns a command that may be used to communicate with the API via
