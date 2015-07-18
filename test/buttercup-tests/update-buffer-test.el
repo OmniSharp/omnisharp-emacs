@@ -2,7 +2,7 @@
   (before-each
     (ot--open-the-minimal-solution-source-file "MyClass.cs")
     (ot--buffer-contents-and-point-at-$
-     "//contents don't matter"))
+     "//contents don't matter$"))
 
   (it "does not crash when called"
     ;; no easy way to verify the server has done its thing
