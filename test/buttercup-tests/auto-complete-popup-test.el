@@ -32,7 +32,7 @@
       }"))
 
   (it "when yasnippet is loaded, completes a function that has parameters using snippets"
-    (load-library "yasnippet")
+    (require 'yasnippet)
     (ot--buffer-contents-and-point-at-$
      "namespace Test {
           public class Awesome {
