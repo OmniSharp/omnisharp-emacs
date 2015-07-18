@@ -1,5 +1,6 @@
 #! /bin/bash
-cask exec emacs \
+
+TERM=dumb cask exec emacs \
     -batch \
     -f package-initialize \
     -l buttercup \
