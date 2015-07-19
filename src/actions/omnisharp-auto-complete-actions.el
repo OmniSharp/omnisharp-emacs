@@ -243,13 +243,13 @@ and complete members."
 (defun omnisharp--get-auto-complete-result-in-popup-format ()
   "Returns /autocomplete API results \(autocompletions\) as popup
 items."
-  (let* ((auto-complete-response
-          (omnisharp-auto-complete-worker
-           (omnisharp--create-auto-complete-request)))
-         (completions-in-popup-format
-          (omnisharp--convert-auto-complete-json-to-popup-format
-           auto-complete-response)))
-    completions-in-popup-format))
+  (omnisharp--wait-until-request-completed
+   (omnisharp-auto-complete-worker
+    (omnisharp--create-auto-complete-request)))
+
+  ;; result is stored in this buffer-local-variable
+  (omnisharp--convert-auto-complete-json-to-popup-format
+   omnisharp--last-buffer-specific-auto-complete-result))
 
 (defun omnisharp-company--prefix ()
   "Returns the symbol to complete. Also, if point is on a dot,
@@ -514,7 +514,7 @@ must take a single argument, the auto-complete result texts to show."
   (cdr (assoc omnisharp--show-last-auto-complete-result-frontend
               omnisharp--show-last-auto-complete-result-frontends-alist)))
 
-(defun omnisharp-auto-complete-worker (auto-complete-request callback)
+(defun omnisharp-auto-complete-worker (auto-complete-request &optional callback)
   "Takes an AutoCompleteRequest and makes an autocomplete query with
 them.
 
@@ -528,7 +528,8 @@ Returns the request-id for the auto-complete request to the server."
      ;; Cache result so it may be juggled in different contexts easily
      (setq omnisharp--last-buffer-specific-auto-complete-result
            auto-complete-response)
-     (funcall callback auto-complete-response))))
+     (when callback
+       (funcall callback auto-complete-response)))))
 
 (defun omnisharp-auto-complete-overrides ()
   (interactive)

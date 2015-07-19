@@ -74,3 +74,20 @@
     ;; if not done, other tests will fail due to "something something
     ;; yas overlay is active"
     (kill-buffer "MyClassContainer.cs")))
+
+(describe "auto-complete's completion source"
+  (it "provides valid completions as an auto-complete source"
+    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
+    (ot--buffer-contents-and-point-at-$
+     "namespace Test {
+          public class Awesome {
+              public Awesome() {
+                  object.Equa$
+              }
+          }
+      }")
+    (expect
+     (popup-item-value
+      (-first-item
+       (omnisharp--get-auto-complete-result-in-popup-format)))
+     :to-be-truthy)))
