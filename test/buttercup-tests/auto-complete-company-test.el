@@ -2,10 +2,9 @@
 
   (before-each
     (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
-    (ot--keyboard-input
-     (ot--meta-x-command "omnisharp-mode"))
-
+    (omnisharp-mode t)
     (require 'company)
+    (company-mode t)
     (eval-after-load 'company
       '(add-to-list 'company-backends 'company-omnisharp)))
 
@@ -20,8 +19,7 @@
           }
       }")
 
-    (ot--keyboard-input
-     (ot--meta-x-command "company-complete"))
+    (company-complete)
 
     (ot--buffer-should-contain
      "namespace Test {
@@ -43,9 +41,7 @@
           }
       }")
 
-    (ot--keyboard-input
-     (ot--meta-x-command "company-mode")
-     (ot--meta-x-command "company-complete"))
+    (company-complete)
 
     (ot--keyboard-input
      ;; will complete the current line to this:
