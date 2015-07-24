@@ -75,7 +75,8 @@ server backend."
     ("Auto-complete"
      ["at point" omnisharp-auto-complete]
      ["Add . and complete members" omnisharp-add-dot-and-auto-complete]
-     ["Override superclass member" omnisharp-auto-complete-overrides]
+     ;; not implemented yet in omnisharp-roslyn
+     ;; ["Override superclass member" omnisharp-auto-complete-overrides]
      ["Show last result" omnisharp-show-last-auto-complete-result]
      ["Show overloads at point" omnisharp-show-overloads-at-point])
 
