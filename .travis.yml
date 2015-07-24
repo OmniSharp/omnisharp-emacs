@@ -12,7 +12,7 @@ before_script:
     - cask install
     - mkdir omnisharp-roslyn
     - cd omnisharp-roslyn
-    - wget https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.0.3/omnisharp.tar.gz
+    - wget $(curl -s https://api.github.com/repos/omnisharp/omnisharp-roslyn/releases/latest | grep browser_download_url | awk '{ print $2 }' | sed s/\"//g | sed s/,//g)
     - tar xzvf omnisharp.tar.gz
     - cd ..
     - mono --version
