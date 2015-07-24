@@ -20,8 +20,8 @@ to insert the result in code, for example."
 message. TYPE-PROPERTY-NAME is a symbol in the type lookup response
 from the server side, i.e. 'Type or 'Documentation that will be
 displayed to the user."
-  (omnisharp-post-message-curl-as-json-async
-   (concat (omnisharp-get-host) "typelookup")
+  (omnisharp--send-command-to-server
+   "typelookup"
    (omnisharp--get-common-params)
    (lambda (response)
      (let ((stuff-to-display (cdr (assoc type-property-name
