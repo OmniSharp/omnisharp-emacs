@@ -44,7 +44,7 @@ ring."
    "findusages"
    (omnisharp--get-common-params)
    (-lambda ((&alist 'QuickFixes quickfixes))
-            (omnisharp--find-usages-show-response quicfixes))))
+            (omnisharp--find-usages-show-response quickfixes))))
 
 (defun omnisharp--find-usages-show-response (quickfixes)
   (if (equal 0 (length quickfixes))
