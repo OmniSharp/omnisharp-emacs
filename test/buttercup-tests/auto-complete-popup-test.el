@@ -19,9 +19,7 @@
       }")
 
     (ot--keyboard-input
-     (ot--press-key "M-x")
-     (ot--type "omnisharp-auto-complete")
-     (ot--press-key "RET")
+     (ot--meta-x-command "omnisharp-auto-complete")
      ;; A pop-up.el menu is shown. Complete the first candidate.
      (ot--press-key "RET"))
 

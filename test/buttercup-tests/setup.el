@@ -151,6 +151,12 @@ detecting situations in the middle of input is impossible."
       (execute-kbd-macro (reduce 'vconcat text-vectors))
     (error (print (format "ot--keyboard-input error: %s" error)))))
 
+(defun ot--meta-x-command (command)
+  (vconcat
+   (ot--press-key "M-x")
+   (ot--type command)
+   (ot--press-key "RET")))
+
 (defun ot--type (text)
   (string-to-vector text))
 
