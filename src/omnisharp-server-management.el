@@ -137,29 +137,29 @@ its type."
                   'Request_seq request-id) packet)
          ((&alist :response-handlers response-handlers) server-info))
     ;; try to find the matching response-handler
-    (-if-let* ((request-response (--first (= (car it) request-id)
-                                          response-handlers))
-               ((request-id . response-handler) request-response))
-        (condition-case maybe-error-data
-            (progn
-              (omnisharp--log (format "<-- %s %s: %s"
-                                      request-id
-                                      command
-                                      body))
-              (omnisharp--remove-response-handler server-info request-id)
-              (apply response-handler (list body)))
-          (error
-           (progn
-             (let ((msg (format
-                         (concat "\n"
-                                 "omnisharp--handle-server-response-packet error: \n%s.\n\n"
-                                 "Tried to handle this packet: \n%s\n\n"
-                                 "This can mean an error in the handler function:\n%s\n\n")
-                         (prin1-to-string maybe-error-data)
-                         (prin1-to-string packet)
-                         (prin1-to-string response-handler))))
-               (omnisharp--log msg)
-               (message msg)))))
+    (-if-let* ((id-and-handler (--first (= (car it) request-id)
+                                        response-handlers)))
+        (-let (((request-id . response-handler) id-and-handler))
+          (condition-case maybe-error-data
+              (progn
+                (omnisharp--log (format "<-- %s %s: %s"
+                                        request-id
+                                        command
+                                        body))
+                (omnisharp--remove-response-handler server-info request-id)
+                (apply response-handler (list body)))
+            (error
+             (progn
+               (let ((msg (format
+                           (concat "\n"
+                                   "omnisharp--handle-server-response-packet error: \n%s.\n\n"
+                                   "Tried to handle this packet: \n%s\n\n"
+                                   "This can mean an error in the handler function:\n%s\n\n")
+                           (prin1-to-string maybe-error-data)
+                           (prin1-to-string packet)
+                           (prin1-to-string response-handler))))
+                 (omnisharp--log msg)
+                 (message msg))))))
 
       (omnisharp--log (format "<-- %s %s: Warning: internal error - response has no handler: %s"
                               request-id
