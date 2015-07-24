@@ -9,9 +9,9 @@
     (eval-after-load 'company
       '(add-to-list 'company-backends 'company-omnisharp)))
 
-  (comment (it "completes a member in the same file"
-             (ot--buffer-contents-and-point-at-$
-              "namespace Test {
+  (it "completes a member in the same file"
+    (ot--buffer-contents-and-point-at-$
+     "namespace Test {
           public class Awesome {
               StringWriter writer;
               public Awesome() {
@@ -20,18 +20,18 @@
           }
       }")
 
-             (ot--keyboard-input
-              (ot--meta-x-command "company-complete"))
+    (ot--keyboard-input
+     (ot--meta-x-command "company-complete"))
 
-             (ot--buffer-should-contain
-              "namespace Test {
+    (ot--buffer-should-contain
+     "namespace Test {
           public class Awesome {
               StringWriter writer;
               public Awesome() {
                   writer
               }
           }
-      }")))
+      }"))
 
   (it "completes a function that has parameters using snippets"
     (ot--buffer-contents-and-point-at-$
