@@ -44,7 +44,7 @@ ring."
    "findusages"
    (omnisharp--get-common-params)
    (-lambda ((&alist 'QuickFixes quickfixes))
-     (omnisharp--find-usages-show-response quickfixes))))
+            (omnisharp--find-usages-show-response quicfixes))))
 
 (defun omnisharp--find-usages-show-response (quickfixes)
   (if (equal 0 (length quickfixes))
@@ -91,20 +91,20 @@ to select one (or more) to jump to."
   (interactive)
   (message "Finding implementations...")
   (omnisharp-find-implementations-worker
-    (omnisharp--get-common-params)
-    (lambda (quickfixes)
-      (cond ((equal 0 (length quickfixes))
-             (message "No implementations found."))
+   (omnisharp--get-common-params)
+   (lambda (quickfixes)
+     (cond ((equal 0 (length quickfixes))
+            (message "No implementations found."))
 
-            ;; Go directly to the implementation if there only is one
-            ((equal 1 (length quickfixes))
-             (omnisharp-go-to-file-line-and-column (car quickfixes)))
+           ;; Go directly to the implementation if there only is one
+           ((equal 1 (length quickfixes))
+            (omnisharp-go-to-file-line-and-column (car quickfixes)))
 
-            (t
-             (omnisharp--write-quickfixes-to-compilation-buffer
-              quickfixes
-              omnisharp--find-implementations-buffer-name
-              omnisharp-find-implementations-header))))))
+           (t
+            (omnisharp--write-quickfixes-to-compilation-buffer
+             quickfixes
+             omnisharp--find-implementations-buffer-name
+             omnisharp-find-implementations-header))))))
 
 (defun omnisharp-find-implementations-worker (request callback)
   "Gets a list of QuickFix lisp objects from a findimplementations api call
@@ -113,7 +113,7 @@ asynchronously. On completions, CALLBACK is run with the quickfixes as its only 
    "findimplementations"
    request
    (-lambda ((&alist 'QuickFixes quickfixes))
-     (apply callback (list (omnisharp--vector-to-list quickfixes))))))
+            (apply callback (list (omnisharp--vector-to-list quickfixes))))))
 
 (defun omnisharp-rename ()
   "Rename the current symbol to a new name. Lets the user choose what
@@ -123,8 +123,8 @@ name to rename to, defaulting to the current name of the symbol."
          (rename-to (read-string "Rename to: " current-word))
          (rename-request
           (->> (omnisharp--get-common-params)
-               (cons `(RenameTo . ,rename-to))
-               (cons `(WantsTextChanges . true))))
+            (cons `(RenameTo . ,rename-to))
+            (cons `(WantsTextChanges . true))))
          (location-before-rename
           (omnisharp--get-common-params-for-emacs-side-use)))
     (omnisharp--send-command-to-server-sync
