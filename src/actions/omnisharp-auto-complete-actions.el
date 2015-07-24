@@ -172,11 +172,7 @@ present in the current namespace or imported namespaces, inverting the
 default `omnisharp-auto-complete-want-importable-types'
 value. Selecting one of these will import the required namespace."
   (interactive "P")
-  (let* ((json-false :json-false)
-         ;; json-false helps distinguish between null and false in
-         ;; json. This is an emacs limitation.
-
-         (auto-complete-request
+  (let* ((auto-complete-request
           (let ((omnisharp-auto-complete-want-importable-types
                  ;; Invert the user configuration value if requested
                  (if invert-importable-types-setting
@@ -248,7 +244,7 @@ items."
     (omnisharp--create-auto-complete-request)))
 
   ;; result is stored in this buffer-local-variable
-  (omnisharp--convert-auto-complete-json-to-popup-format
+  (omnisharp--convert-auto-complete-result-to-popup-format
    omnisharp--last-buffer-specific-auto-complete-result))
 
 (defun omnisharp-company--prefix ()
@@ -381,14 +377,14 @@ triggers a completion immediately"
   "This is called after yasnippet has finished expanding a template. 
    It adds data to the completed text, which we later use in ElDoc"
   (when omnisharp-snippet-json-result
-    (add-text-properties yas-snippet-beg yas-snippet-end 
+    (add-text-properties yas-snippet-beg yas-snippet-end
                          (list 'omnisharp-result omnisharp-snippet-json-result))
     (remove-hook 'yas-after-exit-snippet-hook 'omnisharp--yasnippet-tag-text-with-completion-info)
     (setq omnisharp-snippet-json-result nil)))
-  
+
 (defvar omnisharp-snippet-json-result nil
-   "Internal, used by snippet completion callback to tag a yasnippet
-    completion with data, used by ElDoc.")
+  "Internal, used by snippet completion callback to tag a
+  yasnippet completion with data, used by ElDoc.")
 
 (defun omnisharp--snippet-templatify (call snippet json-result)
   "Does a snippet expansion of the completed text.
@@ -405,17 +401,17 @@ triggers a completion immediately"
   "If function templating is turned on, and the method is not a
    generic, return the 'method base' (basically, the method definition
    minus its return type)"
-    (when omnisharp-company-do-template-completion
-      (let ((method-base (omnisharp--completion-result-item-get-method-header json-result))
-            (display (omnisharp--completion-result-item-get-completion-text
-                      json-result)))
-        (when (and method-base
-                   ;; company doesn't expand < properly, so
-                   ;; if we're not using yasnippet, disable templating on methods that contain it
-                   (or omnisharp-company-template-use-yasnippet
-                       (not (string-match-p "<" display)))
-                   (not (string= method-base "")))
-          method-base))))
+  (when omnisharp-company-do-template-completion
+    (let ((method-base (omnisharp--completion-result-item-get-method-header json-result))
+          (display (omnisharp--completion-result-item-get-completion-text
+                    json-result)))
+      (when (and method-base
+                 ;; company doesn't expand < properly, so
+                 ;; if we're not using yasnippet, disable templating on methods that contain it
+                 (or omnisharp-company-template-use-yasnippet
+                     (not (string-match-p "<" display)))
+                 (not (string= method-base "")))
+        method-base))))
 
 (defun omnisharp--make-company-completion (json-result)
   "`company-mode' expects the beginning of the candidate to be
@@ -475,8 +471,7 @@ company-mode-friendly"
           (omnisharp--create-auto-complete-request)))
 
     ;; store auto-complete results
-    (omnisharp--wait-until-request-completed
-     (omnisharp-auto-complete-worker params))
+    (omnisharp--wait-until-request-completed (omnisharp-auto-complete-worker params))
     (let* ((completion-list (mapcar #'omnisharp--make-company-completion
                                     omnisharp--last-buffer-specific-auto-complete-result)))
       (if (eq omnisharp-company-match-type 'company-match-simple)
@@ -583,9 +578,8 @@ Returns the request-id for the auto-complete request to the server."
   "Display function for omnisharp-show-last-auto-complete-result using
 a simple 'compilation' like buffer to display the last auto-complete
 result."
-  (let ((buffer
-         (get-buffer-create
-          omnisharp--last-auto-complete-result-buffer-name)))
+  (let ((buffer (get-buffer-create
+                 omnisharp--last-auto-complete-result-buffer-name)))
     (omnisharp--write-lines-to-compilation-buffer
      auto-complete-result-in-human-readable-form-list
      buffer
@@ -617,7 +611,7 @@ current buffer."
     (setq json-result-alist
           (omnisharp--vector-to-list json-result-alist))
     (let* ((display-list
-            (omnisharp--convert-auto-complete-json-to-popup-format
+            (omnisharp--convert-auto-complete-result-to-popup-format
              json-result-alist))
 
            (completion-texts
@@ -717,7 +711,7 @@ is a more sophisticated matching framework than what popup.el offers."
       (when required-namespace-import
         (omnisharp--insert-namespace-import required-namespace-import)))))
 
-(defun omnisharp--convert-auto-complete-json-to-popup-format (json-result-alist)
+(defun omnisharp--convert-auto-complete-result-to-popup-format (json-result-alist)
   (mapcar
    (-lambda ((&alist 'DisplayText display-text
                      'CompletionText completion-text

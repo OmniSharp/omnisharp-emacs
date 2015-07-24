@@ -259,7 +259,7 @@ expected output in that buffer"
      (mock (omnisharp-post-message-curl-async "host/stopserver" * *))
      (omnisharp-stop-server))))
 
-(ert-deftest omnisharp--convert-auto-complete-json-to-popup-format-shows-correct-data ()
+(ert-deftest omnisharp--convert-auto-complete-result-to-popup-format-shows-correct-data ()
   (let* ((description "Verbosity Verbose; - description")
          (completion-text "Verbose - completion text")
          (snippet-text "Verbose$0")
@@ -273,7 +273,7 @@ expected output in that buffer"
              (CompletionText . ,completion-text))])
          (converted-popup-item
           (nth 0
-               (omnisharp--convert-auto-complete-json-to-popup-format
+               (omnisharp--convert-auto-complete-result-to-popup-format
                 auto-completions))))
 
     (should (equal description (popup-item-document converted-popup-item)))
