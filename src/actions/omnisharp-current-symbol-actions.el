@@ -56,18 +56,23 @@ ring."
 
 (defun omnisharp-find-implementations-with-ido (&optional other-window)
   (interactive "P")
-  (let ((quickfixes (omnisharp--vector-to-list
-                     (cdr (assoc 'QuickFixes (omnisharp-post-message-curl-as-json
-                                              (concat (omnisharp-get-host) "findimplementations")
-                                              (omnisharp--get-common-params)))))))
+  (omnisharp--send-command-to-server-sync
+   "findimplementations"
+   (omnisharp--get-common-params)
+   (lambda (quickfix-response)
+     (omnisharp--show-or-navigate-to-quickfixes-with-ido quickfix-response
+                                                         other-window))))
+
+(defun omnisharp--show-or-navigate-to-quickfixes-with-ido (quickfix-response
+                                                           &optional other-window)
+  (-let (((&alist 'QuickFixes quickfixes) quickfix-response))
     (cond ((equal 0 (length quickfixes))
            (message "No implementations found."))
           ((equal 1 (length quickfixes))
-           (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
+           (omnisharp-go-to-file-line-and-column (-first-item (omnisharp--vector-to-list quickfixes))
+                                                 other-window))
           (t
-           (omnisharp--choose-and-go-to-quickfix-ido
-            (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
-            other-window)))))
+           (omnisharp--choose-and-go-to-quickfix-ido quickfixes other-window)))))
 
 (defun omnisharp-find-usages-with-ido (&optional other-window)
   (interactive "P")

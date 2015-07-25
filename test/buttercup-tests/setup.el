@@ -13,6 +13,7 @@
 ;;; file. Work around that by loading them in advance.
 (require 'csharp-mode)
 (require 'vc-git)
+(require 'el-mock)
 
 (defvar omnisharp-emacs-root-path
   (-> (f-this-file)
