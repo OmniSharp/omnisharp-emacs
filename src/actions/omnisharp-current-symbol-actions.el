@@ -76,18 +76,12 @@ ring."
 
 (defun omnisharp-find-usages-with-ido (&optional other-window)
   (interactive "P")
-  (let ((quickfixes (omnisharp--vector-to-list
-                     (cdr (assoc 'QuickFixes (omnisharp-post-message-curl-as-json
-                                              (concat (omnisharp-get-host) "findusages")
-                                              (omnisharp--get-common-params)))))))
-    (cond ((equal 0 (length quickfixes))
-           (message "No usages found."))
-          ((equal 1 (length quickfixes))
-           (omnisharp-go-to-file-line-and-column (car quickfixes) other-window))
-          (t
-           (omnisharp--choose-and-go-to-quickfix-ido
-            (mapcar 'omnisharp-format-find-output-to-ido quickfixes)
-            other-window)))))
+  (omnisharp--send-command-to-server
+   "findusages"
+   (omnisharp--get-common-params)
+   (lambda (quickfix-response)
+     (omnisharp--show-or-navigate-to-quickfixes-with-ido quickfix-response
+                                                         other-window))))
 
 (defun omnisharp-find-implementations ()
   "Show a buffer containing all implementations of the interface under
