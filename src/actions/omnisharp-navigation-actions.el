@@ -83,18 +83,6 @@ ido-completing-read. Returns the chosen element."
                           quickfix-choices)))
     (nth chosen-quickfix-index quickfixes)))
 
-(defun omnisharp-navigate-to-type-in-current-file ()
-  (interactive)
-  (omnisharp-navigate-to-type-in-current-file-worker
-   (omnisharp--get-common-params)))
-
-(defun omnisharp-navigate-to-type-in-current-file-worker (request)
-  (let ((quickfixes
-         (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "currentfiletopleveltypes")
-          request)))
-    (omnisharp--choose-and-go-to-quickfix-ido quickfixes)))
-
 ;; No need for a worker pattern since findsymbols takes no arguments
 (defun omnisharp-navigate-to-solution-member
   (&optional other-window)

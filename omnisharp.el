@@ -83,7 +83,6 @@ server backend."
     ("Navigate to.."
      ["Definition at point" omnisharp-go-to-definition]
      ["Current file member" omnisharp-navigate-to-current-file-member]
-     ["Type in current file" omnisharp-navigate-to-type-in-current-file]
      ["Solution member" omnisharp-navigate-to-solution-member]
      ["File in solution" omnisharp-navigate-to-solution-file]
      ["Region in current file" omnisharp-navigate-to-region])
