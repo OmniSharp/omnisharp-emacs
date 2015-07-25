@@ -107,7 +107,7 @@ its type."
            (-let (((&alist 'LogLevel log-level
                            'Message message) (cdr (assoc 'Body packet))))
              (when (equal log-level "ERROR")
-               (message (format "OmniSharp server error: %s"
+               (message (format "<-- OmniSharp server error: %s"
                                 (-first-item (s-lines message)))))
              (omnisharp--log (format "%s: %s" log-level message))))
 
@@ -130,10 +130,10 @@ its type."
 
 (defun omnisharp--handle-server-response-packet (packet server-info)
   "Calls the appropriate response callback for the received packet"
-  (-let (((&alist 'Success success
-                  'Message message
+  (-let (((&alist 'Message message
                   'Body body
                   'Command command
+                  'Success success?
                   'Request_seq request-id) packet)
          ((&alist :response-handlers response-handlers) server-info))
     ;; try to find the matching response-handler
@@ -142,12 +142,18 @@ its type."
         (-let (((request-id . response-handler) id-and-handler))
           (condition-case maybe-error-data
               (progn
-                (omnisharp--log (format "<-- %s %s: %s"
-                                        request-id
-                                        command
-                                        body))
+                (omnisharp--log (if (equal success? :json-false)
+                                    (format "<-- %s %s: request failed"
+                                            request-id
+                                            command
+                                            body)
+                                  (format "<-- %s %s: %s"
+                                          request-id
+                                          command
+                                          body)))
                 (omnisharp--remove-response-handler server-info request-id)
-                (apply response-handler (list body)))
+                (when (equal t success?)
+                  (apply response-handler (list body))))
             (error
              (progn
                (let ((msg (format
@@ -159,6 +165,7 @@ its type."
                            (prin1-to-string packet)
                            (prin1-to-string response-handler))))
                  (omnisharp--log msg)
+                 (omnisharp--remove-response-handler server-info request-id)
                  (message msg))))))
 
       (omnisharp--log (format "<-- %s %s: Warning: internal error - response has no handler: %s"
