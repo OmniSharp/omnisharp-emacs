@@ -23,22 +23,17 @@ argument, use another window."
   "Show a list of all members in the current file, and jump to the
 selected member. With prefix argument, use another window."
   (interactive "P")
-  (omnisharp-navigate-to-current-file-member-worker
+  (omnisharp--send-command-to-server
+   "currentfilemembersasflat"
    (omnisharp--get-common-params)
-   other-window))
+   (lambda (quickfixes)
+     (omnisharp--choose-and-go-to-quickfix-ido
+      quickfixes
+      other-window))))
 
 (defun omnisharp-navigate-to-current-file-member-other-window ()
   (interactive)
   (omnisharp-navigate-to-current-file-member t))
-
-(defun omnisharp-navigate-to-current-file-member-worker
-  (request &optional other-window)
-  (let ((quickfixes (omnisharp-post-message-curl-as-json
-                     (concat (omnisharp-get-host) "currentfilemembersasflat")
-                     request)))
-    (omnisharp--choose-and-go-to-quickfix-ido
-     quickfixes
-     other-window)))
 
 (defun omnisharp--choose-and-go-to-quickfix-ido
   (quickfixes &optional other-window)
