@@ -218,7 +218,7 @@ and complete members."
 
             (WordToComplete . ,(thing-at-point 'symbol)))
 
-          (omnisharp--get-common-params)))
+          (omnisharp--get-request-object)))
 
 ;; Use this source in your csharp editing mode hook like so:
 ;; (add-to-list 'ac-sources 'ac-source-omnisharp)
@@ -531,7 +531,7 @@ Returns the request-id for the auto-complete request to the server."
 (defun omnisharp-auto-complete-overrides ()
   (interactive)
   (omnisharp-auto-complete-overrides-worker
-   (omnisharp--get-common-params)))
+   (omnisharp--get-request-object)))
 
 (defun omnisharp-auto-complete-overrides-worker (params)
   (let* ((json-result
@@ -553,7 +553,7 @@ Returns the request-id for the auto-complete request to the server."
 (defun omnisharp-auto-complete-overrides-run-override (override-name)
   (omnisharp-auto-complete-overrides-run-override-worker
    (cons `(OverrideTargetName . ,override-name)
-         (omnisharp--get-common-params))))
+         (omnisharp--get-request-object))))
 
 (defun omnisharp-auto-complete-overrides-run-override-worker (params)
   (let ((json-result (omnisharp-post-message-curl-as-json

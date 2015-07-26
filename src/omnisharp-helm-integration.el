@@ -30,7 +30,7 @@
     (message "Helm Finding usages...")
     (omnisharp--send-command-to-server
      "findusages"
-     (omnisharp--get-common-params)
+     (omnisharp--get-request-object)
      (-lambda ((&alist 'QuickFixes quickfixes))
        (omnisharp--helm-got-usages quickfixes))))
 

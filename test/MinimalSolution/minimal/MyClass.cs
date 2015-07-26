@@ -1,12 +1,5 @@
-﻿using System;
-
+using System;
 namespace minimal
 {
-    public class MyClass
-    {
-        public MyClass ()
-        {
-        }
-    }
+    public class MyClass {}
 }
-

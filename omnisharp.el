@@ -156,7 +156,7 @@ them manually."
   (let ((json-result
          (omnisharp-post-message-curl-as-json
           (concat (omnisharp-get-host) "fixusings")
-          (omnisharp--get-common-params))))
+          (omnisharp--get-request-object))))
 
     (omnisharp--set-buffer-contents-to
      filename
@@ -170,7 +170,7 @@ them manually."
 ;; file to add.
 (defun omnisharp-add-to-solution-current-file ()
   (interactive)
-  (let ((params (omnisharp--get-common-params)))
+  (let ((params (omnisharp--get-request-object)))
     (omnisharp-add-to-solution-worker params)
     (message "Added %s to the solution."
              (cdr (assoc 'FileName params)))))
@@ -182,7 +182,7 @@ them manually."
     (--each selected-files
       (let ((params
              (cons `(FileName . ,it)
-                   (omnisharp--get-common-params))))
+                   (omnisharp--get-request-object))))
         (omnisharp-add-to-solution-worker params))
       (message "Added %s files to the solution."
                (prin1-to-string (length selected-files))))))
@@ -196,7 +196,7 @@ them manually."
 
 (defun omnisharp-remove-from-project-current-file ()
   (interactive)
-  (let ((params (omnisharp--get-common-params)))
+  (let ((params (omnisharp--get-request-object)))
     (omnisharp-remove-from-project-current-file-worker params)
     (message "Removed %s from the solution."
              (cdr (assoc 'FileName params)))))
@@ -209,7 +209,7 @@ solution."
     (--each selected-files
       (let ((params
              (cons `(FileName . ,it)
-                   (omnisharp--get-common-params))))
+                   (omnisharp--get-request-object))))
         (omnisharp-remove-from-project-current-file-worker params))
       (message "Removed %s files from the project."
                (prin1-to-string (length selected-files))))))
@@ -230,7 +230,7 @@ solution."
                               ;; TODO use a predicate for filtering
                               ;; dll and csproj files
                               ))
-         (tmp-params (omnisharp--get-common-params))
+         (tmp-params (omnisharp--get-request-object))
          (params (cl-pushnew `(Reference . ,path-to-ref-file-to-add)
 			     tmp-params)))
     (omnisharp-add-reference-worker params)))
@@ -278,7 +278,7 @@ user is less likely to lose data."
 refactoring code actions for the current file and position."
   (omnisharp-post-message-curl-as-json
    (concat (omnisharp-get-host) "getcodeactions")
-   (->> (omnisharp--get-common-params)
+   (->> (omnisharp--get-request-object)
      (cons `(SelectionStartColumn . ,(omnisharp--region-start-column)))
      (cons `(SelectionStartLine   . ,(omnisharp--region-start-line)))
      (cons `(SelectionEndColumn   . ,(omnisharp--region-end-column)))
@@ -330,7 +330,7 @@ Otherwise return ACTUAL-NUMBER."
   (chosen-action-index)
 
   (let* ((run-action-params
-          (->> (omnisharp--get-common-params)
+          (->> (omnisharp--get-request-object)
             (cons `(CodeAction . ,chosen-action-index))
             (cons `(SelectionStartColumn . ,(omnisharp--region-start-column)))
             (cons `(SelectionStartLine   . ,(omnisharp--region-start-line)))
@@ -409,8 +409,8 @@ Returns the curl process"
       0
     (cl-reduce 'max (mapcar 'length completions))))
 
-(defun omnisharp--get-common-params ()
-  "Get common parameters used in the base request class Request."
+(defun omnisharp--get-request-object ()
+  "Construct a Request object based on the current buffer contents."
   (let* ((line-number (number-to-string (line-number-at-pos)))
          (column-number (number-to-string (+ 1 (omnisharp--current-column))))
          (buffer-contents (omnisharp--get-current-buffer-contents))
@@ -423,7 +423,7 @@ Returns the curl process"
               params)
       params)))
 
-(defun omnisharp--get-common-params-for-emacs-side-use ()
+(defun omnisharp--get-request-object-for-emacs-side-use ()
   "Gets a Request class that can be only handled safely inside
 Emacs. This should not be transferred to the server backend - it might
 not work on all platforms."
@@ -607,7 +607,7 @@ with the formatted result. Saves the file before starting."
   (omnisharp-code-format-worker
    ;; Add omnisharp-code-format-expand-tab to params
    (cons `(ExpandTab . ,omnisharp-code-format-expand-tab)
-         (omnisharp--get-common-params))
+         (omnisharp--get-request-object))
    (buffer-file-name)
    (line-number-at-pos)
    (omnisharp--current-column)))
@@ -650,7 +650,7 @@ server process running in the background."
                                         ; is set
             (eval
              (omnisharp--get-curl-command-arguments-string-for-api-name
-              (omnisharp--get-common-params)
+              (omnisharp--get-request-object)
               "codecheck")))
 
   :error-patterns ((error line-start
@@ -717,7 +717,7 @@ cursor at that location"
   (condition-case nil
       (let* ((quickfixes (omnisharp-post-message-curl-as-json
                           (concat (omnisharp-get-host) "currentfilemembersasflat")
-                          (omnisharp--get-common-params)))
+                          (omnisharp--get-request-object)))
              (list-quickfixes (omnisharp--vector-to-list quickfixes))
              (imenu-list (mapcar (lambda (quickfix-alist)
                                    (cons (cdr (assoc 'Text quickfix-alist))
@@ -805,7 +805,7 @@ cursor at that location"
   (omnisharp--completion-result-get-item 
    (omnisharp-post-message-curl-as-json
     (concat (omnisharp-get-host) "typelookup")
-    (omnisharp--get-common-params))
+    (omnisharp--get-request-object))
    'Type))
 
 (defun omnisharp-eldoc-function ()
@@ -829,7 +829,7 @@ cursor at that location"
   (interactive)
   (let ((run-code-action-result
          (omnisharp--fix-code-issue-at-point-worker
-          (omnisharp--get-common-params))))
+          (omnisharp--get-request-object))))
     (omnisharp--set-buffer-contents-to
      (buffer-name)
      (cdr (assoc 'Text run-code-action-result))
@@ -880,7 +880,7 @@ contents with the issue at point fixed."
                       (omnisharp-post-message-curl-as-json
                        (concat (omnisharp-get-host) "gettestcontext") 
                        (cons `("Type" . ,mode)
-                             (omnisharp--get-common-params))))))))
+                             (omnisharp--get-request-object))))))))
 
     (compile build-command)
     ;; User can answer yes straight away if they don't want to

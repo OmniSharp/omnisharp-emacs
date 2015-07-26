@@ -6,7 +6,7 @@ argument, use another window."
   (interactive "P")
   (omnisharp--send-command-to-server
    "gotodefinition"
-   (omnisharp--get-common-params)
+   (omnisharp--get-request-object)
    (lambda (response)
      (if (null (cdr (assoc 'FileName response)))
          (message
@@ -25,7 +25,7 @@ selected member. With prefix argument, use another window."
   (interactive "P")
   (omnisharp--send-command-to-server
    "currentfilemembersasflat"
-   (omnisharp--get-common-params)
+   (omnisharp--get-request-object)
    (lambda (quickfixes)
      (omnisharp--choose-and-go-to-quickfix-ido
       quickfixes
@@ -110,8 +110,6 @@ files in the current solution."
 
 (defun omnisharp--get-solution-files-list-of-strings ()
   "Returns all files in the current solution as a list of strings."
-  ;; This is just mapping functions one after another. Read from top
-  ;; to bottom.
   (->> (omnisharp--get-solution-files-quickfix-response)
     (assoc 'QuickFixes)
     (cdr)
@@ -139,7 +137,7 @@ use another window."
   (interactive "P")
   (-let [(&alist 'QuickFixes qfs) (omnisharp-post-message-curl-as-json
                                    (concat (omnisharp-get-host) "gotoregion")
-                                   (omnisharp--get-common-params))]
+                                   (omnisharp--get-request-object))]
     (omnisharp--choose-and-go-to-quickfix-ido qfs other-window)))
 
 (provide 'omnisharp-navigation-actions)

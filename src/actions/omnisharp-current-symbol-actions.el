@@ -22,7 +22,7 @@ from the server side, i.e. 'Type or 'Documentation that will be
 displayed to the user."
   (omnisharp--send-command-to-server
    "typelookup"
-   (omnisharp--get-common-params)
+   (omnisharp--get-request-object)
    (lambda (response)
      (let ((stuff-to-display (cdr (assoc type-property-name
                                          response))))
@@ -42,7 +42,7 @@ ring."
   (message "Finding usages...")
   (omnisharp--send-command-to-server
    "findusages"
-   (omnisharp--get-common-params)
+   (omnisharp--get-request-object)
    (-lambda ((&alist 'QuickFixes quickfixes))
             (omnisharp--find-usages-show-response quickfixes))))
 
@@ -58,7 +58,7 @@ ring."
   (interactive "P")
   (omnisharp--send-command-to-server-sync
    "findimplementations"
-   (omnisharp--get-common-params)
+   (omnisharp--get-request-object)
    (lambda (quickfix-response)
      (omnisharp--show-or-navigate-to-quickfixes-with-ido quickfix-response
                                                          other-window))))
@@ -78,7 +78,7 @@ ring."
   (interactive "P")
   (omnisharp--send-command-to-server
    "findusages"
-   (omnisharp--get-common-params)
+   (omnisharp--get-request-object)
    (lambda (quickfix-response)
      (omnisharp--show-or-navigate-to-quickfixes-with-ido quickfix-response
                                                          other-window))))
@@ -90,7 +90,7 @@ to select one (or more) to jump to."
   (interactive)
   (message "Finding implementations...")
   (omnisharp-find-implementations-worker
-   (omnisharp--get-common-params)
+   (omnisharp--get-request-object)
    (lambda (quickfixes)
      (cond ((equal 0 (length quickfixes))
             (message "No implementations found."))
@@ -121,11 +121,11 @@ name to rename to, defaulting to the current name of the symbol."
   (let* ((current-word (thing-at-point 'symbol))
          (rename-to (read-string "Rename to: " current-word))
          (rename-request
-          (->> (omnisharp--get-common-params)
+          (->> (omnisharp--get-request-object)
             (cons `(RenameTo . ,rename-to))
             (cons `(WantsTextChanges . true))))
          (location-before-rename
-          (omnisharp--get-common-params-for-emacs-side-use)))
+          (omnisharp--get-request-object-for-emacs-side-use)))
     (omnisharp--send-command-to-server-sync
      "rename"
      rename-request
@@ -169,7 +169,7 @@ renames require interactive confirmation from the user."
          (all-solution-files
           (omnisharp--get-solution-files-list-of-strings))
          (location-before-rename
-          (omnisharp--get-common-params-for-emacs-side-use)))
+          (omnisharp--get-request-object-for-emacs-side-use)))
 
     (setq omnisharp--current-solution-files all-solution-files)
     (tags-query-replace current-word

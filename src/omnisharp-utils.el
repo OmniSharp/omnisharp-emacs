@@ -293,7 +293,7 @@ moving point."
   (omnisharp--wait-until-request-completed
    (omnisharp--send-command-to-server
     "updatebuffer"
-    (omnisharp--get-common-params))))
+    (omnisharp--get-request-object))))
 
 ;; this is actually used in tests only
 (defun omnisharp--create-ecukes-test-server (omnisharp-emacs-root-path)
