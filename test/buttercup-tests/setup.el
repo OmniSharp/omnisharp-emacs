@@ -71,12 +71,33 @@ request id."
 (defun ot--buffer-contents-and-point-at-$ (&rest buffer-contents-to-insert)
   "Test setup. Only works reliably if there is one $ character"
   (erase-buffer)
+  (deactivate-mark)
   (--map (insert it "\n") buffer-contents-to-insert)
   (beginning-of-buffer)
   (search-forward "$")
   (delete-backward-char 1)
   ;; will block
   (omnisharp--update-buffer))
+
+(defun ot--buffer-contents-and-region (&rest lines)
+  "Notice: LINES have to contain $"
+
+  ;; todo deactivate existing region
+  (apply #'ot--buffer-contents-and-point-at-$ lines)
+
+  (beginning-of-buffer)
+
+  ;; remove region-starts-here markers
+  (re-search-forward "(region-starts-here)")
+  (replace-match "")
+  (setq region-start (point))
+  (re-search-forward "(region-ends-here)")
+  (replace-match "")
+
+  (omnisharp--update-buffer)
+  ;; select the text between the current position and the last one
+  (push-mark region-start)
+  (activate-mark))
 
 (defun ot--point-should-be-on-line-number (expected-line-number)
   (let ((current-line-number (line-number-at-pos)))
