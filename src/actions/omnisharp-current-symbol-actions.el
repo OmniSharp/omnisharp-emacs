@@ -142,12 +142,7 @@ name to rename to, defaulting to the current name of the symbol."
       ;; Save all buffers to avoid conflicts / losing changes
       (save-some-buffers t)
 
-      (--map (-let (((&alist 'Changes changes
-                             'FileName file-name) it))
-               (omnisharp--update-files-with-text-changes
-                file-name
-                (omnisharp--vector-to-list changes)))
-             modified-file-responses)
+      (-map #'omnisharp--apply-text-changes modified-file-responses)
 
       ;; Keep point in the buffer that initialized the rename so that
       ;; the user does not feel disoriented
@@ -156,6 +151,13 @@ name to rename to, defaulting to the current name of the symbol."
       (message "Rename complete in files: \n%s"
                (-interpose "\n" (--map (cdr (assoc 'FileName it))
                                        modified-file-responses))))))
+
+(defun omnisharp--apply-text-changes (modified-file-response)
+  (-let (((&alist 'Changes changes
+                  'FileName file-name) modified-file-response))
+    (omnisharp--update-files-with-text-changes
+     file-name
+     (omnisharp--vector-to-list changes))))
 
 (defun omnisharp-rename-interactively ()
   "Rename the current symbol to a new name. Lets the user choose what

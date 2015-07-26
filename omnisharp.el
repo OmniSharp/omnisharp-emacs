@@ -40,6 +40,7 @@
 (require 'omnisharp-navigation-actions)
 (require 'omnisharp-settings)
 (require 'omnisharp-helm-integration)
+(require 'omnisharp-solution-actions)
 
 ;;; Code:
 ;;;###autoload
@@ -166,124 +167,10 @@ them manually."
     (omnisharp--vector-to-list
      (cdr (assoc 'AmbiguousResults json-result)))))
 
-;; TODO create omnisharp-add-to-solution that lets user choose which
-;; file to add.
-(defun omnisharp-add-to-solution-current-file ()
-  (interactive)
-  (let ((params (omnisharp--get-request-object)))
-    (omnisharp-add-to-solution-worker params)
-    (message "Added %s to the solution."
-             (cdr (assoc 'FileName params)))))
-
-(defun omnisharp-add-to-solution-dired-selected-files ()
-  "Add the files currently selected in dired to the current solution."
-  (interactive)
-  (let ((selected-files (dired-get-marked-files)))
-    (--each selected-files
-      (let ((params
-             (cons `(FileName . ,it)
-                   (omnisharp--get-request-object))))
-        (omnisharp-add-to-solution-worker params))
-      (message "Added %s files to the solution."
-               (prin1-to-string (length selected-files))))))
-
-(defun omnisharp-add-to-solution-worker (params)
-  "TODO"
-  ;; TODO report results somehow
-  (omnisharp-post-message-curl
-   (concat (omnisharp-get-host) "addtoproject")
-   params))
-
-(defun omnisharp-remove-from-project-current-file ()
-  (interactive)
-  (let ((params (omnisharp--get-request-object)))
-    (omnisharp-remove-from-project-current-file-worker params)
-    (message "Removed %s from the solution."
-             (cdr (assoc 'FileName params)))))
-
-(defun omnisharp-remove-from-project-dired-selected-files ()
-  "Remove the files currently selected in dired from the current
-solution."
-  (interactive)
-  (let ((selected-files (dired-get-marked-files)))
-    (--each selected-files
-      (let ((params
-             (cons `(FileName . ,it)
-                   (omnisharp--get-request-object))))
-        (omnisharp-remove-from-project-current-file-worker params))
-      (message "Removed %s files from the project."
-               (prin1-to-string (length selected-files))))))
-
-(defun omnisharp-remove-from-project-current-file-worker (params)
-  (omnisharp-post-message-curl
-   (concat (omnisharp-get-host) "removefromproject")
-   params))
-
-(defun omnisharp-add-reference ()
-  (interactive)
-  (let* ((path-to-ref-file-to-add
-          (ido-read-file-name "Add reference to (dll / project): "
-                              nil ;; start in current dir
-                              nil ;; no default filename
-                              t ;; only allow existing files
-
-                              ;; TODO use a predicate for filtering
-                              ;; dll and csproj files
-                              ))
-         (tmp-params (omnisharp--get-request-object))
-         (params (cl-pushnew `(Reference . ,path-to-ref-file-to-add)
-			     tmp-params)))
-    (omnisharp-add-reference-worker params)))
-
-(defun omnisharp-add-reference-worker (params)
-  (omnisharp-post-message-curl-as-json
-   (concat (omnisharp-get-host) "addreference")
-   params))
-
 (defvar omnisharp--eldoc-fontification-buffer-name " * OmniSharp : Eldoc Fontification *"
   "The name of the buffer that is used to fontify eldoc strings.")
 
-(defun omnisharp-run-code-action-refactoring ()
-  "Gets a list of refactoring code actions for the current editor
-position and file from the API. Asks the user what kind of refactoring
-they want to run. Then runs the action.
-
-Saves the current file before doing anything else. This is so that the
-user is less likely to lose data."
-
-  (interactive)
-  (save-buffer)
-  (let* ((actions-vector (omnisharp--get-code-actions-from-api))
-         ;; CodeActions is a vector. Need to convert it to a list.
-         (actions-list
-          (omnisharp--vector-to-list
-           (cdr (assoc 'CodeActions actions-vector)))))
-    ;; Exit early if no refactorings are provided by the API.
-    (if (<= (length actions-list) 0)
-        (message "No refactorings available at this position.")
-
-      (progn
-        (let* ((chosen-action (ido-completing-read
-                               "Run code action: "
-                               actions-list
-                               t))
-               (chosen-action-index
-                (cl-position chosen-action actions-list)))
-
-          (omnisharp-run-code-action-refactoring-worker
-           chosen-action-index))))))
-
-(defun omnisharp--get-code-actions-from-api ()
-  "Fetches and returns a GetCodeActionsResponse: the runnable
-refactoring code actions for the current file and position."
-  (omnisharp-post-message-curl-as-json
-   (concat (omnisharp-get-host) "getcodeactions")
-   (->> (omnisharp--get-request-object)
-     (cons `(SelectionStartColumn . ,(omnisharp--region-start-column)))
-     (cons `(SelectionStartLine   . ,(omnisharp--region-start-line)))
-     (cons `(SelectionEndColumn   . ,(omnisharp--region-end-column)))
-     (cons `(SelectionEndLine     . ,(omnisharp--region-end-line))))))
-
+;; todo what the actual funk is this? the same as min?
 (defun omnisharp--with-minimum-value (min-number actual-number)
   "If ACTUAL-NUMBER is less than MIN-NUMBER, return MIN-NUMBER.
 Otherwise return ACTUAL-NUMBER."
@@ -325,36 +212,6 @@ Otherwise return ACTUAL-NUMBER."
         (goto-char (region-end)))
       (omnisharp--with-minimum-value 1
                                      (omnisharp--current-column)))))
-
-(defun omnisharp-run-code-action-refactoring-worker
-  (chosen-action-index)
-
-  (let* ((run-action-params
-          (->> (omnisharp--get-request-object)
-            (cons `(CodeAction . ,chosen-action-index))
-            (cons `(SelectionStartColumn . ,(omnisharp--region-start-column)))
-            (cons `(SelectionStartLine   . ,(omnisharp--region-start-line)))
-            (cons `(SelectionEndColumn   . ,(omnisharp--region-end-column)))
-            (cons `(SelectionEndLine     . ,(omnisharp--region-end-line)))))
-         (json-run-action-result ; RunCodeActionsResponse
-          (omnisharp-post-message-curl-as-json
-           (concat (omnisharp-get-host) "runcodeaction")
-           run-action-params)))
-
-    (omnisharp-run-code-action-worker run-action-params
-                                      json-run-action-result)))
-
-(defun omnisharp-run-code-action-worker (run-action-params
-                                         json-run-action-result)
-  "Gets new file contents with the chosen refactoring
-applied. Attempts to keep point still.
-
-run-action-params: original parameters sent to /runcodeaction API."
-  (omnisharp--set-buffer-contents-to
-   (buffer-file-name)
-   (cdr (assoc 'Text json-run-action-result))
-   (line-number-at-pos)
-   (omnisharp--current-column)))
 
 (defun omnisharp-post-message-curl-as-json-async (url params callback)
   "Posts message to curl at URL with PARAMS asynchronously.
@@ -537,67 +394,6 @@ the user selects a completion and the completion is inserted."
   ;; TODO how to check if popup is active?
   (omnisharp--auto-complete-display-function-ido
    omnisharp--last-buffer-specific-auto-complete-result))
-
-(defun omnisharp-get-build-command ()
-  "Retrieve the shell command to build the current solution."
-  (omnisharp-post-message-curl
-   (concat (omnisharp-get-host) "buildcommand")
-   nil))
-
-(defun omnisharp-build-in-emacs ()
-  "Build the current solution in a non-blocking fashion inside emacs.
-Uses the standard compilation interface (compile)."
-  (interactive)
-  ;; Build command contains backslashes on Windows systems. Work
-  ;; around this by using double backslashes. Other systems are not
-  ;; affected.
-  (let ((build-command (omnisharp--fix-build-command-if-on-windows
-                        (omnisharp-get-build-command))))
-    (omnisharp--recognize-mono-compilation-error-format)
-    (compile build-command)
-    (add-to-list 'compile-history build-command)))
-
-(defun omnisharp--recognize-mono-compilation-error-format ()
-  "Makes Emacs recognize the mono compiler errors as clickable
-compilation buffer elements."
-  (add-to-list 'compilation-error-regexp-alist
-               '(" in \\(.+\\):\\([0-9]+\\)" 1 2)))
-
-(defun omnisharp--fix-build-command-if-on-windows (command)
-  "Fixes the build command gotten via omnisharp-get-build-command.
-See function definition for an example.
-
-If not on windows, returns COMMAND unchanged."
-
-  ;; Example input without fix:
-  ;; C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Msbuild.exe /m /nologo
-  ;;     /v:q /property:GenerateFullPaths=true
-  ;;     \"c:/Projects/foo/foo.sln\"
-
-  ;; This changes that to this:
-  ;; C:/Windows/Microsoft.NET/Framework64/v4.0.30319/Msbuild.exe
-  ;;     //m //nologo //v:q //property:GenerateFullPaths=true
-  ;;     \"c://Projects//bowsville_freelancer//src//Bowsville.Freelancer.sln\"
-  ;;
-  ;; ^ this works :)
-
-
-  (if (equal system-type 'windows-nt)
-      ;; Compiler path fix. C:\Path is interpreted as C:Path
-      (omnisharp--convert-backslashes-to-forward-slashes
-       command)
-
-    ;; Not on windows. Do not change.
-    command))
-
-(defun omnisharp--convert-backslashes-to-forward-slashes
-  (string-to-convert)
-  "Converts the given STRING-TO-CONVERT's backslashes to forward
-slashes."
-  (replace-regexp-in-string "\\\\" "/" string-to-convert))
-
-(defun omnisharp--convert-slashes-to-double-slashes (command)
-  (replace-regexp-in-string "/" "//" command))
 
 (defun omnisharp-code-format ()
   "Format the code in the current file. Replaces the file contents
@@ -823,31 +619,6 @@ cursor at that location"
             (omnisharp--eldoc-default))))
     (error nil
            (omnisharp--eldoc-default))))
-
-;;;###autoload
-(defun omnisharp-fix-code-issue-at-point ()
-  (interactive)
-  (let ((run-code-action-result
-         (omnisharp--fix-code-issue-at-point-worker
-          (omnisharp--get-request-object))))
-    (omnisharp--set-buffer-contents-to
-     (buffer-name)
-     (cdr (assoc 'Text run-code-action-result))
-     (line-number-at-pos)
-     (omnisharp--current-column))))
-
-(defun omnisharp--fix-code-issue-at-point-worker (request)
-  "Takes a Request in lisp format. Calls the api and returns a
-RunCodeIssuesResponse that contains Text - the new buffer
-contents with the issue at point fixed."
-  ;; The api uses a RunCodeActionRequest but currently ignores the
-  ;; CodeAction property in that class
-  (let ((run-code-action-request
-         (cons `(CodeAction . 0) request)))
-    (omnisharp-post-message-curl-as-json
-     (concat (omnisharp-get-host)
-             "fixcodeissue")
-     run-code-action-request)))
 
 (add-to-list 'compilation-error-regexp-alist
              '(" in \\(.+\\):\\([1-9][0-9]+\\)" 1 2))
