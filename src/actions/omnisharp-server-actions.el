@@ -67,9 +67,7 @@ solution files were found."
                    (set-process-filter process 'omnisharp--handle-server-message)
                    (set-process-sentinel process 'omnisharp--server-process-sentinel)
                    (set-process-coding-system process 'utf-8-unix 'utf-8-unix)
-                   process)))
-          (unless omnisharp-debug ;; ignore process output if debug flag not set
-            (set-process-filter process (lambda (process string)))))
+                   process))))
       (error (format "Path does not lead to a valid solution path: %s" path-to-solution)))))
 
 ;;;###autoload

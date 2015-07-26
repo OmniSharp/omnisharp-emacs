@@ -9,8 +9,6 @@
     (:response-handlers . nil)
     (:started? . nil)))
 
-(setq omnisharp-debug t)                ; for now
-
 (defun omnisharp--clear-response-handlers ()
   "For development time cleaning up impossible states of response
 handlers in the current omnisharp--server-info."
@@ -207,15 +205,18 @@ have not been returned before."
         ;; is complete. Might be slightly slower but easier to
         ;; implement
         (when (omnisharp--marker-at-full-line? (point))
-          (progn
-            (set-marker (process-mark process) (point))
-            ;; get the start of the last inserted line
-            (goto-char previous-text-marker)
-            (beginning-of-line)
-            (--filter (not (s-blank? it))
-                      (s-lines (buffer-substring-no-properties
+          (set-marker (process-mark process) (point))
+          ;; get the start of the last inserted line
+          (goto-char previous-text-marker)
+          (beginning-of-line)
+          (let ((text (s-lines (buffer-substring-no-properties
                                 (point)
-                                (process-mark process))))))))))
+                                (process-mark process)))))
+            ;; don't store messages in the process buffer unless
+            ;; debugging, as they can slow emacs down when they pile
+            ;; up
+            (when (not omnisharp-debug) (erase-buffer))
+            (--filter (not (s-blank? it)) text)))))))
 
 ;;; todo stop-process
 
