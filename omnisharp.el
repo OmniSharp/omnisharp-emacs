@@ -104,12 +104,12 @@ server backend."
      ["Rename interactively" omnisharp-rename-interactively])
 
     ("Solution actions"
-     ["Add current file to solution" omnisharp-add-to-solution-current-file]
-     ["Remove current file from solution" omnisharp-remove-from-project-current-file]
-     ["Add marked files in dired to solution" omnisharp-add-to-solution-dired-selected-files]
-     ["Remove marked files in dired from solution" omnisharp-remove-from-project-current-file]
-     ["Add reference to dll or project" omnisharp-add-reference]
-     ["Build solution in emacs" omnisharp-build-in-emacs]
+     ;; ["Add current file to solution" omnisharp-add-to-solution-current-file]
+     ;; ["Remove current file from solution" omnisharp-remove-from-project-current-file]
+     ;; ["Add marked files in dired to solution" omnisharp-add-to-solution-dired-selected-files]
+     ;; ["Remove marked files in dired from solution" omnisharp-remove-from-project-dired-selected-files]
+     ;; ["Add reference to dll or project" omnisharp-add-reference]
+     ;; ["Build solution in emacs" omnisharp-build-in-emacs]
      ["Start syntax check" flycheck-mode]
      ["Fix code issue at point" omnisharp-fix-code-issue-at-point])
 
