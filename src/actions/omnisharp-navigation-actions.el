@@ -126,9 +126,10 @@ file. With prefix argument uses another window."
   "Navigate to region in current file. If OTHER-WINDOW is given and t,
 use another window."
   (interactive "P")
-  (-let [(&alist 'QuickFixes qfs) (omnisharp-post-message-curl-as-json
-                                   (concat (omnisharp-get-host) "gotoregion")
-                                   (omnisharp--get-request-object))]
-    (omnisharp--choose-and-go-to-quickfix-ido qfs other-window)))
+  (omnisharp--send-command-to-server
+   "gotoregion"
+   (omnisharp--get-request-object)
+   (-lambda ((&alist 'QuickFixes quickfixes))
+            (omnisharp--choose-and-go-to-quickfix-ido quickfixes other-window))))
 
 (provide 'omnisharp-navigation-actions)

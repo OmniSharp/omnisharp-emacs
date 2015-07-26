@@ -1,5 +1,5 @@
 (describe "Navigate to solution file"
-  (it "asks the user for a file to navigate to and goes there"
+  (it "asks the user for a file in the current solution to navigate to and goes there"
     (-when-let (buffer (get-buffer "MyClass.cs"))
       (kill-buffer buffer))
 
