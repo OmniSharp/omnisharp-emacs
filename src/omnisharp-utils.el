@@ -362,4 +362,12 @@ buffer."
       (accept-process-output nil 0.01)))
   request-id)
 
+;; todo use everywhere
+(defun omnisharp--ido-completing-read (&rest args)
+  "Mockable wrapper for ido-completing-read.
+The problem with mocking ido-completing-read directly is that
+sometimes the mocks are not removed when an error occurs. This renders
+the developer's emacs unusable."
+  (apply 'ido-completing-read args))
+
 (provide 'omnisharp-utils)
