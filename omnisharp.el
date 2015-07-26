@@ -727,7 +727,7 @@ cursor at that location"
     (error nil)))
 
 (defun omnisharp-format-find-output-to-ido (item)
-  (let ((filename (cdr (assoc 'FileName item))))
+  (-let* ((('FileName filename) item))
     (cons
      (cons
       (car (car item))
