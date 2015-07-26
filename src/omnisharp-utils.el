@@ -308,9 +308,9 @@ moving point."
       (with-current-buffer buffer
         (-map 'omnisharp--apply-text-change text-changes))
     (progn
-      ;; this loads only the text but runs no file hooks and no syntax
-      ;; highlighting etc.
-      (let ((file (find-file file-name)))
+      ;; convert for ms-windows
+      (let ((file (find-file (omnisharp--convert-backslashes-to-forward-slashes
+                              file-name))))
         (-map 'omnisharp--apply-text-change text-changes)
         (save-buffer)
         (kill-buffer)))))
