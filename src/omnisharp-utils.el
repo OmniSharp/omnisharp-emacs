@@ -310,7 +310,7 @@ moving point."
     (progn
       ;; this loads only the text but runs no file hooks and no syntax
       ;; highlighting etc.
-      (let ((file (find-file-literally file-name)))
+      (let ((file (find-file file-name)))
         (-map 'omnisharp--apply-text-change text-changes)
         (save-buffer)
         (kill-buffer)))))
