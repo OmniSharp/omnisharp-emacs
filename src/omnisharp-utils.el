@@ -311,9 +311,7 @@ moving point."
       ;; convert for ms-windows
       (let ((file (find-file (omnisharp--convert-backslashes-to-forward-slashes
                               file-name))))
-        (-map 'omnisharp--apply-text-change text-changes)
-        (save-buffer)
-        (kill-buffer)))))
+        (-map 'omnisharp--apply-text-change text-changes)))))
 
 (defun omnisharp--apply-text-change (text-change)
   "Takes a LinePositionSpanTextChange and applies it to the current
