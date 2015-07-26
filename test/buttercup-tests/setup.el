@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;;; This file is a common place for buttercup testing related
 ;;; utilities and initialization
 
@@ -190,6 +192,18 @@ detecting situations in the middle of input is impossible."
 
 (defmacro ot--set (symbol value)
   `(setq symbol ,value))
+
+(defmacro ot--answer-omnisharp--ido-completing-read-with (answer-function)
+  "Automatically select the first candidate given to
+omnisharp--ido-completing-read. This could be done by controlling
+ido with the keyboard like in other tests, but ido is not easy to
+control programmatically.
+
+ANSWER-FUNCTION should receive a list of choices (strings) and respond
+with one."
+  `(spy-on 'omnisharp--ido-completing-read :and-call-fake
+           (lambda (_prompt _quickfixes)
+             (funcall ,answer-function _quickfixes))))
 
 ;;; Test suite setup. Start a test server process that can be used by
 ;;; all tests
