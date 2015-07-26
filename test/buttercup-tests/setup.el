@@ -44,8 +44,9 @@
 
 ;;; I grew tired of the omnisharp-- prefix so now I use ot--, standing
 ;;; for omnisharp test
-(defun ot--buffer-should-contain (expected)
-  (let ((actual (s-replace (string ?\C-m) (string ?\C-j) (buffer-string)))
+(defun ot--buffer-should-contain (&rest expected)
+  (let ((expected (s-join "\n" expected))
+        (actual (s-replace (string ?\C-m) (string ?\C-j) (buffer-string)))
         (message "Expected '%s' to be part of '%s', but was not."))
     (cl-assert (s-contains? expected actual) nil message expected actual)))
 
@@ -137,13 +138,13 @@ request id."
              expected-buffer-name
              (buffer-name)))
 
-(defun ot--i-should-see (text)
-  (cl-assert (s-contains? text
+(defun ot--i-should-see (&rest lines)
+  (cl-assert (s-contains? (s-join "\n" lines)
                           (buffer-string))
              nil
              (concat "Expected the buffer to contain '%s' but it did not. "
                      "The buffer contains '%s'")
-             text
+             lines
              (buffer-string)))
 
 ;;; this is a poor man's version of action chains in ecukes

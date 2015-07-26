@@ -4,8 +4,8 @@
 
   (it "navigates to the only implementation when only one found"
     (ot--buffer-contents-and-point-at-$
-     "public class Base$Class {}
-      public class SomeClass : BaseClass {}")
+     "public class Base$Class {}"
+     "public class SomeClass : BaseClass {}")
 
     (ot--evaluate-and-wait-for-server-response "(omnisharp-find-implementations-with-ido)")
     (ot--wait-for-seconds 1)
@@ -13,9 +13,9 @@
 
   (it "lets the user choose one with ido when more than one found"
     (ot--buffer-contents-and-point-at-$
-     "public class Base$Class {}
-      public class SomeClass : BaseClass {}
-      public class SomeClass2 : BaseClass {}")
+     "public class Base$Class {}"
+     "public class SomeClass : BaseClass {}"
+     "public class SomeClass2 : BaseClass {}")
 
     (ot--keyboard-input
      (ot--meta-x-command "omnisharp-find-implementations-with-ido")

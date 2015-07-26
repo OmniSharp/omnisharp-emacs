@@ -4,17 +4,16 @@
 
   (it "moves point to selected type"
     (ot--buffer-contents-and-point-at-$
-     "using System;
-
-      namespace minimal
-      {
-          public class Class_One {}
-          // point location does not matter
-          public class $Class_Two {
-              public int Foo = 0;
-          }
-          public class Class_Three {}
-      }")
+     "using System;"
+     "namespace minimal"
+     "{"
+     "    public class Class_One {}"
+     "    // point location does not matter"
+     "    public class $Class_Two {"
+     "        public int Foo = 0;"
+     "    }"
+     "    public class Class_Three {}"
+     "}")
 
     ;; automatically select the first candidate given to
     ;; omnisharp--choose-quickfix-ido.

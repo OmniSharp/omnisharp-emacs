@@ -4,15 +4,14 @@
 
   (it "lists usages of the symbol under point"
     (ot--buffer-contents-and-point-at-$
-     "using System;
-
-      namespace minimal
-      {
-          public class Target {}
-          public class JumpSite {
-              Targ$et foo;
-          }
-      }")
+     "using System;"
+     "namespace minimal"
+     "{"
+     "    public class Target {}"
+     "    public class JumpSite {"
+     "        Targ$et foo;"
+     "    }"
+     "}")
 
     (ot--evaluate-and-wait-for-server-response "(omnisharp-find-usages)")
     (ot--wait-for-seconds 1)
