@@ -168,7 +168,7 @@ request id."
              lines
              (buffer-string)))
 
-;;; this is a poor man's version of action chains in ecukes
+;; this is a poor man's version of action chains in ecukes
 (defun ot--keyboard-input (&rest text-vectors)
   "Simulates typing. Can be used to do interactive input, but
 detecting situations in the middle of input is impossible."
