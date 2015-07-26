@@ -67,10 +67,10 @@ request id."
 (defun ot--wait-for-seconds (seconds)
   (sit-for seconds))
 
-(defun ot--buffer-contents-and-point-at-$ (&rest buffer-contents-to-insert)
+(defun ot--buffer-contents-and-point-at-$ (buffer-contents-to-insert)
   "Test setup. Only works reliably if there is one $ character"
   (erase-buffer)
-  (--map (insert it "\n") buffer-contents-to-insert)
+  (insert buffer-contents-to-insert)
   (beginning-of-buffer)
   (search-forward "$")
   (delete-backward-char 1)
