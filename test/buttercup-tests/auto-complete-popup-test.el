@@ -58,7 +58,8 @@
      (ot--type "this")
      (ot--press-key "TAB")
      ;; now fill the second parameter
-     (ot--type "new object()"))
+     (ot--type "new object()")
+     (ot--press-key "TAB"))
 
     (ot--buffer-should-contain
      "namespace Test {
