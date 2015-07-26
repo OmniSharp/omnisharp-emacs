@@ -317,28 +317,25 @@ moving point."
   "Takes a LinePositionSpanTextChange and applies it to the current
 buffer."
   (save-excursion
-    (-let (((&alist 'NewText new-text
-                    'StartLine start-line
-                    'StartColumn start-column
-                    'EndLine end-line
-                    'EndColumn end-column) text-change))
+    (-let* (((&alist 'NewText new-text
+                     'StartLine start-line
+                     'StartColumn start-column
+                     'EndLine end-line
+                     'EndColumn end-column) text-change)
+            (start-point (progn
+                           (omnisharp--go-to-line-and-column
+                            start-line
+                            (- start-column 1))
+                           (point)))
+            (end-point (progn
+                         (omnisharp--go-to-line-and-column
+                          end-line
+                          (- end-column 1))
+                         (point))))
 
-      (let ((start-point
-             (progn
-               (omnisharp--go-to-line-and-column
-                start-line
-                (- start-column 1))
-               (point)))
-            (end-point
-             (progn
-               (omnisharp--go-to-line-and-column
-                end-line
-                (- end-column 1))
-               (point))))
-
-        (delete-region start-point end-point)
-        (goto-char start-point)
-        (insert new-text)))))
+      (delete-region start-point end-point)
+      (goto-char start-point)
+      (insert new-text))))
 
 (defun omnisharp--handler-exists-for-request (request-id)
   (--any? (= request-id (car it))
