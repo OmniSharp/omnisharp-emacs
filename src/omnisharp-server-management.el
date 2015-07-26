@@ -146,11 +146,11 @@ its type."
                                     (format "<-- %s %s: request failed"
                                             request-id
                                             command
-                                            body)
+                                            (prin1-to-string body))
                                   (format "<-- %s %s: %s"
                                           request-id
                                           command
-                                          body)))
+                                          (prin1-to-string body))))
                 (omnisharp--remove-response-handler server-info request-id)
                 (when (equal t success?)
                   (apply response-handler (list body))))
