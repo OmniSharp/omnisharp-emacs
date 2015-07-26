@@ -183,5 +183,4 @@ renames require interactive confirmation from the user."
     ;; the user deos not feel disoriented
     (omnisharp-go-to-file-line-and-column location-before-rename)))
 
-
 (provide 'omnisharp-current-symbol-actions)
