@@ -67,10 +67,10 @@ request id."
 (defun ot--wait-for-seconds (seconds)
   (sit-for seconds))
 
-(defun ot--buffer-contents-and-point-at-$ (buffer-contents-to-insert)
+(defun ot--buffer-contents-and-point-at-$ (&rest buffer-contents-to-insert)
   "Test setup. Only works reliably if there is one $ character"
   (erase-buffer)
-  (insert buffer-contents-to-insert)
+  (--map (insert it "\n") buffer-contents-to-insert)
   (beginning-of-buffer)
   (search-forward "$")
   (delete-backward-char 1)
@@ -89,6 +89,8 @@ request id."
                (buffer-string))))
 
 (defun ot--open-the-minimal-solution-source-file (file-path-to-open)
+  (when (get-buffer file-path-to-open)
+    (kill-buffer file-path-to-open))
   (find-file-literally (f-join omnisharp-minimal-test-solution-path
                                file-path-to-open))
   (setq buffer-read-only nil))
@@ -177,6 +179,8 @@ detecting situations in the middle of input is impossible."
                (omnisharp--log "Server did not start in time"))
   (while (not (equal t (cdr (assoc :started? omnisharp--server-info))))
     (accept-process-output)))
+
+(setq create-lockfiles nil)
 
 (print "buttercup test setup file loaded.")
 
