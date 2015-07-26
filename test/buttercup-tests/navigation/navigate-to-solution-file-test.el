@@ -3,10 +3,10 @@
     (-when-let (buffer (get-buffer "MyClass.cs"))
       (kill-buffer buffer))
 
-    (spy-on 'omnisharp--choose-quickfix-ido :and-call-fake
-            (lambda (quickfixes)
-              (--first (s-contains? "MyClass.cs" (cdr (assoc 'Text it)))
-                       quickfixes)))
+    (ot--answer-omnisharp--ido-completing-read-with
+     (lambda (choices)
+       (--first (s-contains? "MyClass.cs" it)
+                choices)))
     (omnisharp--wait-until-request-completed
      (omnisharp-navigate-to-solution-file))
     (ot--there-should-be-a-window-editing-the-file "MyClass.cs")))

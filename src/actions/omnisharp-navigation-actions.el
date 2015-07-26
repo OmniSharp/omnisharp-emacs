@@ -66,7 +66,7 @@ ido-completing-read. Returns the chosen element."
            quickfixes))
 
          (chosen-quickfix-text
-          (ido-completing-read
+          (omnisharp--ido-completing-read
            "Go to: "
            ;; TODO use a hashmap if too slow.
            ;; This algorithm is two iterations in the worst case

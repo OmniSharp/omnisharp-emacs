@@ -543,10 +543,9 @@ Returns the request-id for the auto-complete request to the server."
           (mapcar (lambda (a)
                     (cdr (assoc 'OverrideTargetName a)))
                   json-result))
-         (chosen-override (ido-completing-read
+         (chosen-override (omnisharp--ido-completing-read
                            "Override: "
-                           target-names
-                           t)))
+                           target-names)))
     (omnisharp-auto-complete-overrides-run-override
      chosen-override)))
 
@@ -681,7 +680,7 @@ is a more sophisticated matching framework than what popup.el offers."
            ;; TODO does ido-completing-read allow a custom format that
            ;; could store these, as with popup-make-item ?
            (user-chosen-display-text
-            (ido-completing-read
+            (omnisharp--ido-completing-read
              "Complete: "
              display-texts))
 

@@ -14,10 +14,10 @@
      "}")
     ;; automatically select the first candidate given to
     ;; omnisharp--choose-quickfix-ido.
-    (spy-on 'omnisharp--choose-quickfix-ido :and-call-fake
-            (lambda (quickfixes)
-              (--first (s-contains? "MyClassContainer" (cdr (assoc 'Text it)))
-                       quickfixes)))
+    (ot--answer-omnisharp--ido-completing-read-with
+     (lambda (choices)
+       (--first (s-contains? "MyClassContainer" it)
+                choices)))
 
     (omnisharp--wait-until-request-completed
      (omnisharp-navigate-to-solution-member))

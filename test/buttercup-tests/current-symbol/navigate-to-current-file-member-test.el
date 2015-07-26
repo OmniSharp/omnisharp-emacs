@@ -17,8 +17,7 @@
 
     ;; automatically select the first candidate given to
     ;; omnisharp--choose-quickfix-ido.
-    (spy-on 'omnisharp--choose-quickfix-ido :and-call-fake
-            (lambda (quickfixes) (-first-item quickfixes)))
+    (ot--answer-omnisharp--ido-completing-read-with #'-first-item)
 
     (omnisharp--wait-until-request-completed
      (omnisharp-navigate-to-current-file-member))

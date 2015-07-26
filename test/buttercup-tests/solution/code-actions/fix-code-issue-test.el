@@ -11,8 +11,8 @@
      "        int$ i = 1;"
      "    }"
      "}")
-    (spy-on 'omnisharp--ido-completing-read :and-call-fake
-            (lambda (&rest args) "Use 'var' keyword"))
+    (ot--answer-omnisharp--ido-completing-read-with
+     (lambda (choices) "Use 'var' keyword"))
     (omnisharp--wait-until-request-completed
      (omnisharp-run-code-action-refactoring))
     (ot--point-should-be-on-a-line-containing "var i = 1;"))
@@ -31,10 +31,10 @@
      "    }"
      "}")
 
-    (spy-on 'omnisharp--ido-completing-read :and-call-fake
-            (lambda (_prompt choices)
-              (--first (s-contains? "Extract Method" it)
-                       choices)))
+    (ot--answer-omnisharp--ido-completing-read-with
+     (lambda (choices)
+       (--first (s-contains? "Extract Method" it)
+                choices)))
 
     (omnisharp--wait-until-request-completed
      (omnisharp-run-code-action-refactoring))

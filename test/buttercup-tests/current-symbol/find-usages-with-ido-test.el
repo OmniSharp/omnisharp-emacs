@@ -13,12 +13,7 @@
      "    }"
      "}")
 
-    ;; automatically select the first candidate given to
-    ;; omnisharp--choose-quickfix-ido. this could be done by
-    ;; controlling ido with the keyboard like in other tests, but ido
-    ;; is not easy to control programmatically.
-    (spy-on 'omnisharp--choose-quickfix-ido :and-call-fake
-            (lambda (quickfixes) (-first-item quickfixes)))
+    (ot--answer-omnisharp--ido-completing-read-with #'-first-item)
 
     (omnisharp--wait-until-request-completed (omnisharp-find-usages-with-ido))
 

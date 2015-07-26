@@ -9,10 +9,10 @@
      "    #endregion awesome"
      "$"
      "}")
-    (spy-on 'omnisharp--choose-quickfix-ido :and-call-fake
-            (lambda (quickfixes)
-              (--first (s-contains? "awesome" (cdr (assoc 'Text it)))
-                       quickfixes)))
+    (ot--answer-omnisharp--ido-completing-read-with
+     (lambda (choices)
+       (--first (s-contains? "awesome" it)
+                choices)))
     (omnisharp--wait-until-request-completed
      (omnisharp-navigate-to-region))
     (ot--point-should-be-on-a-line-containing "#region awesome")))
