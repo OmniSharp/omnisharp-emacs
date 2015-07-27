@@ -135,18 +135,13 @@ request id."
                current-line)))
 
 (defun ot--there-should-be-a-window-editing-the-file (file-name)
-  (let ((full-path (buffer-file-name
-                    (window-buffer
-                     (get-buffer-window file-name)))))
-    (cl-assert (when full-path
-                 (f-filename
-                  full-path))
-               nil
-               (concat
-                "No visible window is editing the file '%s'."
-                " Visible windows: '%s'")
-               file-name
-               (window-list))))
+  (cl-assert (get-buffer-window file-name)
+             nil
+             (concat
+              "No visible window is editing the file '%s'."
+              " Visible windows: '%s'")
+             file-name
+             (window-list)))
 
 (defun ot--switch-to-the-window-in-the-buffer (file-name)
   (select-window (get-buffer-window file-name)))
