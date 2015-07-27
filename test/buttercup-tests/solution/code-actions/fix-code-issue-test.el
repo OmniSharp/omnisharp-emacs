@@ -52,4 +52,37 @@
      "        int i = 1;"
      "        int i2 = 2;"
      "    }"
-     "}")))
+     "}"))
+
+  (it "can create new files (Generate class in new file)"
+    (ot--delete-the-minimal-solution-source-file "MyNewClass.cs")
+    (ot--buffer-contents-and-point-at-$
+     "namespace MyNamespace"
+     "{"
+     "    public class Class1"
+     "    {"
+     "        public void Whatever()"
+     "        {"
+     "            MyNew$Class.DoSomething();"
+     "        }"
+     "    }"
+     "}")
+    (ot--answer-omnisharp--ido-completing-read-with
+     (lambda (choices)
+       (--first (equal it
+                       "Generate class for 'MyNewClass' in 'MyNamespace' (in new file)")
+                choices)))
+    (omnisharp--wait-until-request-completed
+     (omnisharp-run-code-action-refactoring))
+    (ot--there-should-be-a-window-editing-the-file "MyNewClass.cs")
+    (ot--switch-to-buffer "MyNewClass.cs")
+    (ot--buffer-should-contain
+     "namespace MyNamespace"
+     "{"
+     "    internal class MyNewClass"
+     "    {"
+     "    }"
+     "}"))
+
+  (comment (it "can alter other files besides the one currently open (Generate method in other class)"
+             (comment todo))))
