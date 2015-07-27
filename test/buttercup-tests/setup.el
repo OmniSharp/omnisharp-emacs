@@ -48,7 +48,8 @@
 ;;; for omnisharp test
 (defun ot--buffer-should-contain (&rest expected)
   (let ((expected (s-join "\n" expected))
-        (actual (s-replace (string ?\C-m) (string ?\C-j) (buffer-string)))
+        (actual (s-replace (string ?\C-m) (string ?\C-j)
+                           (substring-no-properties (buffer-string))))
         (message "Expected '%s' to be part of '%s', but was not."))
     (cl-assert (s-contains? expected actual) nil message expected actual)))
 
@@ -115,9 +116,16 @@ request id."
 (defun ot--open-the-minimal-solution-source-file (file-path-to-open)
   (when (get-buffer file-path-to-open)
     (kill-buffer file-path-to-open))
-  (find-file-literally (f-join omnisharp-minimal-test-solution-path
-                               file-path-to-open))
+  (find-file (f-join omnisharp-minimal-test-solution-path
+                     file-path-to-open))
   (setq buffer-read-only nil))
+
+(defun ot--delete-the-minimal-solution-source-file (file-name)
+  (-when-let (buffer (get-buffer file-name))
+    (kill-buffer buffer))
+  (let ((file-path (f-join omnisharp-minimal-test-solution-path file-name)))
+    (when (f-exists? file-path)
+      (f-delete file-path))))
 
 (defun ot--point-should-be-on-a-line-containing (expected-line-contents)
   (let ((current-line (substring-no-properties (thing-at-point 'line))))

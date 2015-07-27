@@ -61,14 +61,7 @@
      (ot--type "new object()")
      (ot--press-key "TAB"))
 
-    (ot--buffer-should-contain
-     "namespace Test {"
-     "    public class Awesome {"
-     "        public Awesome() {"
-     "            object.Equals(this, new object())"
-     "        }"
-     "    }"
-     "}")
+    (ot--buffer-should-contain "object.Equals(this, new object())")
 
     ;; if not done, other tests will fail due to "something something
     ;; yas overlay is active"
