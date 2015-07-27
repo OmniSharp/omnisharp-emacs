@@ -10,13 +10,10 @@
      "        Old$Class foo; // rename here"
      "    }"
      "}")
-    (ot--keyboard-input
-     (ot--press-key "M-x")
-     (ot--type "omnisharp-rename")
-     (ot--press-key "RET")
-     (ot--type "Changed")
-     (ot--press-key "RET"))
 
+    ;; rename to:
+    (spy-on 'read-string :and-return-value "OldClassChanged")
+    (omnisharp-rename)
     (ot--point-should-be-on-line-number 6)
 
     (ot--i-should-see
@@ -49,13 +46,8 @@
      "    }"
      "}")
 
-    (ot--keyboard-input
-     (ot--press-key "M-x")
-     (ot--type "omnisharp-rename")
-     (ot--press-key "RET")
-     ;; The new name will be MyClass2
-     (ot--type "2")
-     (ot--press-key "RET"))
+    (spy-on 'read-string :and-return-value "MyClass2")
+    (omnisharp-rename)
 
     (ot--buffer-should-contain
      "using System;"
