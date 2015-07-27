@@ -305,14 +305,10 @@ moving point."
                                               "/test/MinimalSolution/minimal.sln")))
 
 (defun omnisharp--update-files-with-text-changes (file-name text-changes)
-  (-if-let (buffer (omnisharp--buffer-exists-for-file-name file-name))
-      (with-current-buffer buffer
-        (-map 'omnisharp--apply-text-change text-changes))
-    (progn
-      ;; convert for ms-windows
-      (let ((file (find-file (omnisharp--convert-backslashes-to-forward-slashes
-                              file-name))))
-        (-map 'omnisharp--apply-text-change text-changes)))))
+  (let ((file (find-file (omnisharp--convert-backslashes-to-forward-slashes
+                          file-name))))
+    (with-current-buffer file
+      (-map 'omnisharp--apply-text-change text-changes))))
 
 (defun omnisharp--apply-text-change (text-change)
   "Takes a LinePositionSpanTextChange and applies it to the current
