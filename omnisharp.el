@@ -308,9 +308,9 @@ QuickFix class json result."
    other-window))
 
 (defun omnisharp--go-to-line-and-column (line column)
-  (with-no-warnings
-    (goto-line line))
-  (move-to-column column))
+  (goto-char (point-min))
+  (forward-line (1- line))
+  (move-to-column (max 0 column)))
 
 (defun omnisharp-go-to-file-line-and-column-worker (line
                                                     column
