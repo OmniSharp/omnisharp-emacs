@@ -90,12 +90,8 @@ Uses the standard compilation interface (compile)."
 (defun omnisharp-run-code-action-refactoring ()
   "Gets a list of refactoring code actions for the current editor
 position and file from the server. Asks the user what kind of
-refactoring they want to run. Then runs the action.
-
-Saves the current file before doing anything else. This is so that the
-user is less likely to lose data."
+refactoring they want to run. Then runs the action."
   (interactive)
-  (save-buffer)
   (let ((get-code-actions-request (omnisharp--get-code-actions-request)))
     (omnisharp--send-command-to-server
      "v2/getcodeactions"
