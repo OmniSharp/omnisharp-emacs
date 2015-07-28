@@ -11,10 +11,8 @@
      "        int$ i = 1;"
      "    }"
      "}")
-    (ot--answer-omnisharp--ido-completing-read-with
-     (lambda (choices) "Use 'var' keyword"))
-    (omnisharp--wait-until-request-completed
-     (omnisharp-run-code-action-refactoring))
+    (ot--answer-omnisharp--ido-completing-read-with (lambda (choices) "Use 'var' keyword"))
+    (omnisharp--wait-until-request-completed (omnisharp-run-code-action-refactoring))
     (ot--point-should-be-on-a-line-containing "var i = 1;"))
 
   (it "can operate on the current region (Extract method)"
@@ -33,8 +31,7 @@
        (--first (s-contains? "Extract Method" it)
                 choices)))
 
-    (omnisharp--wait-until-request-completed
-     (omnisharp-run-code-action-refactoring))
+    (omnisharp--wait-until-request-completed (omnisharp-run-code-action-refactoring))
 
     (ot--buffer-should-contain
      "public class Class1"
@@ -98,8 +95,7 @@
        (--first (equal it
                        "Generate class for 'MyNewClass' in 'MyNamespace' (in new file)")
                 choices)))
-    (omnisharp--wait-until-request-completed
-     (omnisharp-run-code-action-refactoring))
+    (omnisharp--wait-until-request-completed (omnisharp-run-code-action-refactoring))
     (ot--there-should-be-a-window-editing-the-file "MyNewClass.cs")
     (ot--switch-to-buffer "MyNewClass.cs")
     (ot--buffer-should-contain
