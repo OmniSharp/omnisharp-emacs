@@ -204,4 +204,20 @@ slashes."
 (defun omnisharp--convert-slashes-to-double-slashes (command)
   (replace-regexp-in-string "/" "//" command))
 
+(defun omnisharp-code-format-entire-file ()
+  "Format the code in the current file. Replaces the file contents
+with the formatted result. Saves the file before starting."
+  (interactive)
+  (omnisharp--send-command-to-server
+   "codeformat"
+   (cons `(ExpandTab . ,omnisharp-code-format-expand-tab)
+         (omnisharp--get-request-object))
+   (let ((current-file (buffer-file-name)))
+     (-lambda ((&alist 'Buffer new-buffer-contents))
+              (omnisharp--set-buffer-contents-to
+               current-file
+               new-buffer-contents
+               (line-number-at-pos)
+               (omnisharp--current-column))))))
+
 (provide 'omnisharp-solution-actions)

@@ -112,7 +112,8 @@ server backend."
      ;; ["Add reference to dll or project" omnisharp-add-reference]
      ;; ["Build solution in emacs" omnisharp-build-in-emacs]
      ["Start syntax check" flycheck-mode]
-     ["Fix code issue at point" omnisharp-fix-code-issue-at-point])
+     ["Fix code issue at point" omnisharp-fix-code-issue-at-point]
+     ["Run code format on current buffer" omnisharp-code-format-entire-file])
 
     ("Unit tests"
      ["Run test at point" omnisharp-unit-test-single]
@@ -120,7 +121,6 @@ server backend."
      ["Run all tests in project" omnisharp-unit-test-all])
 
     ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
-    ["Run code format on current buffer" omnisharp-code-format]
     ;; not implemented yet in omnisharp-roslyn
     ;; ["Fix using statements" omnisharp-fix-usings]
     ))
@@ -391,33 +391,6 @@ the user selects a completion and the completion is inserted."
   ;; TODO how to check if popup is active?
   (omnisharp--auto-complete-display-function-ido
    omnisharp--last-buffer-specific-auto-complete-result))
-
-(defun omnisharp-code-format ()
-  "Format the code in the current file. Replaces the file contents
-with the formatted result. Saves the file before starting."
-  (interactive)
-  (save-buffer)
-  (omnisharp-code-format-worker
-   ;; Add omnisharp-code-format-expand-tab to params
-   (cons `(ExpandTab . ,omnisharp-code-format-expand-tab)
-         (omnisharp--get-request-object))
-   (buffer-file-name)
-   (line-number-at-pos)
-   (omnisharp--current-column)))
-
-(defun omnisharp-code-format-worker (code-format-request
-                                     filename
-                                     current-line
-                                     current-column)
-  (let ((json-result
-         (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "codeformat")
-          code-format-request)))
-    (omnisharp--set-buffer-contents-to
-     filename
-     (cdr (assoc 'Buffer json-result))
-     current-line
-     current-column)))
 
 ;; This currently has no UI, so there only exists the
 ;; worker. Originally the plan was to be able to run manual syntax

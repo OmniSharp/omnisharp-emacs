@@ -100,23 +100,22 @@ If RESULT-POINT-LINE and RESULT-POINT-COLUMN are not given, and a
 buffer exists for FILENAME-FOR-BUFFER, its current positions are
 used. If a buffer does not exist, the file is visited and the default
 point position is used."
-  (omnisharp--find-file-possibly-in-other-window
-   filename-for-buffer nil) ; not in other-window
+  (save-window-excursion
+    (omnisharp--find-file-possibly-in-other-window
+     filename-for-buffer nil) ; not in other-window
 
-  ;; Default values are the ones in the buffer that is visiting
-  ;; filename-for-buffer.
-  (setq result-point-line
-        (or result-point-line (line-number-at-pos)))
-  (setq result-point-column
-        (or result-point-column (omnisharp--current-column)))
+    ;; Default values are the ones in the buffer that is visiting
+    ;; filename-for-buffer.
+    (setq result-point-line
+          (or result-point-line (line-number-at-pos)))
+    (setq result-point-column
+          (or result-point-column (omnisharp--current-column)))
+    (erase-buffer)
+    (insert new-buffer-contents)
 
-  (save-buffer)
-  (erase-buffer)
-  (insert new-buffer-contents)
-
-  ;; Hack. Puts point where it belongs.
-  (omnisharp-go-to-file-line-and-column-worker
-   result-point-line result-point-column filename-for-buffer))
+    ;; Hack. Puts point where it belongs.
+    (omnisharp-go-to-file-line-and-column-worker
+     result-point-line result-point-column filename-for-buffer)))
 
 (defun omnisharp--current-column ()
   "Returns the current column, converting tab characters in a way that
