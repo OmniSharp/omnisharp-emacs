@@ -332,7 +332,7 @@ buffer."
 
       (delete-region start-point end-point)
       (goto-char start-point)
-      (insert new-text))))
+      (insert (s-replace (kbd "RET") "" new-text)))))
 
 (defun omnisharp--handler-exists-for-request (request-id)
   (--any? (= request-id (car it))
