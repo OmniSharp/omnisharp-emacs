@@ -1,4 +1,6 @@
 # omnisharp-emacs
+
+[![Join the chat at https://gitter.im/OmniSharp/omnisharp-emacs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OmniSharp/omnisharp-emacs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 <a href="//travis-ci.org/OmniSharp/omnisharp-emacs">
     <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
 </a>
