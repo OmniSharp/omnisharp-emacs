@@ -266,7 +266,7 @@ Returns the curl process"
 (defun omnisharp--get-request-object ()
   "Construct a Request object based on the current buffer contents."
   (let* ((line-number (number-to-string (line-number-at-pos)))
-         (column-number (number-to-string (+ 1 (omnisharp--current-column))))
+         (column-number (number-to-string (1+ (omnisharp--current-column))))
          (buffer-contents (omnisharp--get-current-buffer-contents))
          (filename-tmp (or buffer-file-name ""))
          (params `((Line     . ,line-number)

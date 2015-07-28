@@ -7,7 +7,7 @@
      "{"
      "    public class Target {}"
      "    public class JumpSite {"
-     "        Targ$et foo; // go to definition from here"
+     "        $Target foo; // go to definition from here"
      "    }"
      "}")
 
@@ -39,7 +39,7 @@
      "{"
      "    public class MyClassContainer"
      "    {"
-     "        public My$Class foo;"
+     "        public MyClass$ foo;"
      "    }"
      "}")
     (ot--evaluate-and-wait-for-server-response "(omnisharp-go-to-definition-other-window)")

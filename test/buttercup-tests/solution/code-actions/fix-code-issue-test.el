@@ -51,6 +51,35 @@
      "    }"
      "}"))
 
+  (it "gives code actions for the current symbol even at the very end of it"
+    ;; no "using System;", so we use a code action to add one
+    (ot--buffer-contents-and-point-at-$
+     "public class MyClass"
+     "{"
+     "    public void MyClass()"
+     "    {"
+     "        $Console"
+     "    }"
+     "}")
+
+    (ot--answer-omnisharp--ido-completing-read-with
+     (lambda (choices)
+       (--first (s-contains? "using System;" it)
+                choices)))
+
+    (omnisharp--wait-until-request-completed (omnisharp-run-code-action-refactoring))
+
+    (ot--buffer-should-contain
+     "using System;"
+     ""
+     "public class MyClass"
+     "{"
+     "    public void MyClass()"
+     "    {"
+     "        Console"
+     "    }"
+     "}"))
+
   (it "can create new files (Generate class in new file)"
     (ot--delete-the-minimal-solution-source-file "MyNewClass.cs")
     (ot--buffer-contents-and-point-at-$
