@@ -148,21 +148,22 @@ region-ends-here."
      "(region-ends-here)line 5")
    (should (equal 0 (omnisharp--region-end-column)))))
 
-(ert-deftest omnisharp--region-start-column-with-evil-mode-line-selection ()
-  "Using evil-mode the user may select a line with V. This must report
+(comment
+ (ert-deftest omnisharp--region-start-column-with-evil-mode-line-selection ()
+   "Using evil-mode the user may select a line with V. This must report
 the correct start and end columns: the start being the start of the
 line (0) and end being the length of the line."
 
-  (with-current-buffer (get-buffer-create "omnisharp-test-buffer")
-    (delete-region (point-min) (point-max))
-    (insert "This is a line with a length of 34\n") ; this is tested
-    (insert "Another line.\n")
-    (insert "There is a bug that doesn't occur with just one line.\n")
-    (goto-line 1)
-    (evil-visual-line)
+   (with-current-buffer (get-buffer-create "omnisharp-test-buffer")
+     (delete-region (point-min) (point-max))
+     (insert "This is a line with a length of 34\n") ; this is tested
+     (insert "Another line.\n")
+     (insert "There is a bug that doesn't occur with just one line.\n")
+     (goto-line 1)
+     (evil-visual-line)
 
-    (should (equal 0 (omnisharp--region-start-column)))
-    (should (equal 34 (omnisharp--region-end-column)))))
+     (should (equal 0 (omnisharp--region-start-column)))
+     (should (equal 34 (omnisharp--region-end-column))))))
 
 (defun get-line-text (&optional line-number)
   "Returns the text on the current line or another line with the
