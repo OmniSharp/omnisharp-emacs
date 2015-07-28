@@ -220,4 +220,25 @@ with the formatted result. Saves the file before starting."
                (line-number-at-pos)
                (omnisharp--current-column))))))
 
+(defun omnisharp-code-format-region ()
+  "Format the code in the current region."
+  (interactive)
+  (let ((request (-concat (omnisharp--get-request-object)
+                          `((EndLine . ,(omnisharp--region-end-line))
+                            (EndColumn . ,(omnisharp--region-end-column)))))
+        (buffer (current-buffer)))
+    ;; The server refers to the start Line and Column in this
+    ;; case. Replace the ones that refer to point
+    (setcdr (assoc 'Line request) (omnisharp--region-start-line))
+    (setcdr (assoc 'Column request) (omnisharp--region-start-column))
+
+    (if (not mark-active)
+        (message "Need to select something before trying to format the region")
+      (omnisharp--send-command-to-server-sync
+       "formatRange"
+       request
+       (-lambda ((&alist 'Changes text-changes))
+                (--map (omnisharp--apply-text-change-to-buffer it buffer)
+                       text-changes))))))
+
 (provide 'omnisharp-solution-actions)
