@@ -265,13 +265,13 @@ expected output in that buffer"
     ;; #("Verbosity Verbose - display text" 0 32 (document "Verbosity Verbose; - description" value "Verbose - completion text"))
     ))
 
-(ert-deftest omnisharp--apply-text-change-text ()
+(ert-deftest omnisharp--apply-text-change-to-buffer-text ()
   (with-test-buffer-contents
    ["namespace testing {"
     "    public class WillBeRenamed {}"
     "}"]
    (should (equal (progn
-                    (omnisharp--apply-text-change
+                    (omnisharp--apply-text-change-to-buffer
                      `((NewText . "NewClassName")
                        (StartLine . 2) (EndLine . 2)
                        (StartColumn . 18) (EndColumn . 31)))

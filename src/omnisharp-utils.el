@@ -307,33 +307,40 @@ moving point."
   (let ((file (find-file (omnisharp--convert-backslashes-to-forward-slashes
                           file-name))))
     (with-current-buffer file
-      (-map 'omnisharp--apply-text-change text-changes))))
+      (-map 'omnisharp--apply-text-change-to-buffer text-changes))))
 
-(defun omnisharp--apply-text-change (text-change)
-  "Takes a LinePositionSpanTextChange and applies it to the current
-buffer."
-  (save-excursion
-    (-let* (((&alist 'NewText new-text
-                     'StartLine start-line
-                     'StartColumn start-column
-                     'EndLine end-line
-                     'EndColumn end-column) text-change)
-            ;; In emacs, the first column is 0. On the server, it's
-            ;; 1. In emacs we always handle the first column as 0.
-            (start-point (progn
+(defun omnisharp--apply-text-change-to-buffer (text-change
+                                               &optional buffer)
+  "Takes a LinePositionSpanTextChange and applies it to the
+current buffer.
+
+If this is used as a response handler, the call to the server
+must be blocking (synchronous) so the user doesn't have time to
+switch the buffer to some other buffer. That would cause the
+changes to be applied to that buffer instead."
+  (with-current-buffer (or buffer (current-buffer))
+    (save-excursion
+      (-let* (((&alist 'NewText new-text
+                       'StartLine start-line
+                       'StartColumn start-column
+                       'EndLine end-line
+                       'EndColumn end-column) text-change)
+              ;; In emacs, the first column is 0. On the server, it's
+              ;; 1. In emacs we always handle the first column as 0.
+              (start-point (progn
+                             (omnisharp--go-to-line-and-column
+                              start-line
+                              (- start-column 1))
+                             (point)))
+              (end-point (progn
                            (omnisharp--go-to-line-and-column
-                            start-line
-                            (- start-column 1))
-                           (point)))
-            (end-point (progn
-                         (omnisharp--go-to-line-and-column
-                          end-line
-                          (- end-column 1))
-                         (point))))
+                            end-line
+                            (- end-column 1))
+                           (point))))
 
-      (delete-region start-point end-point)
-      (goto-char start-point)
-      (insert (s-replace (kbd "RET") "" new-text)))))
+        (delete-region start-point end-point)
+        (goto-char start-point)
+        (insert (s-replace (kbd "RET") "" new-text))))))
 
 (defun omnisharp--handler-exists-for-request (request-id)
   (--any? (= request-id (car it))
