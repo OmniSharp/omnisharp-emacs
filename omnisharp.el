@@ -401,35 +401,30 @@ the user selects a completion and the completion is inserted."
    (concat (omnisharp-get-host) "syntaxerrors")
    params))
 
-;; Flycheck interns this variable and uses it as the program to get
-;; the errors with.
-(setq flycheck-csharp-omnisharp-curl-executable
-      omnisharp--curl-executable-path)
+;; (flycheck-define-checker csharp-omnisharp-codecheck
+;;   "A csharp source syntax checker using curl to call an OmniSharp
+;; server process running in the background."
+;;   ;; This must be an external process. Currently flycheck does not
+;;   ;; support using elisp functions as checkers.
+;;   :command ("curl" ; this is overridden by
+;;                                         ; flycheck-csharp-omnisharp-curl-executable if it
+;;                                         ; is set
+;;             (eval
+;;              (omnisharp--get-curl-command-arguments-string-for-api-name
+;;               (omnisharp--get-request-object)
+;;               "codecheck")))
 
-(flycheck-define-checker csharp-omnisharp-codecheck
-  "A csharp source syntax checker using curl to call an OmniSharp
-server process running in the background."
-  ;; This must be an external process. Currently flycheck does not
-  ;; support using elisp functions as checkers.
-  :command ("curl" ; this is overridden by
-                                        ; flycheck-csharp-omnisharp-curl-executable if it
-                                        ; is set
-            (eval
-             (omnisharp--get-curl-command-arguments-string-for-api-name
-              (omnisharp--get-request-object)
-              "codecheck")))
+;;   :error-patterns ((error line-start
+;;                           (file-name) ":"
+;;                           line ":"
+;;                           column
+;;                           " "
+;;                           (message (one-or-more not-newline))))
+;;   :error-parser (lambda (output checker buffer)
+;;                   (omnisharp--flycheck-error-parser-raw-json
+;;                    output checker buffer))
 
-  :error-patterns ((error line-start
-                          (file-name) ":"
-                          line ":"
-                          column
-                          " "
-                          (message (one-or-more not-newline))))
-  :error-parser (lambda (output checker buffer)
-                  (omnisharp--flycheck-error-parser-raw-json
-                   output checker buffer))
-
-  :predicate (lambda () omnisharp-mode))
+;;   :predicate (lambda () omnisharp-mode))
 
 (defun omnisharp--flycheck-error-parser-raw-json (output checker buffer)
   "Takes either a QuickFixResponse or a SyntaxErrorsResponse as a
