@@ -171,25 +171,25 @@ them manually."
   "The name of the buffer that is used to fontify eldoc strings.")
 
 (defun omnisharp--region-start-line ()
-  (when (region-active-p)
+  (when mark-active
     (save-excursion
       (goto-char (region-beginning))
       (line-number-at-pos))))
 
 (defun omnisharp--region-end-line ()
-  (when (region-active-p)
+  (when mark-active
     (save-excursion
       (goto-char (region-end))
       (line-number-at-pos))))
 
 (defun omnisharp--region-start-column ()
-  (when (region-active-p)
+  (when mark-active
     (save-excursion
       (goto-char (region-beginning))
       (omnisharp--current-column))))
 
 (defun omnisharp--region-end-column ()
-  (when (region-active-p)
+  (when mark-active
     (save-excursion
       ;; evil-mode has its own Vim-like concept of the region. A
       ;; visual line selection in evil-mode reports the end column to
