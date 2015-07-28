@@ -92,10 +92,10 @@ Uses the standard compilation interface (compile)."
 position and file from the server. Asks the user what kind of
 refactoring they want to run. Then runs the action."
   (interactive)
-  (let ((get-code-actions-request (omnisharp--get-code-actions-request)))
+  (let ((code-actions-request (omnisharp--get-code-actions-request)))
     (omnisharp--send-command-to-server
      "v2/getcodeactions"
-     get-code-actions-request
+     code-actions-request
      (-lambda ((&alist 'CodeActions code-actions))
               (let* ((code-actions (omnisharp--vector-to-list code-actions))
                      (action-names (--map (cdr (assoc 'Name it))
@@ -113,12 +113,12 @@ refactoring they want to run. Then runs the action."
 
                     (omnisharp-run-code-action-refactoring-worker
                      (cdr (assoc 'Identifier chosen-action))
-                     get-code-actions-request))))))))
+                     code-actions-request))))))))
 
 (defun omnisharp-run-code-action-refactoring-worker (chosen-action-identifier
-                                                     get-code-actions-request)
+                                                     code-actions-request)
   (let* ((run-code-action-request
-          (-concat get-code-actions-request
+          (-concat code-actions-request
                    `((Identifier . ,chosen-action-identifier)
                      (WantsTextChanges . t)))))
     (omnisharp--send-command-to-server-sync
