@@ -66,7 +66,7 @@ solution."
                               ))
          (tmp-params (omnisharp--get-request-object))
          (params (cl-pushnew `(Reference . ,path-to-ref-file-to-add)
-			     tmp-params)))
+           tmp-params)))
     (omnisharp-add-reference-worker params)))
 
 (defun omnisharp-add-reference-worker (params)

@@ -132,4 +132,3 @@ use another window."
    (-lambda ((&alist 'QuickFixes quickfixes))
             (omnisharp--choose-and-go-to-quickfix-ido quickfixes other-window))))
 
-(provide 'omnisharp-navigation-actions)
