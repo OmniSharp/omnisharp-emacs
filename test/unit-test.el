@@ -146,9 +146,7 @@ region-ends-here."
      "line 3"
      "line 4"
      "(region-ends-here)line 5")
-   ;; the minimum required column is 1 on the server side
-   (should (equal 1
-                  (omnisharp--region-end-column)))))
+   (should (equal 0 (omnisharp--region-end-column)))))
 
 (ert-deftest omnisharp--region-start-column-with-evil-mode-line-selection ()
   "Using evil-mode the user may select a line with V. This must report
@@ -163,10 +161,8 @@ line (0) and end being the length of the line."
     (goto-line 1)
     (evil-visual-line)
 
-    (should (equal 1
-                   (omnisharp--region-start-column)))
-    (should (equal 34
-                   (omnisharp--region-end-column)))))
+    (should (equal 0 (omnisharp--region-start-column)))
+    (should (equal 34 (omnisharp--region-end-column)))))
 
 (defun get-line-text (&optional line-number)
   "Returns the text on the current line or another line with the

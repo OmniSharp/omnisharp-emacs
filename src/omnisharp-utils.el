@@ -319,6 +319,8 @@ buffer."
                      'StartColumn start-column
                      'EndLine end-line
                      'EndColumn end-column) text-change)
+            ;; In emacs, the first column is 0. On the server, it's
+            ;; 1. In emacs we always handle the first column as 0.
             (start-point (progn
                            (omnisharp--go-to-line-and-column
                             start-line
