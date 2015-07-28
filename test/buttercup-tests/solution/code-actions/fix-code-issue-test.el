@@ -55,7 +55,7 @@
      "{"
      "    public void MyClass()"
      "    {"
-     "        $Console"
+     "        Console$"
      "    }"
      "}")
 

@@ -7,7 +7,7 @@
      "{"
      "    public class Target {}"
      "    public class JumpSite {"
-     "        $Target foo; // go to definition from here"
+     "        Target$ foo; // go to definition from here"
      "    }"
      "}")
 

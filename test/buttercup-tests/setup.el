@@ -80,7 +80,9 @@ request id."
   (search-forward "$")
   (delete-backward-char 1)
   ;; will block
-  (omnisharp--update-buffer))
+  (omnisharp--update-buffer)
+  (when (fboundp 'evil-insert)
+    (evil-insert 1)))
 
 (defun ot--buffer-contents-and-region (&rest lines)
   "Notice: LINES have to contain $"

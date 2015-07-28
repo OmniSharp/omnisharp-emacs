@@ -121,7 +121,12 @@ point position is used."
   "Returns the current column, converting tab characters in a way that
 the OmniSharp server understands."
   (let ((tab-width 1))
-    (current-column)))
+    (if (or (and (fboundp 'evil-normal-state-p)
+                 (evil-normal-state-p))
+            (and (fboundp 'evil-visual-state-p)
+                 (evil-visual-state-p)))
+        (1+ (current-column))
+      (current-column))))
 
 (defun omnisharp--buffer-exists-for-file-name (file-name)
   (let ((all-open-buffers-list (-non-nil (buffer-list))))
