@@ -18,16 +18,13 @@
     (ot--point-should-be-on-a-line-containing "var i = 1;"))
 
   (it "can operate on the current region (Extract method)"
-    ;; region starts on its own lines for readability only
     (ot--buffer-contents-and-region
      "public class Class1"
      "{"
      "    public void Whatever()"
      "    {"
-     "        (region-starts-here)"
-     "        int$ i = 1;"
-     "        int i2 = 2;"
-     "        (region-ends-here)"
+     "        (region-starts-here)int$ i = 1;"
+     "        int i2 = 2;(region-ends-here)"
      "    }"
      "}")
 
@@ -82,7 +79,4 @@
      "    internal class MyNewClass"
      "    {"
      "    }"
-     "}"))
-
-  (comment (it "can alter other files besides the one currently open (Generate method in other class)"
-             (comment todo))))
+     "}")))

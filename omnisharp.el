@@ -170,14 +170,6 @@ them manually."
 (defvar omnisharp--eldoc-fontification-buffer-name " * OmniSharp : Eldoc Fontification *"
   "The name of the buffer that is used to fontify eldoc strings.")
 
-;; todo what the actual funk is this? the same as min?
-(defun omnisharp--with-minimum-value (min-number actual-number)
-  "If ACTUAL-NUMBER is less than MIN-NUMBER, return MIN-NUMBER.
-Otherwise return ACTUAL-NUMBER."
-  (if (< actual-number min-number)
-      min-number
-    actual-number))
-
 (defun omnisharp--region-start-line ()
   (when (region-active-p)
     (save-excursion
@@ -194,8 +186,7 @@ Otherwise return ACTUAL-NUMBER."
   (when (region-active-p)
     (save-excursion
       (goto-char (region-beginning))
-      (omnisharp--with-minimum-value 1
-                                     (omnisharp--current-column)))))
+      (omnisharp--current-column))))
 
 (defun omnisharp--region-end-column ()
   (when (region-active-p)
@@ -203,15 +194,21 @@ Otherwise return ACTUAL-NUMBER."
       ;; evil-mode has its own Vim-like concept of the region. A
       ;; visual line selection in evil-mode reports the end column to
       ;; be 0 in some cases. Work around this.
-      (if (and (boundp 'evil-visual-end) evil-visual-end)
+      (if (and (boundp 'evil-visual-end)
+               evil-visual-end
+               ;; at this point we know the user is using evil-mode.
+               ;; It's possible to select vanilla emacs regions even
+               ;; when using evil-mode, so make sure the user has
+               ;; selected the region using evil-visual-state
+               (fboundp 'evil-visual-state-p)
+               (evil-visual-state-p))
           (progn
             (goto-char evil-visual-end)
             ;; Point moves to the next line for some reason. So move
             ;; it back
             (backward-char))
         (goto-char (region-end)))
-      (omnisharp--with-minimum-value 1
-                                     (omnisharp--current-column)))))
+      (omnisharp--current-column))))
 
 (defun omnisharp-post-message-curl-as-json-async (url params callback)
   "Posts message to curl at URL with PARAMS asynchronously.
