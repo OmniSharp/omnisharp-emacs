@@ -52,7 +52,7 @@ there are ambiguous unresolved symbols after running omnisharp-fix-usings")
   "Whether to expand tabs to spaces in code format requests."
   :group 'omnisharp
   :type '(choice (const :tag "Yes" t)
-		 (const :tag "No" nil)))
+     (const :tag "No" nil)))
 
 (defvar omnisharp-mode-map
   (let ((map (make-sparse-keymap)))

@@ -149,8 +149,8 @@ shown in a compilation buffer."
         (kill-buffer ambiguous-results-buffer))))
 
 (defun omnisharp-fix-usings-worker (filename
-				    current-line
-				    current-column)
+            current-line
+            current-column)
   "Sets the current buffer contents to a buffer with fixed up usings
 or if necessary, returns any ambiguous results so the user may fix
 them manually."

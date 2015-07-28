@@ -54,7 +54,7 @@ automatically imported. This variable may be set to nil to get a speed
 boost for completions."
   :group 'omnisharp
   :type '(choice (const :tag "Yes" t)
-		 (const :tag "No" nil)))
+     (const :tag "No" nil)))
 
 (defvar omnisharp-auto-complete-popup-keymap
   (let ((keymap (make-sparse-keymap)))
