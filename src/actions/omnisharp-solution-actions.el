@@ -206,12 +206,11 @@ slashes."
 
 (defun omnisharp-code-format-entire-file ()
   "Format the code in the current file. Replaces the file contents
-with the formatted result. Saves the file before starting."
+with the formatted result."
   (interactive)
-  (omnisharp--send-command-to-server
+  (omnisharp--send-command-to-server-sync
    "codeformat"
-   (cons `(ExpandTab . ,omnisharp-code-format-expand-tab)
-         (omnisharp--get-request-object))
+   (omnisharp--get-request-object)
    (let ((current-file (buffer-file-name)))
      (-lambda ((&alist 'Buffer new-buffer-contents))
               (omnisharp--set-buffer-contents-to
