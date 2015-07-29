@@ -176,11 +176,30 @@ them manually."
       (goto-char (region-beginning))
       (line-number-at-pos))))
 
+(defun omnisharp--goto-end-of-region ()
+  "evil-mode has its own Vim-like concept of the region. A visual
+line selection in evil-mode reports the end column to be 0 in
+some cases. Work around this."
+  (when mark-active
+    (if (and (boundp 'evil-visual-end)
+             evil-visual-end
+             ;; at this point we know the user is using evil-mode.
+             ;; It's possible to select vanilla emacs regions even
+             ;; when using evil-mode, so make sure the user has
+             ;; selected the region using evil-visual-state
+             (fboundp 'evil-visual-state-p)
+             (evil-visual-state-p))
+        (-let (((_start end _selection-type) (evil-visual-range)))
+          ;; Point moves to the next line when it's at the very last
+          ;; character of the line, for some reason. So move it back.
+          (goto-char end)
+          (backward-char))
+      (goto-char (region-end)))))
+
 (defun omnisharp--region-end-line ()
   (when mark-active
-    (save-excursion
-      (goto-char (region-end))
-      (line-number-at-pos))))
+    (save-excursion (omnisharp--goto-end-of-region)
+                    (line-number-at-pos))))
 
 (defun omnisharp--region-start-column ()
   (when mark-active
@@ -191,23 +210,7 @@ them manually."
 (defun omnisharp--region-end-column ()
   (when mark-active
     (save-excursion
-      ;; evil-mode has its own Vim-like concept of the region. A
-      ;; visual line selection in evil-mode reports the end column to
-      ;; be 0 in some cases. Work around this.
-      (if (and (boundp 'evil-visual-end)
-               evil-visual-end
-               ;; at this point we know the user is using evil-mode.
-               ;; It's possible to select vanilla emacs regions even
-               ;; when using evil-mode, so make sure the user has
-               ;; selected the region using evil-visual-state
-               (fboundp 'evil-visual-state-p)
-               (evil-visual-state-p))
-          (progn
-            (goto-char evil-visual-end)
-            ;; Point moves to the next line for some reason. So move
-            ;; it back
-            (backward-char))
-        (goto-char (region-end)))
+      (omnisharp--goto-end-of-region)
       (omnisharp--current-column))))
 
 (defun omnisharp-post-message-curl-as-json-async (url params callback)
