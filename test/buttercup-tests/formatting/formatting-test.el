@@ -8,16 +8,16 @@
      "public class KeystrokeTest"
      "{"
      "    public KeystrokeTest()"
-     "      {"
+     "    {"
      "   var    i  =1$"
-     "}")
+     "    }")
 
     (omnisharp-format-on-keystroke ";")
     (ot--buffer-should-contain
      "public class KeystrokeTest"
      "{"
      "    public KeystrokeTest()"
-     "      {"
+     "    {"
      "        var i = 1;"
      "    }"))
 
@@ -27,8 +27,7 @@
      "{"
      "    public KeystrokeTest()"
      "      {"
-     "   var    i  =1;$"
-     "}")
+     "   var    i  =1;$")
 
     (omnisharp-format-on-keystroke "}")
     (ot--buffer-should-contain
