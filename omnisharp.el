@@ -41,6 +41,7 @@
 (require 'omnisharp-settings)
 (require 'omnisharp-helm-integration)
 (require 'omnisharp-solution-actions)
+(require 'omnisharp-format-actions)
 
 ;;; Code:
 ;;;###autoload
