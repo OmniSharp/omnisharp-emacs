@@ -10,36 +10,49 @@
 
   (it "completes a member in the same file"
     (ot--buffer-contents-and-point-at-$
-     "namespace Test {"
-     "    public class Awesome {"
-     "        StringWriter writer;"
-     "        public Awesome() {"
-     "            wri$"
-     "        }"
-     "    }"
-     "}")
+     "namespace Test {
+         public class Awesome {
+             StringWriter writer;
+             public Awesome() {
+                 wri$
+             }
+         }
+      }")
 
     (company-complete)
 
     (ot--buffer-should-contain
-     "namespace Test {"
-     "    public class Awesome {"
-     "        StringWriter writer;"
-     "        public Awesome() {"
-     "            writer"
-     "        }"
-     "    }"
-     "}"))
+     "namespace Test {
+         public class Awesome {
+             StringWriter writer;
+             public Awesome() {
+                 writer
+             }
+         }
+      }"))
+
+  (it "completes after dot"
+    (ot--buffer-contents-and-point-at-$
+     "using System;
+      namespace Test {
+          public class Awesome {
+              public Awesome() {
+                  Console.$
+              }
+          }
+      }")
+
+    (expect (ot--get-completions) :to-contain "WriteLine()"))
 
   (it "completes a function that has parameters using snippets"
     (ot--buffer-contents-and-point-at-$
-     "namespace Test {"
-     "    public class Awesome {"
-     "        public Awesome() {"
-     "            object.Equa$"
-     "        }"
-     "    }"
-     "}")
+     "namespace Test {
+         public class Awesome {
+             public Awesome() {
+                 object.Equa$
+             }
+         }
+     }")
 
     (company-complete)
 
@@ -54,4 +67,5 @@
      (ot--type "new object()")
      (ot--press-key "TAB"))
 
-    (ot--buffer-should-contain "object.Equals(this, new object())")))
+    (ot--buffer-should-contain "object.Equals(this, new object())"))
+  )

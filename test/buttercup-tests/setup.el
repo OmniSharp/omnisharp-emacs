@@ -195,6 +195,12 @@ detecting situations in the middle of input is impossible."
 (defun ot--press-key (key-or-chord)
   (edmacro-parse-keys key-or-chord))
 
+(defun ot--get-completions ()
+    (omnisharp--get-company-candidates "")
+    (-map (lambda(completion)
+            (cdr (assoc 'DisplayText completion)))
+          omnisharp--last-buffer-specific-auto-complete-result))
+
 (defmacro ot--set (symbol value)
   `(setq symbol ,value))
 
