@@ -396,53 +396,32 @@ the user selects a completion and the completion is inserted."
   (omnisharp--auto-complete-display-function-ido
    omnisharp--last-buffer-specific-auto-complete-result))
 
-;; This currently has no UI, so there only exists the
-;; worker. Originally the plan was to be able to run manual syntax
-;; checks but I couldn't figure out how to call them with flycheck.
-(defun omnisharp-syntax-check-worker (params)
-  "Takes a Request and returns a SyntaxErrorsResponse."
-  (omnisharp-post-message-curl-as-json
-   (concat (omnisharp-get-host) "syntaxerrors")
-   params))
+(defun omnisharp--flycheck-start (checker callback)
+  "Start an OmniSharp syntax check with CHECKER.
+CALLBACK is the status callback passed by Flycheck." 
+  ;; Put the current buffer into the closure environment so that we have access
+  ;; to it later.
+  (let ((buffer (current-buffer)))
+    (omnisharp--send-command-to-server
+     "codecheck"
+     (omnisharp--get-request-object)
+     (lambda (response)
+       (let ((errors (omnisharp--flycheck-error-parser response checker buffer)))
+         (funcall callback 'finished (delq nil errors)))))))
 
-;; (flycheck-define-checker csharp-omnisharp-codecheck
-;;   "A csharp source syntax checker using curl to call an OmniSharp
-;; server process running in the background."
-;;   ;; This must be an external process. Currently flycheck does not
-;;   ;; support using elisp functions as checkers.
-;;   :command ("curl" ; this is overridden by
-;;                                         ; flycheck-csharp-omnisharp-curl-executable if it
-;;                                         ; is set
-;;             (eval
-;;              (omnisharp--get-curl-command-arguments-string-for-api-name
-;;               (omnisharp--get-request-object)
-;;               "codecheck")))
+(flycheck-define-generic-checker 'csharp-omnisharp-codecheck
+  "A csharp source syntax checker using the OmniSharp server process
+   running in the background"
+  :start #'omnisharp--flycheck-start
+  :modes '(csharp-mode)
+  :predicate (lambda () omnisharp-mode))
 
-;;   :error-patterns ((error line-start
-;;                           (file-name) ":"
-;;                           line ":"
-;;                           column
-;;                           " "
-;;                           (message (one-or-more not-newline))))
-;;   :error-parser (lambda (output checker buffer)
-;;                   (omnisharp--flycheck-error-parser-raw-json
-;;                    output checker buffer))
+(defun omnisharp--flycheck-error-parser (response checker buffer)
+  "Takes a QuickFixResponse result. Returns flycheck errors created based on the
+locations in the json."
+  (let* ((errors (omnisharp--vector-to-list
+                 (cdr (assoc 'QuickFixes response)))))
 
-;;   :predicate (lambda () omnisharp-mode))
-
-(defun omnisharp--flycheck-error-parser-raw-json (output checker buffer)
-  "Takes either a QuickFixResponse or a SyntaxErrorsResponse as a
-json string. Returns flycheck errors created based on the locations in
-the json."
-  (let* ((json-result
-          (omnisharp--json-read-from-string output))
-         (errors (omnisharp--vector-to-list
-                  ;; Support both a SyntaxErrorsResponse and a
-                  ;; QuickFixResponse. they are essentially the same,
-                  ;; but have the quickfixes (buffer locations) under
-                  ;; different property names.
-                  (cdr (or (assoc 'QuickFixes json-result)
-                           (assoc 'Errors json-result))))))
     (when (not (equal (length errors) 0))
       (mapcar (lambda (it)
                 (flycheck-error-new
@@ -451,9 +430,7 @@ the json."
                  :filename (cdr (assoc 'FileName it))
                  :line (cdr (assoc 'Line it))
                  :column (cdr (assoc 'Column it))
-                 ;; A CodeIssues response has Text instead of Message
-                 :message (cdr (or (assoc 'Message it)
-                                   (assoc 'Text it)))
+                 :message (cdr (assoc 'Text it))
                  :level (if (equal (cdr (assoc 'LogLevel it)) "Warning")
                             'warning
                           'error)))
