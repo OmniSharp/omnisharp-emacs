@@ -7,7 +7,7 @@
        }")
 
     (flycheck-mode)
-    (ot--wait-for-seconds 0.5)
+    (ot--wait-for-seconds 1)
 
     (flycheck-next-error)
     (expect (thing-at-point 'word) :to-equal "DoesNotExist")
