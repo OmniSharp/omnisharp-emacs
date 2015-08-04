@@ -63,7 +63,6 @@ request id."
    (eval (read command-to-execute))))
 
 (defun ot--wait-for (predicate &optional timeout-seconds)
-                     
   (setq timeout-seconds (or timeout-seconds 2))
 
   (let ((start-time (current-time)))
@@ -71,8 +70,9 @@ request id."
       (when (> (cadr (time-subtract (current-time) start-time))
                timeout-seconds)
         (progn
-          (let ((msg (format "Did not complete in %s seconds"
-                             timeout-seconds)))
+          (let ((msg (format "Did not complete in %s seconds: %s"
+                             timeout-seconds
+                             (prin1-to-string predicate))))
             (error msg))))
       (accept-process-output nil 0.01))))
 
