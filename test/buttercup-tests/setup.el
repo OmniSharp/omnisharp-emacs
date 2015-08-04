@@ -62,6 +62,20 @@ request id."
   (omnisharp--wait-until-request-completed
    (eval (read command-to-execute))))
 
+(defun ot--wait-for (predicate &optional timeout-seconds)
+                     
+  (setq timeout-seconds (or timeout-seconds 2))
+
+  (let ((start-time (current-time)))
+    (while (not (funcall predicate))
+      (when (> (cadr (time-subtract (current-time) start-time))
+               timeout-seconds)
+        (progn
+          (let ((msg (format "Did not complete in %s seconds"
+                             timeout-seconds)))
+            (error msg))))
+      (accept-process-output nil 0.01))))
+
 (defun ot--switch-to-buffer (existing-buffer-name)
   (let ((buffer (get-buffer existing-buffer-name))
         (message "Expected the buffer %s to exist but it did not."))
