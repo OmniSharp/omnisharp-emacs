@@ -413,7 +413,6 @@ CALLBACK is the status callback passed by Flycheck."
   "A csharp source syntax checker using the OmniSharp server process
    running in the background"
   :start #'omnisharp--flycheck-start
-  :modes '(csharp-mode)
   :predicate (lambda () omnisharp-mode))
 
 (defun omnisharp--flycheck-error-parser (response checker buffer)

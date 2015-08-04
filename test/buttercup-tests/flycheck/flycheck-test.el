@@ -1,3 +1,4 @@
+;; -*- mode: Emacs-Lisp; lexical-binding: t; -*-
 (describe "Flycheck integration"
   (it "integrates flycheck with omnisharp"
     (ot--open-the-minimal-solution-source-file "FlycheckTest.cs")
@@ -6,18 +7,31 @@
          DoesNotExist foo;
        }")
 
+    ;; required so the correct checker can be found by flycheck
+    (omnisharp-mode t)
     (flycheck-mode)
-    (flycheck-list-errors)
-    ;; (ot--wait-for (lambda() (print "waiting")(get-buffer "*Flycheck errors*")) 5)
-    (ot--wait-for (lambda() (and (boundp 'flycheck-current-errors)
-                                 (> (length flycheck-current-errors) 0))) 10)
 
+    ;; make all flycheck calls wait until the server response has been handled
+    (let ((original-function (symbol-function 'omnisharp--flycheck-start)))
+      (spy-on 'omnisharp--flycheck-start :and-call-fake
+              (lambda (&rest args)
+                (omnisharp--wait-until-request-completed
+                 (apply original-function args)))))
+
+    (flycheck-buffer)
+    ;; when running this test from the command line, this function is
+    ;; not called if a spy is not defined for it
+    (expect 'omnisharp--flycheck-start :to-have-been-called)
+
+    ;; open error list and verify its contents
+    (flycheck-list-errors)
 
     (ot--switch-to-the-window-in-the-buffer "*Flycheck errors*")
     (ot--point-should-be-on-a-line-containing
      (concat "The type or namespace name 'DoesNotExist' could not be found"
              " (are you missing a using directive or an assembly reference?)"))
 
-    (ot--switch-to-the-window-in-the-buffer "FlycheckTest.cs")
+    ;; navigating to the next error will take the user to the correct place
+    (ot--switch-to-buffer "FlycheckTest.cs")
     (flycheck-next-error)
     (expect (thing-at-point 'word) :to-equal "DoesNotExist")))
