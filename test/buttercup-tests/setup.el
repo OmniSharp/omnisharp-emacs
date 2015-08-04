@@ -144,7 +144,7 @@ request id."
       (f-delete file-path))))
 
 (defun ot--point-should-be-on-a-line-containing (expected-line-contents)
-  (let ((current-line (substring-no-properties (thing-at-point 'line))))
+  (let ((current-line (substring-no-properties (or (thing-at-point 'line) ""))))
     (cl-assert (s-contains? expected-line-contents current-line)
                nil
                (concat "Expected the current line (number '%d') to contain"
