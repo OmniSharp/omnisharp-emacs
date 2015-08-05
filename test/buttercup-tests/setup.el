@@ -62,6 +62,20 @@ request id."
   (omnisharp--wait-until-request-completed
    (eval (read command-to-execute))))
 
+(defun ot--wait-for (predicate &optional timeout-seconds)
+  (setq timeout-seconds (or timeout-seconds 2))
+
+  (let ((start-time (current-time)))
+    (while (not (funcall predicate))
+      (when (> (cadr (time-subtract (current-time) start-time))
+               timeout-seconds)
+        (progn
+          (let ((msg (format "Did not complete in %s seconds: %s"
+                             timeout-seconds
+                             (prin1-to-string predicate))))
+            (error msg))))
+      (accept-process-output nil 0.01))))
+
 (defun ot--switch-to-buffer (existing-buffer-name)
   (let ((buffer (get-buffer existing-buffer-name))
         (message "Expected the buffer %s to exist but it did not."))
@@ -130,7 +144,7 @@ request id."
       (f-delete file-path))))
 
 (defun ot--point-should-be-on-a-line-containing (expected-line-contents)
-  (let ((current-line (substring-no-properties (thing-at-point 'line))))
+  (let ((current-line (substring-no-properties (or (thing-at-point 'line) ""))))
     (cl-assert (s-contains? expected-line-contents current-line)
                nil
                (concat "Expected the current line (number '%d') to contain"
