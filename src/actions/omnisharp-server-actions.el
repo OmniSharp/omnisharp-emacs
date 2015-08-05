@@ -12,23 +12,23 @@ solution files were found."
       (locate-dominating-file
        (file-name-directory buffer-file-name)
        (lambda (file)
-   (-when-let (dir-files (directory-files file nil "\\.sln$"))
-     (setq solutions (cons (file-name-as-directory file)
-         dir-files))))))
+         (-when-let (dir-files (directory-files file nil "\\.sln$"))
+           (setq solutions (cons (file-name-as-directory file)
+                                 dir-files))))))
     solutions))
 
 (defun omnisharp--start-omnisharp-server-for-solution-in-parent-directory ()
   (unless (omnisharp--check-alive-status-worker)
     (-let [(directory file . rest) (omnisharp--find-solution-files)]
       (when directory
-  (omnisharp-start-omnisharp-server
-   (if (null rest) ; only one solution found
-       (concat directory file)
-     (read-file-name "Select solution for current file: "
-         directory
-         nil
-         t
-         file)))))))
+        (omnisharp-start-omnisharp-server
+         (if (null rest) ; only one solution found
+             (concat directory file)
+           (read-file-name "Select solution for current file: "
+                           directory
+                           nil
+                           t
+                           file)))))))
 
 ;;;###autoload
 (defun omnisharp-start-omnisharp-server (path-to-solution)
