@@ -1,5 +1,5 @@
+;; -*- mode: Emacs-Lisp; lexical-binding: t; -*-
 
-;;; Some Helm integration
 (when (require 'helm-grep nil 'noerror)
   ;;; Helm usages
   (defvar omnisharp-helm-usage-candidates nil)
@@ -32,7 +32,7 @@
      "findusages"
      (omnisharp--get-request-object)
      (-lambda ((&alist 'QuickFixes quickfixes))
-       (omnisharp--helm-got-usages quickfixes))))
+              (omnisharp--helm-got-usages quickfixes))))
 
   (defun omnisharp--helm-jump-to-candidate (json-result)
     (omnisharp-go-to-file-line-and-column json-result)
@@ -48,18 +48,20 @@
                                                                    helm-pattern
                                                                    (nth 1 (split-string
                                                                            candidate ":" t)))))
-                                     :candidates 'omnisharp--helm-find-symbols-candidates)
+                                     :candidates (omnisharp--helm-find-symbols-candidates))
           :buffer "*Omnisharp Symbols*"
           :truncate-lines t))
 
   (defun omnisharp--helm-find-symbols-candidates ()
-    (let ((quickfix-response
-           (omnisharp-post-message-curl-as-json
-            (concat (omnisharp-get-host) "findsymbols")
-            nil)))
-      (mapcar 'omnisharp--helm-find-symbols-transform-candidate
-              (omnisharp--vector-to-list
-               (cdr (assoc 'QuickFixes quickfix-response))))))
+    (let (candidates)
+      (omnisharp--send-command-to-server-sync
+       "findsymbols"
+       nil
+       (-lambda ((&alist 'QuickFixes quickfixes))
+                (setq candidates
+                      (-map 'omnisharp--helm-find-symbols-transform-candidate
+                            quickfixes))))
+      candidates))
 
   (defun omnisharp--helm-find-symbols-transform-candidate (candidate)
     "Convert a quickfix entry into helm output"

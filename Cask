@@ -4,6 +4,7 @@
 (package-file "omnisharp.el")
 
 (development
+ (depends-on "helm")
  (depends-on "cl-lib")
  (depends-on "yasnippet")
  (depends-on "prodigy")
