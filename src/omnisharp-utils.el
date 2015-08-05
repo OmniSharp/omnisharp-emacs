@@ -267,7 +267,8 @@ changes to be applied to that buffer instead."
                                                 &optional timeout-seconds)
   (setq timeout-seconds (or timeout-seconds 2))
 
-  (let ((start-time (current-time)))
+  (let ((start-time (current-time))
+        (process (cdr (assoc :process omnisharp--server-info))))
     (while (omnisharp--handler-exists-for-request request-id)
       (when (> (cadr (time-subtract (current-time) start-time))
                timeout-seconds)
@@ -276,7 +277,7 @@ changes to be applied to that buffer instead."
                              request-id timeout-seconds)))
             (omnisharp--log msg)
             (error msg))))
-      (accept-process-output nil 0.01)))
+      (accept-process-output process 0.1)))
   request-id)
 
 (defun omnisharp--ido-completing-read (&rest args)
