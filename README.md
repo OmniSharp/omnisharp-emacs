@@ -294,4 +294,3 @@ Pull requests welcome!
 [ido-mode]: http://www.emacswiki.org/emacs/InteractivelyDoThings
 [Flycheck]: https://github.com/lunaryorn/flycheck
 [MELPA]: https://github.com/milkypostman/melpa/#usage
-[the curl website]: http://curl.haxx.se/download.html
