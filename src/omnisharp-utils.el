@@ -131,35 +131,6 @@ the OmniSharp server understands."
 (defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
 
-(defun omnisharp-post-message-curl (url &optional params)
-  "Post json stuff to url with --data set to given params. Return
-result."
-  (comment (let ((curl-command-plist
-                  (omnisharp--get-curl-command url params)))
-             (with-temp-buffer
-               (apply 'call-process
-                      (plist-get curl-command-plist :command)
-                      nil  ;; infile
-                      (buffer-name) ;; destination
-                      nil ;; display (no specialities needed)
-                      ;; these are just args
-                      (plist-get curl-command-plist :arguments))
-               (buffer-string)))))
-
-(defun omnisharp--get-curl-command (url params)
-  "Returns a command that may be used to communicate with the API via
-the curl program. Depends on the operating system."
-  (let ((curl-command
-         (if (equal system-type 'windows-nt)
-             (omnisharp--get-curl-command-windows-with-tmp-file url params)
-           (omnisharp--get-curl-command-unix url params))))
-    (when omnisharp-debug
-      (omnisharp--log-curl-command curl-command))
-    curl-command))
-
-(defun omnisharp--log-curl-command (curl-command)
-  (omnisharp--log (prin1-to-string curl-command)))
-
 (defun omnisharp--log (single-or-multiline-log-string)
   (when omnisharp-debug
     (shut-up
@@ -169,56 +140,6 @@ the curl program. Depends on the operating system."
             (end-of-buffer)
             (insert single-or-multiline-log-string)
             (insert "\n")))))))
-
-(defun omnisharp--get-curl-command-arguments-string-for-api-name
-  (params api-name)
-  "Returns the full command to call curl with PARAMS for the api API-NAME.
-Example: when called with \"getcodeactions\", returns
-\"curl (stuff) http://localhost:2000/getcodeactions (stuff)\"
-with \"stuff\" set to sensible values."
-  (let ((command-plist
-         (omnisharp--get-curl-command
-          (concat (omnisharp-get-host) api-name)
-          params)))
-    (plist-get command-plist :arguments)))
-
-(defun omnisharp--get-curl-command-unix (url params)
-  "Returns a command using plain curl that can be executed to
-communicate with the API."
-  `(:command
-    ,omnisharp--curl-executable-path
-    :arguments
-    ("--ipv4" "--silent" "-H" "Content-type: application/json"
-     "--data"
-     ,(json-encode params)
-     ,url)))
-
-(defun omnisharp--get-curl-command-windows-with-tmp-file (url params)
-  "Basically: put PARAMS to file, then create a curl command to the
-api at URL using that file as the parameters."
-  ;; TODO could optimise: short buffers need not be written to tmp
-  ;; files.
-  (omnisharp--write-json-params-to-tmp-file
-   omnisharp--windows-curl-tmp-file-path
-   (json-encode params))
-  (let ((path-with-curl-prefix
-         (concat "@"
-                 omnisharp--windows-curl-tmp-file-path
-                 )))
-    `(:command ,omnisharp--curl-executable-path
-               :arguments
-               ("--noproxy" "localhost"
-                "--silent" "-H" "Content-type: application/json"
-                "--data-binary"
-                ;; @ specifies a file path to curl
-                ,path-with-curl-prefix
-                ,url))))
-
-(defun omnisharp--write-json-params-to-tmp-file
-  (target-path stuff-to-write-to-file)
-  "Deletes the file when done."
-  (with-temp-file target-path
-    (insert stuff-to-write-to-file)))
 
 (defun omnisharp--json-read-from-string (json-string
                                          &optional error-message)
@@ -233,10 +154,6 @@ something goes wrong, return a human-readable warning."
                                json-string)))
      (message (or error-message
                   "Error communicating to the OmniSharpServer instance")))))
-
-(defun omnisharp-post-message-curl-as-json (url &optional params)
-  (omnisharp--json-read-from-string
-   (omnisharp-post-message-curl url params)))
 
 (defun omnisharp--replace-symbol-in-buffer-with (symbol-to-replace
                                                  replacement-string)

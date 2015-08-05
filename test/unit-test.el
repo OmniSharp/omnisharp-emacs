@@ -231,20 +231,14 @@ expected output in that buffer"
     omnisharp--write-quickfixes-to-compilation-buffer-doesnt-mess-with-find-tag-marker-ring ()
 
   (with-mock
-   (stub ring-insert => (error "must not be called"))
-   (save-excursion
-     (omnisharp--write-quickfixes-to-compilation-buffer
-      '()
-      "buffer-name"
-      "test-buffer-header\n\n"
-      ;; don't save old position to find-tag-marker-ring
-      t))))
-
-(ert-deftest omnisharp-stop-server-calls-correct-api ()
-  (with-mock
-   (let ((omnisharp-host "host/"))
-     (mock (omnisharp-post-message-curl-async "host/stopserver" * *))
-     (omnisharp-stop-server))))
+    (stub ring-insert => (error "must not be called"))
+    (save-excursion
+      (omnisharp--write-quickfixes-to-compilation-buffer
+       '()
+       "buffer-name"
+       "test-buffer-header\n\n"
+       ;; don't save old position to find-tag-marker-ring
+       t))))
 
 (ert-deftest omnisharp--convert-auto-complete-result-to-popup-format-shows-correct-data ()
   (let* ((description "Verbosity Verbose; - description")

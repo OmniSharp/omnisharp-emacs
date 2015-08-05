@@ -77,8 +77,6 @@ server backend."
     ("Auto-complete"
      ["at point" omnisharp-auto-complete]
      ["Add . and complete members" omnisharp-add-dot-and-auto-complete]
-     ;; not implemented yet in omnisharp-roslyn
-     ;; ["Override superclass member" omnisharp-auto-complete-overrides]
      ["Show last result" omnisharp-show-last-auto-complete-result]
      ["Show overloads at point" omnisharp-show-overloads-at-point])
 
@@ -106,67 +104,11 @@ server backend."
      ["Rename interactively" omnisharp-rename-interactively])
 
     ("Solution actions"
-     ;; ["Add current file to solution" omnisharp-add-to-solution-current-file]
-     ;; ["Remove current file from solution" omnisharp-remove-from-project-current-file]
-     ;; ["Add marked files in dired to solution" omnisharp-add-to-solution-dired-selected-files]
-     ;; ["Remove marked files in dired from solution" omnisharp-remove-from-project-dired-selected-files]
-     ;; ["Add reference to dll or project" omnisharp-add-reference]
-     ;; ["Build solution in emacs" omnisharp-build-in-emacs]
      ["Start syntax check" flycheck-mode]
      ["Fix code issue at point" omnisharp-fix-code-issue-at-point]
      ["Run code format on current buffer" omnisharp-code-format-entire-file])
 
-    ("Unit tests"
-     ["Run test at point" omnisharp-unit-test-single]
-     ["Run test fixture" omnisharp-unit-test-fixture]
-     ["Run all tests in project" omnisharp-unit-test-all])
-
-    ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]
-    ;; not implemented yet in omnisharp-roslyn
-    ;; ["Fix using statements" omnisharp-fix-usings]
-    ))
-
-(defun omnisharp-fix-usings ()
-  "Sorts usings, removes unused using statements and
-adds any missing usings. If there are any ambiguous unresolved symbols, they are
-shown in a compilation buffer."
-  (interactive)
-  (save-buffer)
-  (message "Fixing using directives for the current buffer. Hold on...")
-  (-if-let (ambiguous-results
-            (omnisharp-fix-usings-worker
-             (buffer-file-name)
-             (line-number-at-pos)
-             (omnisharp--current-column)))
-      (omnisharp--write-quickfixes-to-compilation-buffer
-       ambiguous-results
-       omnisharp--ambiguous-symbols-buffer-name
-       omnisharp-ambiguous-results-header)
-
-    ;; Otherwise destroy any previous ambiguous result so the user
-    ;; clearly sees the compilation buffer contents have changed
-    (-if-let (ambiguous-results-buffer
-              (get-buffer omnisharp--ambiguous-symbols-buffer-name))
-        (kill-buffer ambiguous-results-buffer))))
-
-(defun omnisharp-fix-usings-worker (filename
-            current-line
-            current-column)
-  "Sets the current buffer contents to a buffer with fixed up usings
-or if necessary, returns any ambiguous results so the user may fix
-them manually."
-  (let ((json-result
-         (omnisharp-post-message-curl-as-json
-          (concat (omnisharp-get-host) "fixusings")
-          (omnisharp--get-request-object))))
-
-    (omnisharp--set-buffer-contents-to
-     filename
-     (cdr (assoc 'Buffer json-result))
-     current-line
-     current-column)
-    (omnisharp--vector-to-list
-     (cdr (assoc 'AmbiguousResults json-result)))))
+    ["Run contextual code action / refactoring at point" omnisharp-run-code-action-refactoring]))
 
 (defvar omnisharp--eldoc-fontification-buffer-name " * OmniSharp : Eldoc Fontification *"
   "The name of the buffer that is used to fontify eldoc strings.")
@@ -213,38 +155,6 @@ some cases. Work around this."
     (save-excursion
       (omnisharp--goto-end-of-region)
       (omnisharp--current-column))))
-
-(defun omnisharp-post-message-curl-as-json-async (url params callback)
-  "Posts message to curl at URL with PARAMS asynchronously.
-On completion, the curl output is parsed as json and passed into CALLBACK."
-  (omnisharp-post-message-curl-async url params
-                                     (lambda (str)
-                                       (funcall callback (omnisharp--json-read-from-string str)))))
-
-(defun omnisharp-post-message-curl-async (url params callback)
-  "Post json stuff to url asynchronously with --data set to given params.
-On completion, CALLBACK is run with the result as it's only parameter.
-
-Returns the curl process"
-  (let* ((curl-command-plist
-          (omnisharp--get-curl-command url params))
-         (process-name (concat "* Omnisharp curl : " url "*"))
-         (process-buffer (generate-new-buffer process-name))
-         (process (apply 'start-process
-                         process-name
-                         process-buffer
-                         (plist-get curl-command-plist :command)
-                         (plist-get curl-command-plist :arguments))))
-    (set-process-sentinel
-     process
-     (lambda (proc status)
-       (unless (process-live-p proc)
-         (funcall callback
-                  (progn (let ((output (with-current-buffer process-buffer (buffer-string))))
-                           (kill-buffer process-buffer)
-                           output))))))
-    process))
-
 
 (defun omnisharp--completion-result-item-get-completion-text (item)
   (cdr (assoc 'CompletionText item)))
@@ -571,38 +481,6 @@ cursor at that location"
 ;; nunit-console.exe on windows uses this format
 (add-to-list 'compilation-error-regexp-alist
              '(" in \\(.+\\):line \\([0-9]+\\)" 1 2))
-
-(defun omnisharp-unit-test-single ()
-  (interactive)
-  (omnisharp-unit-test-worker "single"))
-
-(defun omnisharp-unit-test-fixture ()
-  (interactive)
-  (omnisharp-unit-test-worker "fixture"))
-
-(defun omnisharp-unit-test-all ()
-  (interactive)
-  (omnisharp-unit-test-worker "all"))
-
-(defun omnisharp-unit-test-worker (mode)
-  "Run tests after building the solution. Mode should be one of 'single', 'fixture' or 'all'" 
-  (let ((build-command
-         (omnisharp--fix-build-command-if-on-windows
-          (omnisharp-get-build-command)))
-
-        (test-command
-         (omnisharp--fix-build-command-if-on-windows
-          (cdr (assoc 'TestCommand
-                      (omnisharp-post-message-curl-as-json
-                       (concat (omnisharp-get-host) "gettestcontext") 
-                       (cons `("Type" . ,mode)
-                             (omnisharp--get-request-object))))))))
-
-    (compile build-command)
-    ;; User can answer yes straight away if they don't want to
-    ;; recompile. But they have to be very fast!
-    (when (yes-or-no-p "Compilation started. Answer yes when you want to run tests.")
-      (compile test-command))))
 
 (provide 'omnisharp)
 

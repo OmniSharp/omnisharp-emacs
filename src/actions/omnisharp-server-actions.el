@@ -103,24 +103,4 @@ finished loading the solution."
          (message "Server is ready")
        (message "Server is not ready yet")))))
 
-(defun omnisharp-reload-solution ()
-  "Reload the current solution."
-  (interactive)
-  (message (concat "Reloading the server. Calls to the server will not"
-                   " work until the server has reloaded."))
-  (omnisharp-post-message-curl-async
-   (omnisharp--get-api-url "reloadsolution")
-   nil ; no params needed
-   (lambda (_)
-     (message "OmniSharpServer solution reloaded"))))
-
-(defun omnisharp-stop-server ()
-  "Stop the current omnisharp instance."
-  (interactive)
-  (omnisharp-post-message-curl-async
-   (concat (omnisharp-get-host) "stopserver")
-   nil
-   (lambda (_)
-     (message "OmniSharpServer stopped."))))
-
 (provide 'omnisharp-server-actions)

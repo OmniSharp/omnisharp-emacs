@@ -528,42 +528,6 @@ Returns the request-id for the auto-complete request to the server."
      (when callback
        (funcall callback auto-complete-response)))))
 
-(defun omnisharp-auto-complete-overrides ()
-  (interactive)
-  (omnisharp-auto-complete-overrides-worker
-   (omnisharp--get-request-object)))
-
-(defun omnisharp-auto-complete-overrides-worker (params)
-  (let* ((json-result
-          (omnisharp--vector-to-list
-           (omnisharp-post-message-curl-as-json
-            (concat (omnisharp-get-host) "getoverridetargets")
-            params)))
-         (target-names
-          (mapcar (lambda (a)
-                    (cdr (assoc 'OverrideTargetName a)))
-                  json-result))
-         (chosen-override (omnisharp--ido-completing-read
-                           "Override: "
-                           target-names)))
-    (omnisharp-auto-complete-overrides-run-override
-     chosen-override)))
-
-(defun omnisharp-auto-complete-overrides-run-override (override-name)
-  (omnisharp-auto-complete-overrides-run-override-worker
-   (cons `(OverrideTargetName . ,override-name)
-         (omnisharp--get-request-object))))
-
-(defun omnisharp-auto-complete-overrides-run-override-worker (params)
-  (let ((json-result (omnisharp-post-message-curl-as-json
-                      (concat (omnisharp-get-host) "runoverridetarget")
-                      params)))
-    (omnisharp--set-buffer-contents-to
-     (cdr (assoc 'FileName json-result))
-     (cdr (assoc 'Buffer   json-result))
-     (cdr (assoc 'Line     json-result))
-     (cdr (assoc 'Column   json-result)))))
-
 (defun omnisharp-show-last-auto-complete-result ()
   (interactive)
   (let ((auto-complete-result-in-human-readable-form
