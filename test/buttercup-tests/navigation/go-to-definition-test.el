@@ -11,7 +11,7 @@
      "    }"
      "}")
 
-    (ot--evaluate-and-wait-for-server-response "(omnisharp-go-to-definition)")
+    (omnisharp--wait-until-request-completed (omnisharp-go-to-definition))
     (ot--point-should-be-on-a-line-containing "public class Target {}"))
 
 
@@ -39,10 +39,10 @@
      "{"
      "    public class MyClassContainer"
      "    {"
-     "        public MyClass$ foo;"
+     "        public $MyClass foo;"
      "    }"
      "}")
-    (ot--evaluate-and-wait-for-server-response "(omnisharp-go-to-definition-other-window)")
+    (omnisharp--wait-until-request-completed (omnisharp-go-to-definition-other-window))
 
     (ot--there-should-be-a-window-editing-the-file "MyClassContainer.cs")
     (ot--there-should-be-a-window-editing-the-file "MyClass.cs")
