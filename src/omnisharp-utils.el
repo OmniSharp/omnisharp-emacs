@@ -179,10 +179,6 @@ moving point."
       t
     :json-false))
 
-(defun omnisharp--server-process-sentinel (process event)
-  (if (string-match "^exited abnormally" event)
-      (error (concat "OmniSharp server process " event))))
-
 (defun omnisharp--valid-solution-path-p (path-to-solution)
   (or (string= (file-name-extension path-to-solution) "sln")
       (file-directory-p path-to-solution)))
