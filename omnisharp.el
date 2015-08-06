@@ -366,15 +366,17 @@ cursor at that location"
   "Imenu callback function - returns an alist of ((member-name . position))"
   (interactive)
   (condition-case nil
-      (let* ((quickfixes (omnisharp-post-message-curl-as-json
-                          (concat (omnisharp-get-host) "currentfilemembersasflat")
-                          (omnisharp--get-request-object)))
-             (list-quickfixes (omnisharp--vector-to-list quickfixes))
-             (imenu-list (mapcar (lambda (quickfix-alist)
-                                   (cons (cdr (assoc 'Text quickfix-alist))
-                                         (omnisharp--imenu-make-marker quickfix-alist)))
-                                 list-quickfixes)))
-        imenu-list)
+      (let (result)
+        (omnisharp--send-command-to-server-sync
+         "currentfilemembersasflat"
+         (omnisharp--get-request-object)
+         (lambda (quickfixes)
+           (setq result
+                 (-map (lambda (quickfix-alist)
+                         (cons (cdr (assoc 'Text quickfix-alist))
+                               (omnisharp--imenu-make-marker quickfix-alist)))
+                       quickfixes))))
+        result)
     (error nil)))
 
 (defun omnisharp-format-find-output-to-ido (item)
