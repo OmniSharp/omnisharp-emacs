@@ -230,6 +230,16 @@ with one."
            (lambda (_prompt _quickfixes)
              (funcall ,answer-function _quickfixes))))
 
+
+
+
+
+
+
+
+
+
+
 ;;; Test suite setup. Start a test server process that can be used by
 ;;; all tests
 (let ((omnisharp-server-executable-path (concat omnisharp-emacs-root-path
@@ -247,5 +257,5 @@ with one."
 
 ;;; when reading the test output, make it easier to spot when test
 ;;; setup noise ends and test results start
-(dotimes (i 5) (print "\n"))
+(print "\n\n\n\n\n\n\n\n\n\n\n")
 
