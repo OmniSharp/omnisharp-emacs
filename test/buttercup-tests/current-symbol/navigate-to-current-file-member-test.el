@@ -1,8 +1,6 @@
 (describe "Navigate to current file member"
-  (before-each
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs"))
-
   (it "moves point to selected type"
+    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
     (ot--buffer-contents-and-point-at-$
      "using System;"
      "namespace minimal"
