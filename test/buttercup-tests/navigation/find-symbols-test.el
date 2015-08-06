@@ -1,8 +1,6 @@
 (describe "Navigate to solution member (find symbols)"
-  (before-each
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs"))
-
   (it "moves point to selected type"
+    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
     (ot--buffer-contents-and-point-at-$
      "using System;"
      "namespace minimal"
@@ -19,8 +17,10 @@
        (--first (s-contains? "MyClassContainer" it)
                 choices)))
 
-    (omnisharp--wait-until-request-completed
-     (omnisharp-navigate-to-solution-member))
+    ;; should filter to "foo", defined in this class
+    (spy-on 'omnisharp--read-string :and-return-value "MyClassC")
+
+    (omnisharp--wait-until-request-completed (omnisharp-navigate-to-solution-member))
 
     (ot--point-should-be-on-a-line-containing "public class MyClassContainer")
     (ot--i-should-be-in-buffer-name "MyClassContainer.cs")))

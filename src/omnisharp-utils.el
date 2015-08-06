@@ -283,4 +283,9 @@ sometimes the mocks are not removed when an error occurs. This renders
 the developer's emacs unusable."
   (apply 'ido-completing-read args))
 
+(defun omnisharp--read-string (&rest args)
+  "Mockable wrapper for read-string, see
+`omnisharp--ido-completing-read' for the explanation."
+  (apply 'read-string args))
+
 (provide 'omnisharp-utils)

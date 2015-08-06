@@ -80,13 +80,15 @@ ido-completing-read. Returns the chosen element."
 
 (defun omnisharp-navigate-to-solution-member (&optional other-window)
   (interactive "P")
-  (omnisharp--send-command-to-server
-   "findsymbols"
-   ;; gets all symbols. could also filter here but ido doesn't play
-   ;; well with changing its choices
-   `((Filter . ""))
-   (-lambda ((&alist 'QuickFixes quickfixes))
-            (omnisharp--choose-and-go-to-quickfix-ido quickfixes other-window))))
+  (let ((filter (omnisharp--read-string
+                 "Enter the start of the symbol to go to: ")))
+    (omnisharp--send-command-to-server
+     "findsymbols"
+     ;; gets all symbols. could also filter here but ido doesn't play
+     ;; well with changing its choices
+     `((Filter . ,filter))
+     (-lambda ((&alist 'QuickFixes quickfixes))
+              (omnisharp--choose-and-go-to-quickfix-ido quickfixes other-window)))))
 
 (defun omnisharp-navigate-to-solution-member-other-window ()
   (omnisharp-navigate-to-solution-member t))
