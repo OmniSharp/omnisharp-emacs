@@ -42,6 +42,7 @@
 (require 'omnisharp-helm-integration)
 (require 'omnisharp-solution-actions)
 (require 'omnisharp-format-actions)
+(require 'omnisharp-update-buffer-actions)
 
 ;;; Code:
 ;;;###autoload
@@ -53,6 +54,12 @@ server backend."
   :keymap omnisharp-mode-map
   (omnisharp--init-imenu-support)
   (omnisharp--init-eldoc-support)
+
+  (add-hook 'before-change-functions
+            'omnisharp-before-change-function t t)
+
+  (add-hook 'after-change-functions
+            'omnisharp-after-change-function t t)
 
   ;; These are selected automatically when flycheck is enabled
   (add-to-list 'flycheck-checkers 'csharp-omnisharp-codecheck))
@@ -184,8 +191,8 @@ some cases. Work around this."
          (buffer-contents (omnisharp--get-current-buffer-contents))
          (filename-tmp (or buffer-file-name ""))
          (params `((Line     . ,line-number)
-                   (Column   . ,column-number)
-                   (Buffer   . ,buffer-contents))))
+                   (Column   . ,column-number))))
+
     (if (/= 0 (length filename-tmp))
         (cons `(FileName . ,filename-tmp)
               params)
