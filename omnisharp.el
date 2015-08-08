@@ -56,10 +56,10 @@ server backend."
   (omnisharp--init-eldoc-support)
 
   (add-hook 'before-change-functions
-            'omnisharp-before-change-function t t)
+            'omnisharp--before-change-function t t)
 
   (add-hook 'after-change-functions
-            'omnisharp-after-change-function t t)
+            'omnisharp--after-change-function t t)
 
   ;; These are selected automatically when flycheck is enabled
   (add-to-list 'flycheck-checkers 'csharp-omnisharp-codecheck))
