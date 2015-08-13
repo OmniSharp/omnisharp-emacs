@@ -53,6 +53,8 @@ solution files were found."
           (when (not (eq nil (get-buffer BufferName)))
             (kill-buffer BufferName))
 
+          "Save all csharp buffers to ensure the server is in sync"
+          (save-some-buffers 't `(lambda() (string-equal (file-name-extension (buffer-name)) "cs")))
           (setq omnisharp--server-info
                 (make-omnisharp--server-info
                  ;; use a pipe for the connection instead of a pty
