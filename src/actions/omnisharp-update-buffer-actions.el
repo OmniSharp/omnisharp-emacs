@@ -12,20 +12,30 @@ These information will be used by omnisharp--after-changed-function."
 
 (defun omnisharp--after-change-function (begin end leng-before)
   "Function attached to after-change-functions hook"
-  (omnisharp--send-command-to-server-sync
-   "changebuffer"
-   (let* ((filename-tmp (or buffer-file-name ""))
-          (text (buffer-substring-no-properties begin end))
-          (params `((StartLine   . ,(car omnisharp--before-change-begin))
-                    (EndLine     . ,(car omnisharp--before-change-end))
-                    (StartColumn . ,(cdr omnisharp--before-change-begin))
-                    (EndColumn   . ,(cdr omnisharp--before-change-end))
-                    (NewText     . ,text))))
 
-     (if (/= 0 (length filename-tmp))
-         (cons `(FileName . ,filename-tmp)
-               params)
-       params))))
+  "If the change is too large to send via the pipe, send it via disk instead."
+  (if (>= (- end begin) 4000)
+      (omnisharp--save-and-update-server)
+
+    "else, send the change via the pipe"
+    (omnisharp--send-command-to-server-sync
+     "changebuffer"
+     (let* ((filename-tmp (or buffer-file-name ""))
+            (text (buffer-substring-no-properties begin end))
+            (params `((StartLine   . ,(car omnisharp--before-change-begin))
+                      (EndLine     . ,(car omnisharp--before-change-end))
+                      (StartColumn . ,(cdr omnisharp--before-change-begin))
+                      (EndColumn   . ,(cdr omnisharp--before-change-end))
+                      (NewText     . ,text))))
+
+       (if (/= 0 (length filename-tmp))
+           (cons `(FileName . ,filename-tmp)
+                 params)
+         params)))))
+
+(defun omnisharp--save-and-update-server ()
+  (save-buffer)
+  (omnisharp--update-from-disk))
 
 (defun omnisharp--update-from-disk ()
   (omnisharp--send-command-to-server
