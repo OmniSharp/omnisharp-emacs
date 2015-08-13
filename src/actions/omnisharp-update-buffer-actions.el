@@ -27,7 +27,7 @@ These information will be used by omnisharp--after-changed-function."
                params)
        params))))
 
-(defun omnisharp--before-revert-hook ()
+(defun omnisharp--update-from-disk ()
   (omnisharp--send-command-to-server
    "updatebuffer"
    (cons `(FromDisk . ,t) (omnisharp--get-request-object))))

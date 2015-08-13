@@ -62,7 +62,7 @@ server backend."
             'omnisharp--after-change-function t t)
 
   (add-hook 'before-revert-hook
-            'omnisharp--before-revert-hook)
+            'omnisharp--update-from-disk)
 
   ;; These are selected automatically when flycheck is enabled
   (add-to-list 'flycheck-checkers 'csharp-omnisharp-codecheck))
