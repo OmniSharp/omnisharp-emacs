@@ -13,11 +13,11 @@ These information will be used by omnisharp--after-changed-function."
 (defun omnisharp--after-change-function (begin end leng-before)
   "Function attached to after-change-functions hook"
 
-  "If the change is too large to send via the pipe, send it via disk instead."
+  ;; If the change is too large to send via the pipe, send it via disk instead.
   (if (>= (- end begin) 4000)
       (omnisharp--save-and-update-server)
 
-    "else, send the change via the pipe"
+    ;; else, send the change via the pipe
     (omnisharp--send-command-to-server-sync
      "changebuffer"
      (let* ((filename-tmp (or buffer-file-name ""))
