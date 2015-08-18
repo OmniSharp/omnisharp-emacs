@@ -44,6 +44,14 @@
 (require 'omnisharp)
 (require 'buttercup)
 
+(setq omnisharp-debug 't)
+(defun buffer-whole-string (buffer)
+  (with-current-buffer buffer
+    (save-excursion
+    (save-restriction
+      (widen)
+      (buffer-substring-no-properties (point-min) (point-max))))))
+
 ;;; I grew tired of the omnisharp-- prefix so now I use ot--, standing
 ;;; for omnisharp test
 (defun ot--buffer-should-contain (&rest expected)
@@ -97,6 +105,14 @@ request id."
   (omnisharp--update-buffer)
   (when (fboundp 'evil-insert)
     (evil-insert 1)))
+
+(defun omnisharp--update-buffer (&optional buffer)
+  (setq buffer (or buffer (current-buffer)))
+  (omnisharp--wait-until-request-completed
+   (omnisharp--send-command-to-server
+    "updatebuffer"
+    (cons `(Buffer . ,(omnisharp--get-current-buffer-contents))
+          (omnisharp--get-request-object)))))
 
 (defun ot--buffer-contents-and-region (&rest lines)
   "Notice: LINES have to contain $"
@@ -166,7 +182,6 @@ request id."
               " Visible windows: '%s'")
              file-name
              (window-list)))
-
 (defun ot--switch-to-the-window-in-the-buffer (file-name)
   (select-window (get-buffer-window file-name)))
 
@@ -179,7 +194,6 @@ request id."
               "but was in buffer %s")
              expected-buffer-name
              (buffer-name)))
-
 (defun ot--i-should-see (&rest lines)
   (cl-assert (s-contains? (s-join "\n" lines)
                           (buffer-string))

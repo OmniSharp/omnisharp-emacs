@@ -201,13 +201,6 @@ moving point."
      (t ; some kind of unix: linux or osx
       (cons "mono" args)))))
 
-(defun omnisharp--update-buffer (&optional buffer)
-  (setq buffer (or buffer (current-buffer)))
-  (omnisharp--wait-until-request-completed
-   (omnisharp--send-command-to-server
-    "updatebuffer"
-    (omnisharp--get-request-object))))
-
 ;; this is actually used in tests only
 (defun omnisharp--create-ecukes-test-server (omnisharp-emacs-root-path)
   (condition-case nil
