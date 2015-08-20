@@ -123,6 +123,7 @@ name to rename to, defaulting to the current name of the symbol."
          (rename-request
           (->> (omnisharp--get-request-object)
             (cons `(RenameTo . ,rename-to))
+            (cons `(ApplyTextChanges . ,json-false))
             (cons `(WantsTextChanges . true))))
          (location-before-rename
           (omnisharp--get-request-object-for-emacs-side-use)))
