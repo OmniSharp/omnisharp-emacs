@@ -13,25 +13,41 @@ These information will be used by omnisharp--after-changed-function."
 (defun omnisharp--after-change-function (begin end leng-before)
   "Function attached to after-change-functions hook"
   (when (omnisharp--buffer-is-csharp-file)
-        ;; If the change is too large to send via the pipe, send it via disk instead.
-        (if (>= (- end begin) 4000)
-            (omnisharp--save-and-update-server)
+    ;; If the change is too large to send via the pipe, send it via disk instead.
+    (if (>= (- end begin) 4000)
+        (omnisharp--save-and-update-server)
 
-          ;; else, send the change via the pipe
-          (omnisharp--send-command-to-server-sync
-           "changebuffer"
-           (let* ((filename-tmp (or buffer-file-name ""))
-                  (text (buffer-substring-no-properties begin end))
-                  (params `((StartLine   . ,(car omnisharp--before-change-begin))
-                            (EndLine     . ,(car omnisharp--before-change-end))
-                            (StartColumn . ,(cdr omnisharp--before-change-begin))
-                            (EndColumn   . ,(cdr omnisharp--before-change-end))
-                            (NewText     . ,text))))
+      ;; else, send the change via the pipe
+      (let* ((text (buffer-substring-no-properties begin end)))
+        (omnisharp--send-change-buffer-request
+         omnisharp--before-change-begin omnisharp--before-change-end text)))))
 
-             (if (/= 0 (length filename-tmp))
-                 (cons `(FileName . ,filename-tmp)
-                       params)
-               params))))))
+(defun omnisharp--send-change-buffer-request (begin end text)
+  (omnisharp--send-command-to-server-sync
+   "changebuffer"
+   (let* ((filename-tmp (or buffer-file-name ""))
+          (params `((StartLine   . ,(car begin))
+                    (EndLine     . ,(car end))
+                    (StartColumn . ,(cdr begin))
+                    (EndColumn   . ,(cdr end))
+                    (NewText     . ,text))))
+
+     (if (/= 0 (length filename-tmp))
+         (cons `(FileName . ,filename-tmp)
+               params)
+       params))))
+
+(defun omnisharp--yas-skip-and-clear (orig-fun &rest args)
+  (let* ((field (car args))
+         (begin (yas--field-start field))
+         (end (yas--field-end field))
+         (begin-line-col (omnisharp--line-column-from-pos begin))
+         (end-line-col (omnisharp--line-column-from-pos end)))
+    (omnisharp--send-change-buffer-request begin-line-col end-line-col ""))
+  (apply orig-fun args))
+
+
+(advice-add 'yas--skip-and-clear :around #'omnisharp--yas-skip-and-clear)
 
 (defun omnisharp--save-and-update-server ()
   (save-buffer)
@@ -48,5 +64,8 @@ These information will be used by omnisharp--after-changed-function."
   (string= "cs"
            (file-name-extension
             (buffer-file-name))))
+
+(defadvice delete-region (before omnisharp--send-delete activate)
+  (setq inhibit-modification-hooks nil))
 
 (provide 'omnisharp-update-buffer-actions)
