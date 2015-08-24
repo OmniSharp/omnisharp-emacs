@@ -46,7 +46,6 @@ These information will be used by omnisharp--after-changed-function."
     (omnisharp--send-change-buffer-request begin-line-col end-line-col ""))
   (apply orig-fun args))
 
-
 (advice-add 'yas--skip-and-clear :around #'omnisharp--yas-skip-and-clear)
 
 (defun omnisharp--save-and-update-server ()
@@ -64,8 +63,5 @@ These information will be used by omnisharp--after-changed-function."
   (string= "cs"
            (file-name-extension
             (buffer-file-name))))
-
-(defadvice delete-region (before omnisharp--send-delete activate)
-  (setq inhibit-modification-hooks nil))
 
 (provide 'omnisharp-update-buffer-actions)
