@@ -36,5 +36,4 @@
  (depends-on "flycheck")
  (depends-on "csharp-mode")
  (depends-on "evil")
- (depends-on "company")
- (depends-on "shut-up"))
+ (depends-on "company"))

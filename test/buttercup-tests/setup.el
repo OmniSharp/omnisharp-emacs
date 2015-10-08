@@ -9,7 +9,6 @@
 
 (require 'f)
 (require 's)
-(require 'shut-up)
 
 ;;; These are displayed in the test output when a test opens a .cs
 ;;; file. Work around that by loading them in advance.

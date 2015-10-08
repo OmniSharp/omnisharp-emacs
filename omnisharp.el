@@ -4,7 +4,7 @@
 ;; Author: Mika Vilpas
 ;; Version: 3.4
 ;; Url: https://github.com/Omnisharp/omnisharp-emacs
-;; Package-Requires: ((json "1.2") (flycheck "20150712.903") (dash "20141201.2206") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.9.0") (shut-up "0.3.2"))
+;; Package-Requires: ((json "1.2") (flycheck "20150712.903") (dash "20141201.2206") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.9.0"))
 ;; Keywords: csharp c# IDE auto-complete intellisense
 
 ;;; Commentary:
@@ -26,7 +26,6 @@
 (require 'etags)
 (require 'flycheck)
 (require 's)
-(require 'shut-up)
 
 ;; these are for development only
 (add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/")))
