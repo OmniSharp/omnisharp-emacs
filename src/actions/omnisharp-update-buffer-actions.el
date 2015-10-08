@@ -1,4 +1,5 @@
 ;; -- lexical-binding: t; --
+
 (defun omnisharp--line-column-from-pos(pos)
   (save-excursion (goto-char pos)
                   (cons (line-number-at-pos pos) (+ 1 (current-column)))))
@@ -18,24 +19,42 @@ These information will be used by omnisharp--after-changed-function."
         (omnisharp--save-and-update-server)
 
       ;; else, send the change via the pipe
+      ;; (let* ((text (buffer-substring-no-properties begin end)))
+      ;;   (omnisharp--send-change-buffer-request
+      ;;    omnisharp--before-change-begin omnisharp--before-change-end text)))))
       (let* ((text (buffer-substring-no-properties begin end)))
-        (omnisharp--send-change-buffer-request
+        (omnisharp--add-change-to-queue
          omnisharp--before-change-begin omnisharp--before-change-end text)))))
 
-(defun omnisharp--send-change-buffer-request (begin end text)
-  (omnisharp--send-command-to-server-sync
-   "changebuffer"
-   (let* ((filename-tmp (or buffer-file-name ""))
-          (params `((StartLine   . ,(car begin))
-                    (EndLine     . ,(car end))
-                    (StartColumn . ,(cdr begin))
-                    (EndColumn   . ,(cdr end))
-                    (NewText     . ,text))))
+;; (defun omnisharp--send-change-buffer-request (begin end text)
+;;   (omnisharp--send-command-to-server
+;;    "changebuffer"
+;;    (let* ((filename-tmp (or buffer-file-name ""))
+;;           (params `((StartLine   . ,(car begin))
+;;                     (EndLine     . ,(car end))
+;;                     (StartColumn . ,(cdr begin))
+;;                     (EndColumn   . ,(cdr end))
+;;                     (NewText     . ,text))))
 
-     (if (/= 0 (length filename-tmp))
-         (cons `(FileName . ,filename-tmp)
-               params)
-       params))))
+;;      (if (/= 0 (length filename-tmp))
+;;          (cons `(FileName . ,filename-tmp)
+;;                params)
+;;        params))))
+
+(defun omnisharp--add-change-to-queue (begin end text)
+  (let ((filename-tmp (or buffer-file-name ""))
+        (params `((StartLine   . ,(car begin))
+                  (EndLine     . ,(car end))
+                  (StartColumn . ,(cdr begin))
+                  (EndColumn   . ,(cdr end))
+                  (NewText     . ,text))))
+    (message params)
+    (progn
+      (add-to-list 'omnisharp--change-queue params)
+      (if (/= 0 (length filename-tmp))
+          (cons `(FileName . ,filename-tmp)
+                params)))))
+
 
 (defun omnisharp--yas-skip-and-clear (orig-fun &rest args)
   (let* ((field (car args))
@@ -43,7 +62,7 @@ These information will be used by omnisharp--after-changed-function."
          (end (yas--field-end field))
          (begin-line-col (omnisharp--line-column-from-pos begin))
          (end-line-col (omnisharp--line-column-from-pos end)))
-    (omnisharp--send-change-buffer-request begin-line-col end-line-col ""))
+    (omnisharp--add-change-to-queue begin-line-col end-line-col ""))
   (apply orig-fun args))
 
 (advice-add 'yas--skip-and-clear :around #'omnisharp--yas-skip-and-clear)

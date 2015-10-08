@@ -20,11 +20,19 @@ git checkout -- $recipeFile
 
 if [ $TRAVIS_BRANCH ]; then
     echo "Running build for travis branch: $TRAVIS_BRANCH"
-    sed --in-place 's/:branch "develop"/:branch "'$TRAVIS_BRANCH'"/' $recipeFile
+    gitCurrentBranch="$TRAVIS_BRANCH"
 else
     gitCurrentBranch="$(git rev-parse --abbrev-ref HEAD)"
     echo "Running build for non-travis branch:" $gitCurrentBranch
-    sed --in-place 's/:branch "develop"/:branch "'$gitCurrentBranch'"/' $recipeFile
+fi
+
+platform='unknown'
+unamestr=`uname`
+
+if [[ "$unamestr" == 'Linux' ]]; then
+  sed --in-place 's/:branch "develop"/:branch "'$gitCurrentBranch'"/' $recipeFile
+elif [[ "$unamestr" == "FreeBSD" || "$unamestr" == 'Darwin'* ]]; then
+  sed -i '' -e 's/:branch "develop"/:branch "'$gitCurrentBranch'"/' $recipeFile
 fi
 
 echo ""
@@ -39,7 +47,7 @@ make recipes/omnisharp
 cd ..
 
 # No cask here. Use a fresh emacs so installation is as natural as possible
-homeDir=`mktemp -d`
+homeDir=`mktemp -d 2>/dev/null || mktemp -d -t 'melpatemp'`
 HOME=$homeDir emacs -Q \
     --eval '(setq user-emacs-directory "./sandbox")' \
     -l package \

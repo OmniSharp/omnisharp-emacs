@@ -1,4 +1,5 @@
 (defvar omnisharp--server-info nil)
+(defvar omnisharp--change-queue '())
 
 (defun make-omnisharp--server-info (process)
   `((:process . ,process)

@@ -3,6 +3,21 @@
 
 (package-file "omnisharp.el")
 
+(files 
+  "./src/omnisharp.el"
+  "./src/omnisharp-server-management.el"
+  "./src/omnisharp-helm-integration.el"
+  "./src/omnisharp-settings.el"
+  "./src/omnisharp-utils.el"
+  "./src/actions/omnisharp-auto-complete-actions.el"
+  "./src/actions/omnisharp-current-symbol-actions.el"
+  "./src/actions/omnisharp-format-actions.el"
+  "./src/actions/omnisharp-navigation-actions.el"
+  "./src/actions/omnisharp-server-actions.el"
+  "./src/actions/omnisharp-solution-actions.el"
+  "./src/actions/omnisharp-update-buffer-actions.el"
+)
+
 (development
  (depends-on "helm")
  (depends-on "cl-lib")
