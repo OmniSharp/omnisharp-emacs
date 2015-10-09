@@ -23,7 +23,7 @@
  (depends-on "helm" :archive melpa-stable)
  (depends-on "cl-lib" :archive melpa-stable)
  (depends-on "yasnippet" :archive melpa-stable)
- (depends-on "prodigy" :arhive melpa-stable)
+ (depends-on "prodigy" :archive melpa-stable)
  (depends-on "buttercup" :archive melpa-stable)
  (depends-on "ert-async" :archive melpa-stable)
  (depends-on "noflet" :archive melpa-stable)
