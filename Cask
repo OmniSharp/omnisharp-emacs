@@ -19,7 +19,7 @@
 )
 
 (development
- (depends-on "helm")
+ (depends-on "helm" :archive melpa-stable)
  (depends-on "cl-lib")
  (depends-on "yasnippet")
  (depends-on "prodigy")
