@@ -1,4 +1,6 @@
 ;; -- lexical-binding: t; --
+(require 'nadvice)
+
 (defun omnisharp--line-column-from-pos(pos)
   (save-excursion (goto-char pos)
                   (cons (line-number-at-pos pos) (+ 1 (current-column)))))
