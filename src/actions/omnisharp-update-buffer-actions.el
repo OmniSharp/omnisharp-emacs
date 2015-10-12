@@ -1,5 +1,5 @@
 ;; -- lexical-binding: t; --
-(require 'nadvice)
+(require 'advice)
 
 (defun omnisharp--line-column-from-pos(pos)
   (save-excursion (goto-char pos)
