@@ -3,7 +3,7 @@
 
 (let ((travis-branch (getenv "TRAVIS_BRANCH")))
   (print "Current branch")
-  (print (shell-command-to-string "git rev-parse --abbrev-ref HEAD")))
+  (print (shell-command-to-string "git rev-parse --abbrev-ref HEAD | tr -d '\n'")))
 
 ;; should be run in the repo root directory
 
