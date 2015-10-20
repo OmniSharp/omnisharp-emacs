@@ -1,4 +1,3 @@
-
 (defun omnisharp-get-host ()
   "Makes sure omnisharp-host is ended by / "
   (if (string= (substring omnisharp-host -1 ) "/")
@@ -133,13 +132,12 @@ the OmniSharp server understands."
 
 (defun omnisharp--log (single-or-multiline-log-string)
   (when omnisharp-debug
-    (shut-up
-      (let* ((log-buffer (get-buffer-create "*omnisharp-debug*")))
-        (save-window-excursion
-          (with-current-buffer log-buffer
-            (end-of-buffer)
-            (insert single-or-multiline-log-string)
-            (insert "\n")))))))
+    (let* ((log-buffer (get-buffer-create "*omnisharp-debug*")))
+      (save-window-excursion
+        (with-current-buffer log-buffer
+          (end-of-buffer)
+          (insert single-or-multiline-log-string)
+          (insert "\n"))))))
 
 (defun omnisharp--json-read-from-string (json-string
                                          &optional error-message)

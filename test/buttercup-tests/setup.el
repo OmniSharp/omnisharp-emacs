@@ -9,19 +9,22 @@
 
 (require 'f)
 (require 's)
-(require 'shut-up)
 
 ;;; These are displayed in the test output when a test opens a .cs
 ;;; file. Work around that by loading them in advance.
 (require 'csharp-mode)
-(require 'vc-git)
+;;(require 'vc-git)
 (require 'el-mock)
 
-(defvar omnisharp-emacs-root-path
-  (-> (f-this-file)
-      f-parent
-      f-parent
-      f-parent))
+(defvar omnisharp-emacs-root-path nil)
+
+(if (or (equal nil (boundp 'omnisharp-emacs-repo-path)) (equal nil omnisharp-emacs-repo-path))
+  (setq omnisharp-emacs-root-path (-> (f-this-file)
+        f-parent
+        f-parent
+        f-parent))
+  (setq omnisharp-emacs-root-path (expand-file-name omnisharp-emacs-repo-path))
+)
 
 (defvar omnisharp-emacs-src-path
   (f-join omnisharp-emacs-root-path "src"))
@@ -246,9 +249,10 @@ with one."
 
 ;;; Test suite setup. Start a test server process that can be used by
 ;;; all tests
-(let ((omnisharp-server-executable-path (concat omnisharp-emacs-root-path
-                                                "/omnisharp-roslyn/omnisharp")))
+(let ((omnisharp-server-executable-path
+       (if (or (equal nil (boundp 'omnisharp-load-script)) (equal nil omnisharp-load-script)) (concat omnisharp-emacs-root-path "/omnisharp-roslyn/omnisharp") (expand-file-name omnisharp-load-script))))
   (omnisharp--create-ecukes-test-server omnisharp-emacs-root-path))
+
 ;; wait that the server is alive and ready before starting the test run
 (with-timeout (2 ; seconds
                (omnisharp--log "Server did not start in time"))

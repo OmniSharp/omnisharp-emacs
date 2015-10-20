@@ -2,7 +2,6 @@
 ;; required, package state is reset between test runs, etc.
 (require 'f)
 (require 's)
-(require 'shut-up)
 
 (defvar omnisharp-emacs-support-path
   (f-dirname (f-this-file)))
