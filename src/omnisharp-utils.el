@@ -283,7 +283,8 @@ moving point."
 	 (solution-file-path-arg (expand-file-name solution-file-path))
 	 (args (list server-exe-file-path-arg
 		     "-s"
-		     solution-file-path-arg)))
+		     solution-file-path-arg
+		     (if (equal system-type 'cygwin) "-c Cygwin" ""))))
     (cond
      ((or (equal system-type 'cygwin) ;; No mono needed on cygwin or if using omnisharp-roslyn
           (equal system-type 'windows-nt)
