@@ -2,7 +2,6 @@
 ;; This file is included in each test run before any test file is
 ;; loaded. This is a good place for common test helper functions.
 (require 'ert)
-(require 'ert-async)
 (require 's)
 (require 'cl)
 

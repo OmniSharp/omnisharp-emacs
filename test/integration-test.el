@@ -60,11 +60,3 @@ default message 'json-readtable-error'"
   (with-broken-server-configuration
    (should (equal nil
                   (omnisharp--check-ready-status-worker)))))
-
-;; had some issues with refactoring and this function
-(ert-deftest-async omnisharp-post-message-curl-async-doesnt-crash (done-function)
-  (with-working-server-configuration
-   (omnisharp-post-message-curl-async
-     (omnisharp--get-api-url "checkreadystatus")
-     nil ; no params needed
-     (lambda (_) (funcall done-function)))))
