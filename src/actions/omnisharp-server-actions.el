@@ -30,6 +30,7 @@ solution files were found."
 			   nil
 			   t
 			   file)))
+	(message "Solution not found")
 	(omnisharp-start-omnisharp-server
 	 (file-name-directory buffer-file-name))))))
 
