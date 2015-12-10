@@ -46,24 +46,24 @@ solution files were found."
                       t
                       filename))))
   (setq BufferName "*Omni-Server*")
-  (if (equal nil omnisharp-server-executable-path)
-      (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
-    (if (omnisharp--valid-solution-path-p path-to-solution)
-        (progn
-          (if (string= (file-name-extension path-to-solution) "sln")
-              (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
-            (message (format "Starting OmniSharpServer using folder mode in: %s" path-to-solution)))
-          (when (not (eq nil (get-buffer BufferName)))
-            (kill-buffer BufferName))
-          (let ((process (apply
-                          'start-process
-                          "Omni-Server"
-                          (get-buffer-create BufferName)
-                          (omnisharp--get-omnisharp-server-executable-command path-to-solution))))
-            (set-process-sentinel process 'omnisharp--server-process-sentinel)
-            (unless omnisharp-debug ;; ignore process output if debug flag not set
-              (set-process-filter process (lambda (process string))))))
-      (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
+  (if (and omnisharp-server-executable-path (file-executable-p omnisharp-server-executable-path))
+      (if (omnisharp--valid-solution-path-p path-to-solution)
+          (progn
+            (if (string= (file-name-extension path-to-solution) "sln")
+                (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
+              (message (format "Starting OmniSharpServer using folder mode in: %s" path-to-solution)))
+            (when (not (eq nil (get-buffer BufferName)))
+              (kill-buffer BufferName))
+            (let ((process (apply
+                            'start-process
+                            "Omni-Server"
+                            (get-buffer-create BufferName)
+                            (omnisharp--get-omnisharp-server-executable-command path-to-solution))))
+              (set-process-sentinel process 'omnisharp--server-process-sentinel)
+              (unless omnisharp-debug ;; ignore process output if debug flag not set
+                (set-process-filter process (lambda (process string))))))
+        (error (format "Path does not lead to a solution file: %s" path-to-solution)))
+    (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")))
 
 ;;;###autoload
 (defun omnisharp-check-alive-status ()
