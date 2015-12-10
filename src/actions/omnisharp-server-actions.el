@@ -2,7 +2,7 @@
 ;; Path to the server
 (defcustom omnisharp-server-executable-path (executable-find "OmniSharp.exe")
   "Path to OmniSharpServer. If its value is nil, search for the server in the exec-path"
-    :type '(choice (const :tag "Not Set" nil) string))
+  :type '(choice (const :tag "Not Set" nil) string))
 
 (defun omnisharp--find-solution-files ()
   "Find solution files in parent directories. Returns a list
@@ -13,26 +13,26 @@ solution files were found."
       (locate-dominating-file
        (file-name-directory buffer-file-name)
        (lambda (file)
-	 (-when-let (dir-files (directory-files file nil "\\.sln$"))
-	   (setq solutions (cons (file-name-as-directory file)
-				 dir-files))))))
+         (-when-let (dir-files (directory-files file nil "\\.sln$"))
+           (setq solutions (cons (file-name-as-directory file)
+                                 dir-files))))))
     solutions))
 
 (defun omnisharp--start-omnisharp-server-for-solution-in-parent-directory ()
   (unless (omnisharp--check-alive-status-worker)
     (-let [(directory file . rest) (omnisharp--find-solution-files)]
       (if directory
-	(omnisharp-start-omnisharp-server
-	 (if (null rest) ; only one solution found
-	     (concat directory file)
-	   (read-file-name "Select solution for current file: "
-			   directory
-			   nil
-			   t
-			   file)))
-	(message "Solution not found")
-	(omnisharp-start-omnisharp-server
-	 (file-name-directory buffer-file-name))))))
+          (omnisharp-start-omnisharp-server
+           (if (null rest) ; only one solution found
+               (concat directory file)
+             (read-file-name "Select solution for current file: "
+                             directory
+                             nil
+                             t
+                             file)))
+        (message "Solution not found")
+        (omnisharp-start-omnisharp-server
+         (file-name-directory buffer-file-name))))))
 
 ;;;###autoload
 (defun omnisharp-start-omnisharp-server (path-to-solution)
@@ -80,7 +80,7 @@ port specified."
 
 (defun omnisharp--check-alive-status-worker ()
   (let ((result (omnisharp-post-message-curl-as-json
-		 (concat (omnisharp-get-host) "checkalivestatus"))))
+                 (concat (omnisharp-get-host) "checkalivestatus"))))
     (eq result t)))
 
 ;;;###autoload
@@ -95,7 +95,7 @@ finished loading the solution."
 
 (defun omnisharp--check-ready-status-worker ()
   (let ((result (omnisharp-post-message-curl-as-json
-		 (concat (omnisharp-get-host) "checkreadystatus"))))
+                 (concat (omnisharp-get-host) "checkreadystatus"))))
     (eq result t)))
 
 (defun omnisharp-reload-solution ()
