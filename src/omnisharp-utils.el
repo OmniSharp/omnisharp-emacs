@@ -183,6 +183,10 @@ moving point."
   (or (string= (file-name-extension path-to-solution) "sln")
       (file-directory-p path-to-solution)))
 
+(defun omnisharp--valid-project-path-p (path-to-solution)
+  (or (string= (file-name-nondirectory path-to-solution) "project.json")
+      (file-directory-p path-to-solution)))
+
 (defun omnisharp--get-omnisharp-server-executable-command
   (solution-file-path &optional server-exe-file-path)
   (let* ((server-exe-file-path-arg (expand-file-name 

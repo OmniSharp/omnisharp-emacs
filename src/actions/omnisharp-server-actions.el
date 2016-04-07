@@ -17,6 +17,27 @@ solution files were found."
                                  dir-files))))))
     solutions))
 
+(defun omnisharp--find-project-files ()
+  "Find project files in parent directories. Returns a list
+containing the directory and matching filenames, or nil if no
+project files were found."
+  (let ((projects nil))
+    (when buffer-file-name
+      (locate-dominating-file
+       (file-name-directory buffer-file-name)
+       (lambda (file)
+         (-when-let (dir-files (directory-files file nil "^project\\.json$"))
+           (setq projects (cons (file-name-as-directory file)
+                                dir-files))))))
+    projects))
+
+(defun omnisharp--find-solution-or-project-files ()
+  "Find solution or project files in parent directories. Returns a list
+containing the directory and matching filenames, or nil if no
+matching files were found."
+  (or (omnisharp--find-solution-files)
+      (omnisharp--find-project-files)))
+
 (defun omnisharp--start-omnisharp-server-for-solution-in-parent-directory ()
   (unless (omnisharp--check-alive-status-worker)
     (-let [(directory file . rest) (omnisharp--find-solution-files)]
@@ -35,8 +56,8 @@ solution files were found."
   "Starts an OmniSharpServer for a given path to a solution file or a directory"
   (interactive
    (list
-    (-let [(directory filename . rest) (omnisharp--find-solution-files)]
-      (read-file-name "Start OmniSharpServer.exe for solution: "
+    (-let [(directory filename . rest) (omnisharp--find-solution-or-project-files)]
+      (read-file-name "Start OmniSharpServer.exe for solution/project: "
                       directory
                       nil
                       t
@@ -44,11 +65,16 @@ solution files were found."
   (setq BufferName "*Omni-Server*")
   (if (equal nil omnisharp-server-executable-path)
       (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
-    (if (omnisharp--valid-solution-path-p path-to-solution)
+    (if (or
+         (omnisharp--valid-project-path-p path-to-solution)
+         (omnisharp--valid-solution-path-p path-to-solution))
         (progn
-          (if (string= (file-name-extension path-to-solution) "sln")
-              (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
-            (message (format "Starting OmniSharpServer using folder mode in: %s" path-to-solution)))
+          (cond
+           ((string= (file-name-extension path-to-solution) "sln")
+            (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution)))
+           ((string= (file-name-nondirectory path-to-solution) "project.json")
+            (message (format "Starting OmniSharpServer for project file: %s" path-to-solution)))
+           (t (message (format "Starting OmniSharpServer using folder mode in: %s" path-to-solution))))
 
           (when (not (eq nil (get-buffer BufferName)))
             (kill-buffer BufferName))
@@ -63,10 +89,10 @@ solution files were found."
                                  omnisharp-server-executable-path
                                  ;; remaining arguments
                                  ;; "-v"
-                                 "--stdio" "-s" path-to-solution)))
+                                 "--stdio" "-s" (file-truename path-to-solution))))
                    (set-process-filter process 'omnisharp--handle-server-message)
                    process))))
-      (error (format "Path does not lead to a valid solution path: %s" path-to-solution)))))
+      (error (format "Path does not lead to a valid solution/project path: %s" path-to-solution)))))
 
 ;;;###autoload
 (defun omnisharp-check-alive-status ()
