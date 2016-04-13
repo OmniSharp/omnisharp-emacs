@@ -1,72 +1,34 @@
-
 (defcustom omnisharp-server-executable-path (executable-find "omnisharp")  ; omnisharp-roslyn
-  "Path to omnisharp-server. If its value is nil, search for the server in the exec-path"
+  "Path to OmniSharp. If its value is nil, search for the server in the exec-path"
   :type '(choice (const :tag "Not Set" nil) string))
 
-(defun omnisharp--find-solution-files ()
-  "Find solution files in parent directories. Returns a list
-containing the directory and matching filenames, or nil if no
-solution files were found."
-  (let ((solutions nil))
-    (when buffer-file-name
-      (locate-dominating-file
-       (file-name-directory buffer-file-name)
-       (lambda (file)
-         (-when-let (dir-files (directory-files file nil "\\.sln$"))
-           (setq solutions (cons (file-name-as-directory file)
-                                 dir-files))))))
-    solutions))
-
-(defun omnisharp--start-omnisharp-server-for-solution-in-parent-directory ()
-  (unless (omnisharp--check-alive-status-worker)
-    (-let [(directory file . rest) (omnisharp--find-solution-files)]
-      (when directory
-        (omnisharp-start-omnisharp-server
-         (if (null rest) ; only one solution found
-             (concat directory file)
-           (read-file-name "Select solution for current file: "
-                           directory
-                           nil
-                           t
-                           file)))))))
-
 ;;;###autoload
-(defun omnisharp-start-omnisharp-server (path-to-solution)
-  "Starts an OmniSharpServer for a given path to a solution file or a directory"
-  (interactive
-   (list
-    (-let [(directory filename . rest) (omnisharp--find-solution-files)]
-      (read-file-name "Start OmniSharpServer.exe for solution: "
-                      directory
-                      nil
-                      t
-                      filename))))
-  (setq BufferName "*Omni-Server*")
-  (if (equal nil omnisharp-server-executable-path)
-      (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
-    (if (omnisharp--valid-solution-path-p path-to-solution)
-        (progn
-          (if (string= (file-name-extension path-to-solution) "sln")
-              (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
-            (message (format "Starting OmniSharpServer using folder mode in: %s" path-to-solution)))
+(defun omnisharp-start-omnisharp-server (path-to-project)
+  "Starts an OmniSharp server server for a given path to a project file or a directory"
+  (interactive "DStart OmniSharp for project: ")
+  (setq BufferName "*OmniServer*")
+  (unless (bound-and-true-p omnisharp-server-executable-path)
+    (error "Could not find the OmniSharp executable. Please set the variable omnisharp-server-executable-path to a valid path"))
+  (if (file-directory-p path-to-project)
+      (message (format "Starting OmniSharpServer using project: %s" path-to-project))
+    (error (format "Path does not lead to a valid project path: %s" path-to-project)))
+  (if (get-buffer BufferName)
+      (kill-buffer BufferName))
 
-          (when (not (eq nil (get-buffer BufferName)))
-            (kill-buffer BufferName))
+  "Save all csharp buffers to ensure the server is in sync"
+  (save-some-buffers 't `(lambda() (string-equal (file-name-extension (buffer-name)) "cs")))
 
-          (setq omnisharp--server-info
-                (make-omnisharp--server-info
-                 ;; use a pipe for the connection instead of a pty
-                 (let ((process-connection-type nil)
-                       (process (start-process
-                                 "Omni-Server" ; process name
-                                 "Omni-Server" ; buffer name
-                                 omnisharp-server-executable-path
-                                 ;; remaining arguments
-                                 ;; "-v"
-                                 "--stdio" "-s" path-to-solution)))
-                   (set-process-filter process 'omnisharp--handle-server-message)
-                   process))))
-      (error (format "Path does not lead to a valid solution path: %s" path-to-solution)))))
+  (setq omnisharp--server-info
+        (make-omnisharp--server-info
+         ;; use a pipe for the connection instead of a pty
+         (let ((process-connection-type nil)
+               (process (start-process
+                         "OmniSharp" ; process name
+                         "OmniSharp" ; buffer name
+                         omnisharp-server-executable-path
+                         "--stdio" "-s" (expand-file-name path-to-project))))
+           (set-process-filter process 'omnisharp--handle-server-message)
+           process))))
 
 ;;;###autoload
 (defun omnisharp-check-alive-status ()
