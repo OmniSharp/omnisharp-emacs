@@ -88,7 +88,7 @@ process buffer, and handle them as server events"
         (-map #'omnisharp--handle-server-event json-messages))
     (error (progn
              (let ((msg (format (concat "omnisharp--handle-server-message error: %s. "
-                                        "See the Omni-Server process buffer for detailed server output.")
+                                        "See the OmniServer process buffer for detailed server output.")
                                 (prin1-to-string maybe-error-data))))
                (omnisharp--log msg)
                (message msg))))))
