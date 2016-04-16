@@ -5,6 +5,6 @@
 /test/MinimalSolution/minimal/.ecukes-failing-scenarios
 # backup files by emacs
 /test/MinimalSolution/minimal/#*
-/omnisharp-roslyn/
 /test/MinimalSolution/minimal/RenameFileTest.cs
 *~
+/travis-stuff/omnisharp-roslyn/
