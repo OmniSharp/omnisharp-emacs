@@ -207,7 +207,7 @@ moving point."
 ;; this is actually used in tests only
 (defun omnisharp--create-ecukes-test-server (omnisharp-emacs-root-path)
   (condition-case nil
-      (kill-process "Omni-Server")
+      (kill-process "OmniServer")
     (error nil))
   (omnisharp-start-omnisharp-server (s-concat omnisharp-emacs-root-path
                                               "/test/MinimalSolution/")))

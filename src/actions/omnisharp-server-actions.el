@@ -25,8 +25,8 @@
          ;; use a pipe for the connection instead of a pty
          (let ((process-connection-type nil)
                (process (start-process
-                         "OmniSharp" ; process name
-                         "OmniSharp" ; buffer name
+                         "OmniServer" ; process name
+                         "OmniServer" ; buffer name
                          omnisharp-server-executable-path
                          "--stdio" "-s" (expand-file-name path-to-project))))
            (set-process-filter process 'omnisharp--handle-server-message)

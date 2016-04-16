@@ -55,13 +55,13 @@
  ;; After when everything has been run
 
  (omnisharp--log "TEST: shutting down test server in integration test Teardown hook")
- (with-current-buffer "Omni-Server"
+ (with-current-buffer "OmniServer"
    (let ((filename "omnisharp-server-output.txt"))
      (write-file filename)
-     (print (format "Omni-Server buffer contents (available in %s):\n"
+     (print (format "OmniServer buffer contents (available in %s):\n"
                     filename))
      (print (buffer-string))
-     (kill-process "Omni-Server")))
+     (kill-process "OmniServer")))
 
  (with-current-buffer "*omnisharp-debug*"
    (let ((filename "omnisharp-debug-output.txt"))
