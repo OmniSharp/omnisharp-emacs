@@ -17,6 +17,8 @@
  (depends-on "json")
  (depends-on "dash")
  (depends-on "popup")
+ (depends-on "ecukes")
+ (depends-on "espuds")
  (depends-on "auto-complete")
  (depends-on "flycheck")
  (depends-on "csharp-mode")
