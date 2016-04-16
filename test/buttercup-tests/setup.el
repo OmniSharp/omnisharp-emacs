@@ -45,7 +45,7 @@
 (require 'buttercup)
 
 ;;; I grew tired of the omnisharp-- prefix so now I use ot--, standing
-;;; for omnisharp test
+;;; for "omnisharp test"
 (defun ot--buffer-should-contain (&rest expected)
   (let ((expected (s-join "\n" expected))
         (actual (s-replace (string ?\C-m) (string ?\C-j)
