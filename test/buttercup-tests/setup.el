@@ -243,7 +243,7 @@ with one."
 ;;; Test suite setup. Start a test server process that can be used by
 ;;; all tests
 (let ((omnisharp-server-executable-path (concat omnisharp-emacs-root-path
-                                                "/omnisharp-roslyn/omnisharp")))
+                                                "/travis-stuff/omnisharp-roslyn/run")))
   (omnisharp--create-ecukes-test-server omnisharp-emacs-root-path))
 ;; wait that the server is alive and ready before starting the test run
 (with-timeout (2 ; seconds
