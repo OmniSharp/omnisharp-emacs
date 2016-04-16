@@ -203,7 +203,7 @@ moving point."
       (kill-process "Omni-Server")
     (error nil))
   (omnisharp-start-omnisharp-server (s-concat omnisharp-emacs-root-path
-                                              "/test/MinimalSolution/minimal.sln")))
+                                              "/test/MinimalSolution/")))
 
 (defun omnisharp--update-files-with-text-changes (file-name text-changes)
   (let ((file (find-file (omnisharp--convert-backslashes-to-forward-slashes
