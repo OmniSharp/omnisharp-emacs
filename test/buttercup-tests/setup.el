@@ -259,3 +259,28 @@ with one."
 ;;; setup noise ends and test results start
 (print "\n\n\n\n\n\n\n\n\n\n\n")
 
+
+
+;; todo this needs to be taken into use
+;; (Teardown
+;;  ;; After when everything has been run
+
+;;  (omnisharp--log "TEST: shutting down test server in integration test Teardown hook")
+;;  (with-current-buffer "OmniServer"
+;;    (let ((filename "omnisharp-server-output.txt"))
+;;      (write-file filename)
+;;      (print (format "OmniServer buffer contents (available in %s):\n"
+;;                     filename))
+;;      (print (buffer-string))
+;;      (kill-process "OmniServer")))
+
+;;  (with-current-buffer "*omnisharp-debug*"
+;;    (let ((filename "omnisharp-debug-output.txt"))
+;;      (write-file filename)
+;;      (print (format "Debug buffer contents (available in %s):\n"
+;;                     filename))
+;;      (print (buffer-string))))
+
+;;  (print "Server info:\n")
+;;  (print (prin1-to-string omnisharp--server-info))
+;;  (print "\n"))
