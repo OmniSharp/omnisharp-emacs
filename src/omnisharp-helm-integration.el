@@ -56,7 +56,7 @@
     (let (candidates)
       (omnisharp--send-command-to-server-sync
        "findsymbols"
-       nil
+       '((Filter . ""))
        (-lambda ((&alist 'QuickFixes quickfixes))
                 (setq candidates
                       (-map 'omnisharp--helm-find-symbols-transform-candidate
