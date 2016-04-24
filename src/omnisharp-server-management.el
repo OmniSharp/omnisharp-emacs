@@ -1,4 +1,5 @@
 (defvar omnisharp--server-info nil)
+(defvar omnisharp-use-http nil "Set to t to use http instead of stdio.")
 
 (defun make-omnisharp--server-info (process)
   `((:process . ,process)
@@ -19,6 +20,18 @@ handlers in the current omnisharp--server-info."
 (comment (omnisharp--clear-response-handlers))
 
 (defun omnisharp--send-command-to-server (api-name contents &optional response-handler)
+  "Sends the given command to the server.
+Depending on omnisharp-use-http it will either send it via http or stdio"
+
+  (if omnisharp-use-http
+      (omnisharp--send-command-to-server-http api-name contents response-handler)
+    (omnisharp--send-command-to-server-stdio api-name contents response-handler)))
+
+(defun omnisharp--send-command-to-server-http (api-name contents response-handler)
+  "Sends the given command via curl"
+  (apply response-handler (list (omnisharp-post-message-curl-as-json api-name contents))))
+
+(defun omnisharp--send-command-to-server-stdio (api-name contents &optional response-handler)
   "Sends the given command to the server and associates a
 response-handler for it. The server will respond to this request
 later and the response handler will get called then.
