@@ -3,7 +3,7 @@
   "Post json stuff to url with --data set to given params. Return
 result."
   (let ((curl-command-plist
-         (omnisharp--get-curl-command url params)))
+         (omnisharp--get-curl-command (omnisharp--get-api-url url) params)))
     (with-temp-buffer
       (apply 'call-process
              (plist-get curl-command-plist :command)
@@ -80,7 +80,7 @@ api at URL using that file as the parameters."
 
 (defun omnisharp-post-message-curl-as-json (url &optional params)
   (omnisharp--json-read-from-string
-   (omnisharp-post-message-curl (concat (omnisharp-get-host) url) params)))
+   (omnisharp-post-message-curl url params)))
 
 
 (defun omnisharp--server-process-sentinel (process event)
