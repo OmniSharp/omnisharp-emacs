@@ -34,6 +34,7 @@
 
 (require 'omnisharp-server-management)
 (require 'omnisharp-utils)
+(require 'omnisharp-http-utils)
 (require 'omnisharp-server-actions)
 (require 'omnisharp-auto-complete-actions)
 (require 'omnisharp-current-symbol-actions)
