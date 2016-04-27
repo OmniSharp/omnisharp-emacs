@@ -1,4 +1,4 @@
-(defcustom omnisharp-server-executable-path (executable-find "omnisharp")  ; omnisharp-roslyn
+(defcustom omnisharp-server-executable-path (executable-find "OmniSharp")  ; omnisharp-roslyn
   "Path to OmniSharp. If its value is nil, search for the server in the exec-path"
   :type '(choice (const :tag "Not Set" nil) string))
 
