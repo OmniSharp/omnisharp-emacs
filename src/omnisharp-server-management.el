@@ -86,37 +86,57 @@ process buffer, and handle them as server events"
         ;; should use -each here since it's for side effects only, but
         ;; it can't work with vectors. -map can, so use that instead.
         (-map #'omnisharp--handle-server-event json-messages))
-    (error (progn
-             (let ((msg (format (concat "omnisharp--handle-server-message error: %s. "
-                                        "See the OmniServer process buffer for detailed server output.")
-                                (prin1-to-string maybe-error-data))))
-               (omnisharp--log msg)
-               (message msg))))))
+    (error (let ((msg (format (concat "omnisharp--handle-server-message error: %s. "
+                                      "See the OmniServer process buffer for detailed server output.")
+                              (prin1-to-string maybe-error-data))))
+             (omnisharp--log msg)
+             (message msg)))))
+
+(defun omnisharp--log-packet? (packet)
+  (and (equal "event" (cdr (assoc 'Type packet)))
+       (equal "log" (cdr (assoc 'Event packet)))))
+
+(defun omnisharp--log-log-packet (packet)
+  (-let (((&alist 'LogLevel log-level
+                  'Message message) (cdr (assoc 'Body packet))))
+    (when (equal log-level "ERROR")
+      (message (format "<-- OmniSharp server error: %s"
+                       (-first-item (s-lines message)))))
+    (omnisharp--log (format "%s: %s" log-level message))))
+
+(defun omnisharp--server-started-event-packet? (packet)
+  (and (equal "event" (cdr (assoc 'Type packet)))
+       (equal "started" (cdr (assoc 'Event packet)))))
+
+(defun omnisharp--response-packet? (packet)
+  (equal "response" (cdr (assoc 'Type packet))))
+
+(defun omnisharp--arguments-packet? (packet)
+  (and (assq 'Arguments packet)
+       (assq 'Command packet)))
+
+(defun omnisharp--handle-server-started-event ()
+  (omnisharp--log "The server has started")
+  (message "The OmniSharp server is ready. Hacks and glory await!")
+  (setcdr (assoc :started? server-info) t))
 
 (defun omnisharp--handle-server-event (packet)
   "Takes an alist representing some kind of Packet, possibly a
 ResponsePacket or an EventPacket, and processes it depending on
 its type."
-  (-let ((server-info omnisharp--server-info)
-         ((&alist 'Type type
-                  'Event event) packet))
-    (cond ((and (equal "event" type)
-                (equal "log" event))
-           (-let (((&alist 'LogLevel log-level
-                           'Message message) (cdr (assoc 'Body packet))))
-             (when (equal log-level "ERROR")
-               (message (format "<-- OmniSharp server error: %s"
-                                (-first-item (s-lines message)))))
-             (omnisharp--log (format "%s: %s" log-level message))))
+  (let ((server-info omnisharp--server-info))
+    (cond ((omnisharp--arguments-packet? packet)
+           ;; todo what exactly are these? can they be ignored?
+           nil)
 
-          ((equal "response" type)
+          ((omnisharp--response-packet? packet)
            (omnisharp--handle-server-response-packet packet server-info))
 
-          ((and (equal "event" type)
-                (equal "started" event))
-           (omnisharp--log "The server has started")
-           (message "The OmniSharp server is ready. Hacks and glory await!")
-           (setcdr (assoc :started? server-info) t))
+          ((omnisharp--log-packet? packet)
+           (omnisharp--log-log-packet packet))
+
+          ((omnisharp--server-started-event-packet? packet)
+           (omnisharp--handle-server-started-event packet))
 
           (t (omnisharp--log (format "<-- Received an unknown server packet: %s"
                                      (prin1-to-string packet)))))))
