@@ -104,29 +104,34 @@ process buffer, and handle them as server events"
                        (-first-item (s-lines message)))))
     (omnisharp--log (format "%s: %s" log-level message))))
 
-(defun omnisharp--server-started-event-packet? (packet)
-  (and (equal "event" (cdr (assoc 'Type packet)))
-       (equal "started" (cdr (assoc 'Event packet)))))
+(defun omnisharp--event-packet? (packet)
+  (and (equal "event" (cdr (assoc 'Type packet)))))
 
 (defun omnisharp--response-packet? (packet)
   (equal "response" (cdr (assoc 'Type packet))))
 
-(defun omnisharp--arguments-packet? (packet)
+(defun omnisharp--ignorable-packet? (packet)
+  ;; todo what exactly are these? can they be ignored?
   (and (assq 'Arguments packet)
        (assq 'Command packet)))
 
-(defun omnisharp--handle-server-started-event ()
-  (omnisharp--log "The server has started")
-  (message "The OmniSharp server is ready. Hacks and glory await!")
-  (setcdr (assoc :started? server-info) t))
+(defun omnisharp--handle-event-packet (packet)
+  (-let* ((((&alist 'Type packet-type
+                    'Event event-type) packet)))
+    (cond ((-contains? '("ProjectAdded" "ProjectChanged") event-type)
+           (comment ignore these for now.))
+
+          ((equal "started" event-type)
+           (omnisharp--log "The server has started")
+           (message "The OmniSharp server is ready. Hacks and glory await!")
+           (setcdr (assoc :started? server-info) t)))))
 
 (defun omnisharp--handle-server-event (packet)
   "Takes an alist representing some kind of Packet, possibly a
 ResponsePacket or an EventPacket, and processes it depending on
 its type."
   (let ((server-info omnisharp--server-info))
-    (cond ((omnisharp--arguments-packet? packet)
-           ;; todo what exactly are these? can they be ignored?
+    (cond ((omnisharp--ignorable-packet? packet)
            nil)
 
           ((omnisharp--response-packet? packet)
@@ -135,8 +140,8 @@ its type."
           ((omnisharp--log-packet? packet)
            (omnisharp--log-log-packet packet))
 
-          ((omnisharp--server-started-event-packet? packet)
-           (omnisharp--handle-server-started-event packet))
+          ((omnisharp--event-packet? packet)
+           (omnisharp--handle-event-packet packet))
 
           (t (omnisharp--log (format "<-- Received an unknown server packet: %s"
                                      (prin1-to-string packet)))))))
