@@ -30,6 +30,8 @@
   (f-join omnisharp-emacs-root-path
           "test/MinimalSolution/minimal/"))
 
+(setq omnisharp-debug t)
+
 (print omnisharp-minimal-test-solution-path)
 (add-to-list 'load-path omnisharp-emacs-root-path)
 
@@ -210,10 +212,10 @@ detecting situations in the middle of input is impossible."
   (edmacro-parse-keys key-or-chord))
 
 (defun ot--get-completions ()
-    (omnisharp--get-company-candidates "")
-    (-map (lambda(completion)
-            (cdr (assoc 'DisplayText completion)))
-          omnisharp--last-buffer-specific-auto-complete-result))
+  (omnisharp--get-company-candidates "")
+  (-map (lambda(completion)
+          (cdr (assoc 'DisplayText completion)))
+        omnisharp--last-buffer-specific-auto-complete-result))
 
 (defmacro ot--set (symbol value)
   `(setq symbol ,value))
