@@ -234,9 +234,14 @@ with one."
 
 ;; Test suite setup. Start a test server process that can be used by
 ;; all tests
-(let ((omnisharp-server-executable-path (concat omnisharp-emacs-root-path
-                                                "/travis-stuff/omnisharp-roslyn/OmniSharp")))
-  (omnisharp--create-ecukes-test-server omnisharp-emacs-root-path))
+(defun omnisharp-start-test-server ()
+  (interactive)
+  (let ((omnisharp-server-executable-path (concat omnisharp-emacs-root-path
+                                                  "/travis-stuff/omnisharp-roslyn/OmniSharp")))
+    (omnisharp--create-ecukes-test-server omnisharp-emacs-root-path)))
+
+(omnisharp-start-test-server)
+
 ;; wait that the server is alive and ready before starting the test run
 (with-timeout (2 ; seconds
                (omnisharp--log "Server did not start in time"))
