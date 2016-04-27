@@ -28,7 +28,7 @@
 
 (defvar omnisharp-minimal-test-solution-path
   (f-join omnisharp-emacs-root-path
-          "test/MinimalSolution/minimal/"))
+          "test/MinimalSolution/"))
 
 (setq omnisharp-debug t)
 
