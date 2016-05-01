@@ -1,7 +1,7 @@
 (describe "Format on keystroke"
 
   (before-each
-    (ot--open-the-minimal-solution-source-file "KeystrokeTest.cs"))
+    (ot--open-the-minimal-project-source-file "KeystrokeTest.cs"))
 
   (it "formats on pressing semicolon"
     (ot--buffer-contents-and-point-at-$

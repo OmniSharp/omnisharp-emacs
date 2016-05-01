@@ -1,7 +1,7 @@
 ;; -*- mode: Emacs-Lisp; lexical-binding: t; -*-
 (describe "Flycheck integration"
   (it "integrates flycheck with omnisharp"
-    (ot--open-the-minimal-solution-source-file "FlycheckTest.cs")
+    (ot--open-the-minimal-project-source-file "FlycheckTest.cs")
     (ot--buffer-contents-and-point-at-$
      "$public class MyClass {
          DoesNotExist foo;

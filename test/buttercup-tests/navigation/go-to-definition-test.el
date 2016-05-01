@@ -1,6 +1,6 @@
 (describe "Go to definition"
   (it "goes to definition in the same file"
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
+    (ot--open-the-minimal-project-source-file "MyClassContainer.cs")
     (ot--buffer-contents-and-point-at-$
      "using System;"
      "namespace minimal"
@@ -19,7 +19,7 @@
     ;; We have to let the server know the contents of the files before
     ;; doing anything, otherwise the contents might not be what they
     ;; are on disk
-    (ot--open-the-minimal-solution-source-file "MyClass.cs")
+    (ot--open-the-minimal-project-source-file "MyClass.cs")
     (ot--buffer-contents-and-point-at-$
      "using System;"
      "namespace minimal"
@@ -32,7 +32,7 @@
      "    }"
      "}")
 
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
+    (ot--open-the-minimal-project-source-file "MyClassContainer.cs")
     (ot--buffer-contents-and-point-at-$
      "using System;"
      "namespace minimal"

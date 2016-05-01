@@ -1,6 +1,6 @@
 (describe "Imenu integration"
   (it "builds an index of members in the current file"
-    (ot--open-the-minimal-solution-source-file "ImenuTest.cs")
+    (ot--open-the-minimal-project-source-file "ImenuTest.cs")
     (ot--buffer-contents-and-point-at-$
      "namespace minimal"
      "{"

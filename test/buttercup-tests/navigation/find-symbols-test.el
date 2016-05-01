@@ -1,6 +1,6 @@
 (describe "Navigate to solution member (find symbols)"
   (it "moves point to selected type"
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
+    (ot--open-the-minimal-project-source-file "MyClassContainer.cs")
     (ot--buffer-contents-and-point-at-$
      "using System;"
      "namespace minimal"
