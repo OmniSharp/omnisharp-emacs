@@ -1,6 +1,6 @@
 (describe "Update buffer"
   (before-each
-    (ot--open-the-minimal-solution-source-file "MyClass.cs")
+    (ot--open-the-minimal-project-source-file "MyClass.cs")
     (ot--buffer-contents-and-point-at-$
      "//contents don't matter$"))
 

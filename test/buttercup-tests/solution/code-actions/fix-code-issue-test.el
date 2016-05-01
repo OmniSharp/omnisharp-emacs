@@ -1,7 +1,7 @@
 ;; Test a few different kinds of code actions to see we can support
 ;; each one in a sensible manner.
 (describe "Fix code issue"
-  (before-each (ot--open-the-minimal-solution-source-file "MyClass.cs"))
+  (before-each (ot--open-the-minimal-project-source-file "MyClass.cs"))
   (it "can replace a simple part of the buffer (Use 'var' keyword)"
     (ot--buffer-contents-and-point-at-$
      "public class Class1"
@@ -49,7 +49,7 @@
      "}"))
 
   (it "can create new files (Generate class in new file)"
-    (ot--delete-the-minimal-solution-source-file "MyNewClass.cs")
+    (ot--delete-the-minimal-project-source-file "MyNewClass.cs")
     (ot--buffer-contents-and-point-at-$
      "namespace MyNamespace"
      "{"

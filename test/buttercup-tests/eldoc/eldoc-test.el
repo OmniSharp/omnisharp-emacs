@@ -1,6 +1,6 @@
 (describe "eldoc"
   (before-each
-    (ot--open-the-minimal-solution-source-file "EldocTest.cs"))
+    (ot--open-the-minimal-project-source-file "EldocTest.cs"))
 
   (it "prints the symbol information at point"
       (ot--buffer-contents-and-point-at-$
