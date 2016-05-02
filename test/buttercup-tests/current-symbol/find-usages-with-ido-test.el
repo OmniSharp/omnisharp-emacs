@@ -1,6 +1,6 @@
 (describe "Find usages with ido"
   (before-each
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs"))
+    (ot--open-the-minimal-project-source-file "MyClassContainer.cs"))
 
   (it "lists usages of the symbol under point"
     (ot--buffer-contents-and-point-at-$

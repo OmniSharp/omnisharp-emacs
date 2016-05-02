@@ -1,6 +1,6 @@
 (describe "Rename symbol"
   (it "renames a symbol referenced only in a single file"
-    (ot--open-the-minimal-solution-source-file "RenameFileTest.cs")
+    (ot--open-the-minimal-project-source-file "RenameFileTest.cs")
     (ot--buffer-contents-and-point-at-$
      "using System;"
      "namespace minimal"
@@ -27,7 +27,7 @@
      "}"))
 
   (it "renames a symbol referenced in multiple files"
-    (ot--open-the-minimal-solution-source-file "MyClass.cs")
+    (ot--open-the-minimal-project-source-file "MyClass.cs")
     (ot--buffer-contents-and-point-at-$
      "using System;"
      "namespace minimal$"
@@ -35,7 +35,7 @@
      "    public class MyClass {}"
      "}")
 
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
+    (ot--open-the-minimal-project-source-file "MyClassContainer.cs")
     (ot--buffer-contents-and-point-at-$
      "using System;"
      "namespace minimal"

@@ -26,11 +26,11 @@
 (defvar omnisharp-emacs-src-path
   (f-join omnisharp-emacs-root-path "src"))
 
-(defvar omnisharp-minimal-test-solution-path
+(defvar omnisharp-minimal-test-project-path
   (f-join omnisharp-emacs-root-path
-          "test/MinimalSolution/minimal/"))
+          "test/MinimalProject"))
 
-(print omnisharp-minimal-test-solution-path)
+(print omnisharp-minimal-test-project-path)
 (add-to-list 'load-path omnisharp-emacs-root-path)
 
 ;;; the load-path has to contain omnisharp-emacs-root-path
@@ -145,17 +145,17 @@ request id."
                current-line-number
                (buffer-string))))
 
-(defun ot--open-the-minimal-solution-source-file (file-path-to-open)
+(defun ot--open-the-minimal-project-source-file (file-path-to-open)
   (when (get-buffer file-path-to-open)
     (kill-buffer file-path-to-open))
-  (find-file (f-join omnisharp-minimal-test-solution-path
+  (find-file (f-join omnisharp-minimal-test-project-path
                      file-path-to-open))
   (setq buffer-read-only nil))
 
-(defun ot--delete-the-minimal-solution-source-file (file-name)
+(defun ot--delete-the-minimal-project-source-file (file-name)
   (-when-let (buffer (get-buffer file-name))
     (kill-buffer buffer))
-  (let ((file-path (f-join omnisharp-minimal-test-solution-path file-name)))
+  (let ((file-path (f-join omnisharp-minimal-test-project-path file-name)))
     (when (f-exists? file-path)
       (f-delete file-path))))
 
