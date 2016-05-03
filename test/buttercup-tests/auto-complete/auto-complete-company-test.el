@@ -1,7 +1,7 @@
 (describe "Auto-complete using the company interface"
 
   (before-each
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
+    (ot--open-the-minimal-project-source-file "MyClassContainer.cs")
     (omnisharp-mode t)
     (require 'company)
     (company-mode t)

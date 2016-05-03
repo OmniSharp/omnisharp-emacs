@@ -1,6 +1,6 @@
 (describe "Auto-complete using the popup interface"
   (before-each
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
+    (ot--open-the-minimal-project-source-file "MyClassContainer.cs")
     (ot--set omnisharp--auto-complete-display-backend 'popup))
 
   (after-each
@@ -69,7 +69,7 @@
 
 (describe "auto-complete's completion source"
   (it "provides valid completions as an auto-complete source"
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs")
+    (ot--open-the-minimal-project-source-file "MyClassContainer.cs")
     (ot--buffer-contents-and-point-at-$
      "namespace Test {"
      "    public class Awesome {"

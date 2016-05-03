@@ -1,6 +1,6 @@
 (describe "Find implementations with ido"
   (before-each
-    (ot--open-the-minimal-solution-source-file "MyClassContainer.cs"))
+    (ot--open-the-minimal-project-source-file "MyClassContainer.cs"))
 
   (it "navigates to the only implementation when only one found"
     (ot--buffer-contents-and-point-at-$
