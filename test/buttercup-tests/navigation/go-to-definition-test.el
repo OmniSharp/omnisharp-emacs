@@ -15,7 +15,7 @@
     (ot--point-should-be-on-a-line-containing "public class Target {}"))
 
 
-  (it "goes to a member defined in another file using another window"
+  (xit "goes to a member defined in another file using another window"
     ;; We have to let the server know the contents of the files before
     ;; doing anything, otherwise the contents might not be what they
     ;; are on disk

@@ -2,7 +2,7 @@
 ;; each one in a sensible manner.
 (describe "Fix code issue"
   (before-each (ot--open-the-minimal-project-source-file "MyClass.cs"))
-  (it "can replace a simple part of the buffer (Use 'var' keyword)"
+  (xit "can replace a simple part of the buffer (Use 'var' keyword)"
     (ot--buffer-contents-and-point-at-$
      "public class Class1"
      "{"
@@ -15,7 +15,7 @@
     (omnisharp--wait-until-request-completed (omnisharp-run-code-action-refactoring))
     (ot--point-should-be-on-a-line-containing "var i = 1;"))
 
-  (it "can operate on the current region (Extract method)"
+  (xit "can operate on the current region (Extract method)"
     (ot--buffer-contents-and-region
      "public class Class1"
      "{"
@@ -48,7 +48,7 @@
      "    }"
      "}"))
 
-  (it "can create new files (Generate class in new file)"
+  (xit "can create new files (Generate class in new file)"
     (ot--delete-the-minimal-project-source-file "MyNewClass.cs")
     (ot--buffer-contents-and-point-at-$
      "namespace MyNamespace"
