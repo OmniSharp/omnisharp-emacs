@@ -21,7 +21,7 @@
      "        var i = 1;"
      "    }"))
 
-  (xit "formats on pressing closing brace"
+  (it "formats on pressing closing brace"
     (ot--buffer-contents-and-point-at-$
      "public class KeystrokeTest"
      "{"
