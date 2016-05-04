@@ -457,7 +457,7 @@ cursor at that location"
 (defun omnisharp--eldoc-worker ()
   "Gets type information from omnisharp server about the symbol at point"
   (omnisharp--completion-result-get-item 
-   (omnisharp-post-message-curl-as-json
+   (omnisharp-post-http-message
     (concat (omnisharp-get-host) "typelookup")
     (omnisharp--get-request-object))
    'Type))

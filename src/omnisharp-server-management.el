@@ -29,7 +29,7 @@ Depending on omnisharp-use-http it will either send it via http or stdio"
 
 (defun omnisharp--send-command-to-server-http (api-name contents response-handler)
   "Sends the given command via curl"
-  (apply response-handler (list (omnisharp-post-message-curl-as-json api-name contents))))
+  (apply response-handler (list (omnisharp-post-http-message api-name contents))))
 
 (defun omnisharp--send-command-to-server-stdio (api-name contents &optional response-handler)
   "Sends the given command to the server and associates a
