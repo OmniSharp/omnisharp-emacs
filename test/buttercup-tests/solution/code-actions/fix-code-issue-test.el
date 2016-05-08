@@ -15,7 +15,7 @@
     (omnisharp--wait-until-request-completed (omnisharp-run-code-action-refactoring))
     (ot--point-should-be-on-a-line-containing "var i = 1;"))
 
-  (xit "can operate on the current region (Extract method)"
+  (it "can operate on the current region (Extract method)"
     (ot--buffer-contents-and-region
      "public class Class1"
      "{"
