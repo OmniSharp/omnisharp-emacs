@@ -2,18 +2,18 @@
 ;; each one in a sensible manner.
 (describe "Fix code issue"
   (before-each (ot--open-the-minimal-project-source-file "MyClass.cs"))
-  (xit "can replace a simple part of the buffer (Use 'var' keyword)"
+  (it "can act on a simple part of the buffer (using System;)"
     (ot--buffer-contents-and-point-at-$
      "public class Class1"
      "{"
      "    public void Whatever()"
      "    {"
-     "        int$ i = 1;"
+     "        Gu$id.NewGuid();"
      "    }"
      "}")
-    (ot--answer-omnisharp--ido-completing-read-with (lambda (choices) "Use 'var' keyword"))
+    (ot--answer-omnisharp--ido-completing-read-with (lambda (choices) "using System;"))
     (omnisharp--wait-until-request-completed (omnisharp-run-code-action-refactoring))
-    (ot--point-should-be-on-a-line-containing "var i = 1;"))
+    (ot--buffer-should-contain "using System;"))
 
   (it "can operate on the current region (Extract method)"
     (ot--buffer-contents-and-region
@@ -49,6 +49,8 @@
      "}"))
 
   (xit "can create new files (Generate class in new file)"
+    ;; 2016-05-09 I cannot create a new type. The server doesn't support this yet.
+    ;; https://github.com/OmniSharp/omnisharp-roslyn/commit/63c9eacf2f145ef20b642b6b11431f38e22bb99a#diff-8ff9938e7aa9073d7e49d52e84bacdaaR162
     (ot--delete-the-minimal-project-source-file "MyNewClass.cs")
     (ot--buffer-contents-and-point-at-$
      "namespace MyNamespace"
