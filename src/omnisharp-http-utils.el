@@ -21,19 +21,21 @@
     data))
 
 (defun omnisharp--submit-request (url &optional params)
-  (require 'request)
-  (request url
-           :type "POST"
-           :parser 'json-read
-           :sync t
-           :data (json-encode params)
-           :error
-           (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
-                          (message "Got error: %S" error-thrown)))
-           :complete (lambda (&rest _) (when omnisharp-debug (message "Request completed")))
-           :success (cl-function
-                     (lambda (&key data &allow-other-keys) (when omnisharp-debug (message "Request succeeded"))
-                       ))))
+  (if (require 'request nil 'noerror)
+      (request url
+               :type "POST"
+               :parser 'json-read
+               :sync t
+               :data (json-encode params)
+               :error
+               (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                              (message "Got error: %S" error-thrown)))
+               :complete (lambda (&rest _) (when omnisharp-debug (message "Request completed")))
+               :success (cl-function
+                         (lambda (&key data &allow-other-keys) (when omnisharp-debug (message "Request succeeded"))
+                           )))
+    (message "ERROR: You must install 'request-deferred' package")
+    ))
 
 (defun omnisharp--server-process-sentinel (process event)
   (if (string-match "^exited abnormally" event)
