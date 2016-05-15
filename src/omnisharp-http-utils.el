@@ -37,8 +37,4 @@
     (message "ERROR: You must install 'request-deferred' package")
     ))
 
-(defun omnisharp--server-process-sentinel (process event)
-  (if (string-match "^exited abnormally" event)
-      (error (concat "OmniSharp server process " event))))
-
 (provide 'omnisharp-http-utils)
