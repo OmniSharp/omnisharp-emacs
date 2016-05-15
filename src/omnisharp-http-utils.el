@@ -29,7 +29,7 @@
                :data (json-encode params)
                :error
                (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
-                              (message "Got error: %S" error-thrown)))
+                              (message "Error from %s : %S" url error-thrown)))
                :complete (lambda (&rest _) (when omnisharp-debug (message "Request completed")))
                :success (cl-function
                          (lambda (&key data &allow-other-keys) (when omnisharp-debug (message "Request succeeded"))
