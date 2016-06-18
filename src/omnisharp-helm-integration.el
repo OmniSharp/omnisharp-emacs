@@ -9,7 +9,7 @@
     (cons
      (format "%s(%s): %s"
              (propertize (file-name-nondirectory
-                          (cdr (assoc 'FileName candidate)))
+                          (omnisharp--get-filename candidate))
                          'face 'helm-grep-file)
              (propertize (number-to-string (cdr (assoc 'Line candidate)))
                          'face 'helm-grep-lineno)
@@ -67,7 +67,7 @@
     "Convert a quickfix entry into helm output"
     (cons
      (format "%s : %s"
-             (propertize (cdr (assoc 'FileName candidate))
+             (propertize (omnisharp--get-filename candidate)
                          'face 'helm-grep-file)
              (nth 0 (split-string (cdr (assoc 'Text candidate)) "(")))
      candidate)))

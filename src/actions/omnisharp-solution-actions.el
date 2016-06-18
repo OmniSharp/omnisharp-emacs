@@ -7,7 +7,7 @@
   (let ((params (omnisharp--get-request-object)))
     (omnisharp-add-to-solution-worker params)
     (message "Added %s to the solution."
-             (cdr (assoc 'FileName params)))))
+             (omnisharp--get-filename params))))
 
 (defun omnisharp-add-to-solution-dired-selected-files ()
   "Add the files currently selected in dired to the current solution."
@@ -15,7 +15,7 @@
   (let ((selected-files (dired-get-marked-files)))
     (--each selected-files
       (let ((params
-             (cons `(FileName . ,it)
+             (cons (omnisharp--to-filename it)
                    (omnisharp--get-request-object))))
         (omnisharp-add-to-solution-worker params))
       (message "Added %s files to the solution."

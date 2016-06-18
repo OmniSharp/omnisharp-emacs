@@ -149,14 +149,13 @@ name to rename to, defaulting to the current name of the symbol."
       (omnisharp-go-to-file-line-and-column location-before-rename)
 
       (message "Rename complete in files: \n%s"
-               (-interpose "\n" (--map (cdr (assoc 'FileName it))
+               (-interpose "\n" (--map (omnisharp--get-filename it)
                                        modified-file-responses))))))
 
 (defun omnisharp--apply-text-changes (modified-file-response)
-  (-let (((&alist 'Changes changes
-                  'FileName file-name) modified-file-response))
+  (-let (((&alist 'Changes changes) modified-file-response))
     (omnisharp--update-files-with-text-changes
-     file-name
+     (omnisharp--get-filename modified-file-response)
      (omnisharp--vector-to-list changes))))
 
 (defun omnisharp-rename-interactively ()
