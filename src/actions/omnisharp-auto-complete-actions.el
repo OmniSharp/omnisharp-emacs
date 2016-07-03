@@ -353,12 +353,10 @@ triggers a completion immediately"
                        (omnisharp--tag-text-with-completion-info arg json-result)
                        (when allow-templating
                          ;; Do yasnippet completion
-                         (if (and omnisharp-company-template-use-yasnippet (fboundp 'yas-expand-snippet))
-                             (progn
-                               (let ((method-snippet (omnisharp--completion-result-item-get-method-snippet
-                                                      json-result)))
-                                 (when method-snippet
-                                   (omnisharp--snippet-templatify arg method-snippet json-result))))
+                         (if (and omnisharp-company-template-use-yasnippet (boundp 'yas-minor-mode) yas-minor-mode)
+                             (-when-let (method-snippet (omnisharp--completion-result-item-get-method-snippet
+							 json-result))
+			       (omnisharp--snippet-templatify arg method-snippet json-result))
                            ;; Fallback on company completion but make sure company-template is loaded.
                            ;; Do it here because company-mode is optional
                            (require 'company-template)
