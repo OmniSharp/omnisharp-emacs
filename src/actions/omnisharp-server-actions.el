@@ -5,16 +5,17 @@
 ;;;###autoload
 (defun omnisharp-start-omnisharp-server (path-to-project)
   "Starts an OmniSharp server server for a given path to a project file or a directory"
-  (interactive "DStart OmniSharp for project folder: ")
+  (interactive "fStart OmniSharp for project folder or solution file: ")
   (setq BufferName "*OmniServer*")
   (unless (bound-and-true-p omnisharp-server-executable-path)
     (error "Could not find the OmniSharp executable. Please set the variable omnisharp-server-executable-path to a valid path"))
 
-  (if (file-directory-p path-to-project)
+  (if (or (file-directory-p path-to-project)
+          (file-exists-p path-to-project))
       (progn
-        (message (format "Starting OmniSharpServer using project folder: %s" path-to-project))
+        (message (format "Starting OmniSharpServer using project folder/solution file: %s" path-to-project))
         (message "using the server at: %s" omnisharp-server-executable-path))
-    (error (format "Path does not lead to a valid project folder path: %s" path-to-project)))
+    (error (format "Path does not lead to a valid project folder or solution file path: %s" path-to-project)))
 
   (when (get-buffer BufferName)
     (kill-buffer BufferName))
