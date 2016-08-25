@@ -6,7 +6,6 @@
 (defun omnisharp-start-omnisharp-server (path-to-project)
   "Starts an OmniSharp server server for a given path to a project file or a directory"
   (interactive "GStart OmniSharp for project folder or solution file: ")
-  (setq BufferName "*OmniServer*")
   (unless (bound-and-true-p omnisharp-server-executable-path)
     (error "Could not find the OmniSharp executable. Please set the variable omnisharp-server-executable-path to a valid path"))
 
@@ -16,9 +15,6 @@
         (message (format "Starting OmniSharpServer using project folder/solution file: %s" path-to-project))
         (message "using the server at: %s" omnisharp-server-executable-path))
     (error (format "Path does not lead to a valid project folder or solution file path: %s" path-to-project)))
-
-  (when (get-buffer BufferName)
-    (kill-buffer BufferName))
 
   ;; Save all csharp buffers to ensure the server is in sync"
   (save-some-buffers t (lambda () (string-equal (file-name-extension (buffer-file-name)) "cs")))
