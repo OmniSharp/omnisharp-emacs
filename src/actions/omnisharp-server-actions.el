@@ -5,7 +5,7 @@
 ;;;###autoload
 (defun omnisharp-start-omnisharp-server (path-to-project)
   "Starts an OmniSharp server server for a given path to a project file or a directory"
-  (interactive "fStart OmniSharp for project folder or solution file: ")
+  (interactive "GStart OmniSharp for project folder or solution file: ")
   (setq BufferName "*OmniServer*")
   (unless (bound-and-true-p omnisharp-server-executable-path)
     (error "Could not find the OmniSharp executable. Please set the variable omnisharp-server-executable-path to a valid path"))
