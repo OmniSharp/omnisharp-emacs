@@ -340,9 +340,10 @@ locations in the json."
                  :line (cdr (assoc 'Line it))
                  :column (cdr (assoc 'Column it))
                  :message (cdr (assoc 'Text it))
-                 :level (if (equal (cdr (assoc 'LogLevel it)) "Warning")
-                            'warning
-                          'error)))
+                 :level (pcase (cdr (assoc 'LogLevel it))
+                          ("Warning" 'warning)
+                          ("Hidden" 'info)
+                          (_ 'error))))
               errors))))
 
 (defun omnisharp--imenu-make-marker (element)
