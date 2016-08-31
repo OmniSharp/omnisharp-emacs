@@ -37,6 +37,10 @@
                            "--stdio" "-s" (expand-file-name path-to-project))))
              (setq process-connection-type original-process-connection-type)
              (set-process-filter process 'omnisharp--handle-server-message)
+             (set-process-sentinel process (lambda (process event)
+                                             (when (memq (process-status process) '(exit signal))
+					       (message "OmniSharp server terminated")
+                                               (setq omnisharp--server-info nil))))
              process)))))
 
 ;;;###autoload
