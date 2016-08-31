@@ -25,23 +25,18 @@
 
   (setq omnisharp--server-info
         (make-omnisharp--server-info
-         (let ((original-process-connection-type process-connection-type))
-
-           ;; use a pipe for the connection instead of a pty
-           (setq process-connection-type nil)
-
-           (let ((process (start-process
-                           "OmniServer" ; process name
-                           "OmniServer" ; buffer name
-                           omnisharp-server-executable-path
-                           "--stdio" "-s" (expand-file-name path-to-project))))
-             (setq process-connection-type original-process-connection-type)
-             (set-process-filter process 'omnisharp--handle-server-message)
-             (set-process-sentinel process (lambda (process event)
-                                             (when (memq (process-status process) '(exit signal))
-					       (message "OmniSharp server terminated")
-                                               (setq omnisharp--server-info nil))))
-             process)))))
+         ;; use a pipe for the connection instead of a pty
+         (let ((process-connection-type nil))
+           (-doto (start-process
+		   "OmniServer" ; process name
+		   "OmniServer" ; buffer name
+		   omnisharp-server-executable-path
+		   "--stdio" "-s" (expand-file-name path-to-project))
+             (set-process-filter 'omnisharp--handle-server-message)
+             (set-process-sentinel (lambda (process event)
+                                     (when (memq (process-status process) '(exit signal))
+                                       (message "OmniSharp server terminated")
+                                       (setq omnisharp--server-info nil)))))))))
 
 ;;;###autoload
 (defun omnisharp-check-alive-status ()
