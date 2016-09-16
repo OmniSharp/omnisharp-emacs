@@ -21,8 +21,11 @@ addons:
     - zlib1g
 
 before_script:
+    # install evm (emacs version manager) and cask (dependency resolver/build tool)
     - curl -fsSkL https://gist.github.com/rejeep/7736123/raw > travis.sh && source ./travis.sh
     - evm list
+    # use this version of emacs for tests
+    - evm install emacs-24.5-bin --use --skip
     - emacs --version
     - cask install
     - cd travis-stuff
