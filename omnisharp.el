@@ -323,27 +323,25 @@ CALLBACK is the status callback passed by Flycheck."
   "A csharp source syntax checker using the OmniSharp server process
    running in the background"
   :start #'omnisharp--flycheck-start
-  :predicate (lambda () omnisharp-mode))
+  :predicate (lambda () (and omnisharp-mode omnisharp--server-info)))
 
 (defun omnisharp--flycheck-error-parser (response checker buffer)
   "Takes a QuickFixResponse result. Returns flycheck errors created based on the
 locations in the json."
-  (let* ((errors (omnisharp--vector-to-list
-                 (cdr (assoc 'QuickFixes response)))))
-
-    (when (not (equal (length errors) 0))
-      (mapcar (lambda (it)
-                (flycheck-error-new
-                 :buffer buffer
-                 :checker checker
-                 :filename (cdr (assoc 'FileName it))
-                 :line (cdr (assoc 'Line it))
-                 :column (cdr (assoc 'Column it))
-                 :message (cdr (assoc 'Text it))
-                 :level (if (equal (cdr (assoc 'LogLevel it)) "Warning")
-                            'warning
-                          'error)))
-              errors))))
+  (->> (omnisharp--vector-to-list
+        (cdr (assoc 'QuickFixes response)))
+       (mapcar (lambda (it)
+                 (flycheck-error-new
+                  :buffer buffer
+                  :checker checker
+                  :filename (cdr (assoc 'FileName it))
+                  :line (cdr (assoc 'Line it))
+                  :column (cdr (assoc 'Column it))
+                  :message (cdr (assoc 'Text it))
+                  :level (pcase (cdr (assoc 'LogLevel it))
+                           ("Warning" 'warning)
+                           ("Hidden" 'info)
+                           (_ 'error)))))))
 
 (defun omnisharp--imenu-make-marker (element)
   "Takes a QuickCheck element and returns the position of the
