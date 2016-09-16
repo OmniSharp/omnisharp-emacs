@@ -34,6 +34,7 @@
 
 (require 'omnisharp-server-management)
 (require 'omnisharp-utils)
+(require 'omnisharp-http-utils)
 (require 'omnisharp-server-actions)
 (require 'omnisharp-auto-complete-actions)
 (require 'omnisharp-current-symbol-actions)
@@ -455,8 +456,8 @@ cursor at that location"
 (defun omnisharp--eldoc-worker ()
   "Gets type information from omnisharp server about the symbol at point"
   (omnisharp--completion-result-get-item 
-   (omnisharp-post-message-curl-as-json
-    (concat (omnisharp-get-host) "typelookup")
+   (omnisharp-post-http-message
+    (concat (omnisharp--get-host) "typelookup")
     (omnisharp--get-request-object))
    'Type))
 
