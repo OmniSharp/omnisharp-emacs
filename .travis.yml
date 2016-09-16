@@ -26,6 +26,7 @@ before_script:
     - evm list
     # use this version of emacs for tests
     - evm install emacs-24.5-bin --use --skip
+    - evm list
     - emacs --version
     - cask install
     - cd travis-stuff
