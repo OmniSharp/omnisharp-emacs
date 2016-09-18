@@ -350,7 +350,7 @@ locations in the json."
 cursor at that location"
   (let* ((element-line (cdr (assoc 'Line element)))
          (element-column (cdr (assoc 'Column element)))
-         (element-filename (cdr (assoc 'Filename element)))
+         (element-filename (cdr (assoc 'FileName element)))
          (use-buffer (current-buffer)))
     (save-excursion
       (omnisharp-go-to-file-line-and-column-worker
