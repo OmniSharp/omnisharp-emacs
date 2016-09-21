@@ -1,3 +1,18 @@
+(defun omnisharp--path-to-server (path)
+  (if (and path (eq system-type 'cygwin))
+      (cygwin-convert-file-name-to-windows path)
+    path))
+
+(defun omnisharp--path-from-server (path)
+  (if (and path (eq system-type 'cygwin))
+      (cygwin-convert-file-name-from-windows path)
+    path))
+
+(defun omnisharp--get-filename (item)
+  (omnisharp--path-from-server (cdr (assoc 'FileName item))))
+
+(defun omnisharp--to-filename (path)
+  `(FileName . ,(omnisharp--path-to-server path)))
 
 (defun omnisharp--write-quickfixes-to-compilation-buffer
   (quickfixes
@@ -63,7 +78,7 @@ recognizes, so that the user may jump to the results."
   "Converts a single element of a /findusages JSON response to a
 format that the compilation major mode understands and lets the user
 follow results to the locations in the actual files."
-  (let ((filename (cdr (assoc 'FileName json-result-single-element)))
+  (let ((filename (omnisharp--get-filename json-result-single-element))
         (text (cdr (assoc 'Text json-result-single-element)))
         (line (cdr (assoc 'Line json-result-single-element)))
         (column (cdr (assoc 'Column json-result-single-element)))

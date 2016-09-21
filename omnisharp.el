@@ -188,7 +188,7 @@ some cases. Work around this."
                    (Column   . ,column-number)
                    (Buffer   . ,buffer-contents))))
     (if (/= 0 (length filename-tmp))
-        (cons `(FileName . ,filename-tmp)
+        (cons (omnisharp--to-filename filename-tmp)
               params)
       params)))
 
@@ -204,7 +204,7 @@ not work on all platforms."
                    (Column   . ,column-number)
                    (Buffer   . ,buffer-contents))))
     (if (/= 0 (length filename-tmp))
-        (cons `(FileName . ,filename-tmp)
+        (cons (omnisharp--to-filename filename-tmp)
               params)
       params)))
 
@@ -216,7 +216,7 @@ QuickFix class json result."
   (omnisharp-go-to-file-line-and-column-worker
    (cdr (assoc 'Line json-result))
    (- (cdr (assoc 'Column json-result)) 1)
-   (cdr (assoc 'FileName json-result))
+   (omnisharp--get-filename json-result)
    other-window))
 
 (defun omnisharp--go-to-line-and-column (line column)
@@ -336,7 +336,7 @@ locations in the json."
                  (flycheck-error-new
                   :buffer buffer
                   :checker checker
-                  :filename (cdr (assoc 'FileName it))
+                  :filename (omnisharp--get-filename it)
                   :line (cdr (assoc 'Line it))
                   :column (cdr (assoc 'Column it))
                   :message (cdr (assoc 'Text it))
@@ -350,7 +350,7 @@ locations in the json."
 cursor at that location"
   (let* ((element-line (cdr (assoc 'Line element)))
          (element-column (cdr (assoc 'Column element)))
-         (element-filename (cdr (assoc 'FileName element)))
+         (element-filename (omnisharp--get-filename element))
          (use-buffer (current-buffer)))
     (save-excursion
       (omnisharp-go-to-file-line-and-column-worker
@@ -380,7 +380,7 @@ cursor at that location"
     (error nil)))
 
 (defun omnisharp-format-find-output-to-ido (item)
-  (-let* ((('FileName filename) item))
+  (let (filename (omnisharp--get-filename item))
     (cons
      (cons
       (car (car item))

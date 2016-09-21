@@ -8,7 +8,7 @@ argument, use another window."
    "gotodefinition"
    (omnisharp--get-request-object)
    (lambda (response)
-     (if (null (cdr (assoc 'FileName response)))
+     (if (null (omnisharp--get-filename response))
          (message
           "Cannot go to definition as none was returned by the API.")
        (omnisharp-go-to-file-line-and-column response other-window)))))
@@ -107,7 +107,7 @@ ido-completing-read. Returns the chosen element."
     (assoc 'QuickFixes)
     (cdr)
     (omnisharp--vector-to-list)
-    (--map (cdr (assoc 'FileName it)))))
+    (--map (omnisharp--get-filename it))))
 
 (defun omnisharp-navigate-to-solution-file-then-file-member
   (&optional other-window)
