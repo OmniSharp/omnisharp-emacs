@@ -894,7 +894,7 @@ server process running in the background."
                   (omnisharp--flycheck-error-parser-raw-json
                    output checker buffer))
 
-  :predicate (lambda () omnisharp-mode))
+  :modes (omnisharp-mode))
 
 (defun omnisharp--flycheck-error-parser-raw-json (output checker buffer)
   "Takes either a QuickFixResponse or a SyntaxErrorsResponse as a
