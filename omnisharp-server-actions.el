@@ -2,37 +2,65 @@
   "Path to OmniSharp. If its value is nil, search for the server in the exec-path"
   :type '(choice (const :tag "Not Set" nil) string))
 
-;;;###autoload
-(defun omnisharp-start-omnisharp-server (path-to-project)
-  "Starts an OmniSharp server server for a given path to a project file or a directory"
-  (interactive "GStart OmniSharp for project folder or solution file: ")
-  (unless (bound-and-true-p omnisharp-server-executable-path)
-    (error "Could not find the OmniSharp executable. Please set the variable omnisharp-server-executable-path to a valid path"))
-
-  (if (or (file-directory-p path-to-project)
-          (file-exists-p path-to-project))
-      (progn
-        (message (format "Starting OmniSharpServer using project folder/solution file: %s" path-to-project))
-        (message "using the server at: %s" omnisharp-server-executable-path))
-    (error (format "Path does not lead to a valid project folder or solution file path: %s" path-to-project)))
+(defun omnisharp--do-server-start (path-to-project)
+  (message (format "Starting OmniSharpServer using project folder/solution file: %s" path-to-project))
+  (message "using the server at: %s" omnisharp-server-executable-path)
 
   ;; Save all csharp buffers to ensure the server is in sync"
   (save-some-buffers t (lambda () (string-equal (file-name-extension (buffer-file-name)) "cs")))
+
+  (setq omnisharp--last-project-path path-to-project)
+
+  ;; this can be set by omnisharp-reload-solution to t
+  (setq omnisharp--restart-server-on-stop nil)
 
   (setq omnisharp--server-info
         (make-omnisharp--server-info
          ;; use a pipe for the connection instead of a pty
          (let ((process-connection-type nil))
            (-doto (start-process
-		   "OmniServer" ; process name
-		   "OmniServer" ; buffer name
-		   omnisharp-server-executable-path
-		   "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))
+                   "OmniServer" ; process name
+                   "OmniServer" ; buffer name
+                   omnisharp-server-executable-path
+                   "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))
              (set-process-filter 'omnisharp--handle-server-message)
              (set-process-sentinel (lambda (process event)
                                      (when (memq (process-status process) '(exit signal))
                                        (message "OmniSharp server terminated")
-                                       (setq omnisharp--server-info nil)))))))))
+                                       (setq omnisharp--server-info nil)
+                                       (if omnisharp--restart-server-on-stop
+                                           (omnisharp--do-server-start omnisharp--last-project-path))))))))))
+
+;;;###autoload
+(defun omnisharp-start-omnisharp-server (path-to-project)
+  "Starts an OmniSharp server for a given path to a project file or a directory"
+  (interactive "GStart OmniSharp for project folder or solution file: ")
+  (unless (bound-and-true-p omnisharp-server-executable-path)
+    (error "Could not find the OmniSharp executable. Please set the variable omnisharp-server-executable-path to a valid path"))
+
+  (if (or (file-directory-p path-to-project)
+          (file-exists-p path-to-project))
+      (omnisharp--do-server-start path-to-project)
+    (error (format "Path does not lead to a valid project folder or solution file path: %s" path-to-project))))
+
+;;;###autoload
+(defun omnisharp-stop-server ()
+  "Stops Omnisharp server if running."
+  (interactive)
+  (unless (equal nil omnisharp--server-info)
+    (kill-process (cdr (assoc :process omnisharp--server-info)))))
+
+;;;###autoload
+(defun omnisharp-reload-solution ()
+  "Restarts omnisharp server on solution last loaded"
+  (interactive)
+
+  (if (and (not (equal nil omnisharp--last-project-path))
+           (not (equal nil omnisharp--server-info)))
+      (progn 
+        (setq omnisharp--restart-server-on-stop t)
+        (kill-process (cdr (assoc :process omnisharp--server-info))))
+    (message "Cannot reload project in Omnisharp - no project previously loaded")))
 
 ;;;###autoload
 (defun omnisharp-check-alive-status ()
