@@ -325,7 +325,9 @@ CALLBACK is the status callback passed by Flycheck."
    running in the background"
                                  :start #'omnisharp--flycheck-start
                                  :modes '(csharp-mode)
-                                 :predicate (lambda () (and omnisharp-mode omnisharp--server-info)))
+                                 :predicate (lambda () (and omnisharp-mode
+                                                            (or omnisharp--server-info
+                                                                omnisharp-use-http))))
 
 (defun omnisharp--flycheck-error-parser (response checker buffer)
   "Takes a QuickFixResponse result. Returns flycheck errors created based on the
