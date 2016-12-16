@@ -738,7 +738,7 @@ the user selects a completion and the completion is inserted."
 argument, add the displayed result to the kill ring. This can be used
 to insert the result in code, for example."
   (interactive "P")
-  (omnisharp-current-type-information-worker 'Type (if add-to-kill-ring add-to-kill-ring)))
+  (omnisharp-current-type-information-worker 'Type add-to-kill-ring))
 
 (defun omnisharp-current-type-documentation (&optional add-to-kill-ring)
   "Display documentation of the current type under point. With prefix
