@@ -22,7 +22,8 @@ Date:   Sat Oct 18 23:08:19 2014 +0100
 If you haven't updated your server copy since that, you must upgrade.
 
 ## Project maturity
-Lacks a better UI and a good default configuration.
+- Currently lacks a maintainer. See https://github.com/OmniSharp/omnisharp-emacs/issues/265
+- Lacks a better UI and a good default configuration.
 
 ## Features
 
