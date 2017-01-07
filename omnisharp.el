@@ -441,41 +441,28 @@ cursor at that location"
                 (t (setq found-start t))))))
     (goto-char found-point)))
 
-(defun omnisharp--eldoc-default ()
-  "Tries to find completion information about the method before point"
-  (save-excursion
-    (omnisharp--jump-to-enclosing-func)
-    (search-backward-regexp "\\sw")
-    (let* ((json-result (get-text-property (point) 'omnisharp-result))
-           (type-info (omnisharp--completion-result-get-item json-result 'DisplayText)))
-
-      (if (and type-info (not (string= "" type-info)))
-          (omnisharp--eldoc-fontify-string type-info)
-        nil))))
-
-(defun omnisharp--eldoc-worker ()
-  "Gets type information from omnisharp server about the symbol at point"
-  (omnisharp--completion-result-get-item 
-   (omnisharp--send-command-to-server
-    "typelookup"
-    (omnisharp--get-request-object))
-   'Type))
-
 (defun omnisharp-eldoc-function ()
   "Returns a doc string appropriate for the current context.
    If point is on an empty char, it looks for data on any previous completions.
    Otherwise, returns nil."
-  (condition-case nil
-      (if (looking-at-p " ")
-          (omnisharp--eldoc-default)
-        (let ((current-type-information
-               (omnisharp--eldoc-worker)))
-          (if (and current-type-information (not (string= "" current-type-information)))
-              (progn
-                (omnisharp--eldoc-fontify-string current-type-information))
-            (omnisharp--eldoc-default))))
-    (error nil
-           (omnisharp--eldoc-default))))
+  (unless (equal nil omnisharp--server-info)
+    (condition-case nil
+        (if (not (looking-at-p " "))
+            (progn
+              (condition-case nil
+                  (omnisharp--send-command-to-server
+                   "typelookup"
+                   (omnisharp--get-request-object)
+                   (lambda (response)
+                     (let ((current-type-information
+                            (omnisharp--completion-result-get-item
+                             response
+                             'Type)))
+                       (if (and current-type-information (not (string= "" current-type-information)))
+                           (eldoc-message (omnisharp--eldoc-fontify-string current-type-information))))))
+                (error nil (ignore)))
+              nil))
+      (error nil (ignore)))))
 
 (add-to-list 'compilation-error-regexp-alist
              '(" in \\(.+\\):\\([1-9][0-9]+\\)" 1 2))
