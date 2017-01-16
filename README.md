@@ -1,26 +1,114 @@
 # omnisharp-emacs
+<!--
+disabled for now, for the roslyn version
+
 <a href="//travis-ci.org/OmniSharp/omnisharp-emacs">
     <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
 </a>
+-->
 
 omnisharp-emacs is a port of the awesome [omnisharp-roslyn][] server to the
 Emacs text editor. It provides IDE-like features for editing files in
 C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
-## This requires the [omnisharp-roslyn][] Server program
-The server must be at least the following version (expect this to be
-update to this guide whenever the required version changes):
+## Installation of the omnisharp-roslyn server application
+This emacs package requires the [omnisharp-roslyn][] server program.
+You can build the server yourself from the source or get precompiled 
+binaries from the [omnisharp-roslyn releases](https://github.com/OmniSharp/omnisharp-roslyn/releases) page.
 
-```
-c4a1b10d06765e5efa11c3591f096e6bdb6c1b5d
-Date:   Sat Oct 18 23:08:19 2014 +0100
-```
-
+The server must be a recent one, e.g. at least from year 2016.
 If you haven't updated your server copy since that, you must upgrade.
 
-## Project maturity
-Lacks a better UI and a good default configuration.
+### On macOS with brew
+<pre>
+brew tap omnisharp/omnisharp-roslyn
+brew update
+brew install omnisharp
+</pre>
+
+Then you need to set the `omnisharp-server-executable-path`:
+
+```lisp
+(setq omnisharp-server-executable-path "/usr/local/bin/omnisharp")
+```
+
+### On Windows (non-Cygwin)
+Use binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases).
+
+Then you need to set the `omnisharp-server-executable-path` the path
+to where you have extracted server file, e.g.:
+
+```lisp
+(setq omnisharp-server-executable-path "C:\\Bin\\omnisharp-roslyn\\OmniSharp.exe")
+```
+
+### On Windows (with Cygwin)
+Use binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases):
+
+ - https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.9-beta22/omnisharp-win-x64-net46.zip
+ 
+If I use omnisharp-roslyn net46 directly, omnisharp-emacs hangs when interacting via stdio.
+This seems to be a difference in how console IO is handled in newer versions of .Net.
+My workaround involves using a wrapper written in C#:
+
+https://gist.github.com/corngood/d982c3c21c016127a2f1600dc895c000
+
+You need to compile the wrapper against an older .net framework (3.5 seems to work). A simple way to use the wrapper is to create a shell script like:
+
+```sh
+#!/bin/sh
+set -e
+[path-to-wrapper-exe] "$(cygpath -w [path-to-omnisharp-exe])" "$@"
+```
+
+If you name this script OmniSharp, and put it in your path (e.g. /usr/local/bin/OmniSharp),
+`omnisharp-emacs` should find it and launch omnisharp correctly.
+Or you can point to it directly in your init.el
+
+```lisp
+(setq omnisharp-server-executable-path "/home/<username>/bin/OmniSharp")
+```
+
+## Package Installation and Configuration
+This package requires Emacs 24.3 and above. It has been tested on
+Ubuntu, Windows 7+ and on macOS.
+
+### Installation on Spacemacs
+Add `csharp` layer to `dotspacemacs-configuration-layers` on
+your `.spacemacs` file. `csharp-mode` and `omnisharp` packages
+will get installed automatically on restart for you.
+
+### Installation on Regular Emacs
+To install, use [MELPA][].
+After MELPA is configured correctly, use
+
+<pre>
+M-x package-refresh-contents RET
+M-x package-install omnisharp RET
+</pre>
+to install.
+
+When installing the `omnisharp` package `package.el` will also 
+automatically pull in `csharp-mode` for you as well.
+
+To automatically load omnisharp-emacs when editing csharp files, add
+something like this to `csharp-mode-hook` on your `init.el`:
+
+```
+(add-hook 'csharp-mode-hook 'omnisharp-mode)
+```
+
+## Configuration and commands available
+To start it, use `M-x omnisharp-start-omnisharp-server RET`.
+The command will ask you for a solution file or a directory 
+you want to code in.
+
+Emacs will manage connection to the server as a subprocess.
+
+You will probably want to create a custom configuration for accessing
+omnisharp-emacs in your normal coding sessions. There is an example
+configuration for evil-mode included in the project.
 
 ## Features
 
@@ -246,43 +334,6 @@ in project.
 Specify the path and parameters to your test runner on the server here :-
 https://github.com/nosami/OmniSharpServer/blob/0eb8644f67c020fc570aaf6629beabb7654ac944/OmniSharp/config.json#L10
 
-
-## Installation
-
-This supports Emacs 24.3 and above at least. It has been tested on
-Ubuntu 12.04 (Precise), on Windows 7 and on OSX.
-
-To install, use [MELPA][].
-After MELPA is configured correctly, use
-
-```
-M-x package-refresh-contents RET
-M-x package-install omnisharp RET
-```
-to install.
-
-Download omnisharp-roslyn and extract it to some location. Then point
-the variable `omnisharp-server-executable-path` to that location in
-your init file like so:
-
-```lisp
-(setq omnisharp-server-executable-path "/path/to/omnisharp-roslyn/omnisharp")
-```
-
-To automatically load omnisharp-emacs when editing csharp files, add
-something like this to your csharp-mode-hook:
-
-```
-(add-hook 'csharp-mode-hook 'omnisharp-mode)
-```
-
-Emacs will manage omnisharp-roslyn as a subprocess. To start it, use
-`M-x omnisharp-start-omnisharp-server RET`. The command will ask you
-for a solution file or a directory you want to code in.
-
-You probably need to create a custom configuration for accessing
-omnisharp-emacs in your normal coding sessions. There is an example
-configuration for evil-mode included in the project.
 
 * * * * *
 
