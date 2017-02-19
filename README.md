@@ -20,6 +20,10 @@ binaries from the [omnisharp-roslyn releases](https://github.com/OmniSharp/omnis
 The server must be a recent one, e.g. at least from year 2016.
 If you haven't updated your server copy since that, you must upgrade.
 
+You can install the server from source as detailed on [omnisharp-roslyn building page](https://github.com/OmniSharp/omnisharp-roslyn#building). Or use the following instructions.
+
+ * TODO: there are plans to add automatic server installation/update mechanism to `omnisharp-emacs` eventually. See [omnisharp-emacs#275](https://github.com/OmniSharp/omnisharp-emacs/issues/275). But for now you have to install it manually.
+
 ### On macOS with brew
 <pre>
 brew tap omnisharp/omnisharp-roslyn
@@ -32,6 +36,9 @@ Then you need to set the `omnisharp-server-executable-path`:
 ```lisp
 (setq omnisharp-server-executable-path "/usr/local/bin/omnisharp")
 ```
+
+### On linux
+Extract binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases).
 
 ### On Windows (non-Cygwin)
 Use binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases).
@@ -56,7 +63,7 @@ https://gist.github.com/corngood/d982c3c21c016127a2f1600dc895c000
 
 You need to compile the wrapper against an older .net framework (3.5 seems to work). A simple way to use the wrapper is to create a shell script like:
 
-```sh
+```shell
 #!/bin/sh
 set -e
 [path-to-wrapper-exe] "$(cygpath -w [path-to-omnisharp-exe])" "$@"
@@ -78,6 +85,8 @@ Ubuntu, Windows 7+ and on macOS.
 Add `csharp` layer to `dotspacemacs-configuration-layers` on
 your `.spacemacs` file. `csharp-mode` and `omnisharp` packages
 will get installed automatically on restart for you.
+
+ * TODO: as of 2017-02-19 `csharp` layer installs non-roslyn version of omnisharp-emacs.
 
 ### Installation on Regular Emacs
 To install, use [MELPA][].
