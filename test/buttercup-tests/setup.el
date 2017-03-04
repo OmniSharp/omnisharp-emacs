@@ -34,9 +34,7 @@
 ;;; the load-path has to contain omnisharp-emacs-root-path
 (--each (f-files omnisharp-emacs-root-path
                  (lambda (file)
-                   (equal "el" (f-ext file)))
-                 ;; recursive
-                 t)
+                   (equal "el" (f-ext file))))
   (load-file it))
 
 (require 'omnisharp)
