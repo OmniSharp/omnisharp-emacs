@@ -12,7 +12,7 @@ Emacs text editor. It provides IDE-like features for editing files in
 C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
-See [omnisharp-emacs Features](README-features.md).
+See [omnisharp-emacs Features](doc/features.md).
 
 ## Installation of the omnisharp-roslyn server application
 This emacs package requires the [omnisharp-roslyn][] server program.
