@@ -28,10 +28,6 @@
 (require 's)
 (require 'shut-up)
 
-;; these are for development only
-(add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/")))
-(add-to-list 'load-path (expand-file-name (concat (file-name-directory (or load-file-name buffer-file-name)) "/src/actions")))
-
 (require 'omnisharp-server-management)
 (require 'omnisharp-utils)
 (require 'omnisharp-http-utils)
