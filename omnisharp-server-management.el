@@ -1,4 +1,6 @@
 (defvar omnisharp--server-info nil)
+(defvar omnisharp--last-project-path nil)
+(defvar omnisharp--restart-server-on-stop nil)
 (defvar omnisharp-use-http nil "Set to t to use http instead of stdio.")
 
 (defun make-omnisharp--server-info (process)
