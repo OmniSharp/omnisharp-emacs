@@ -23,9 +23,6 @@
       f-parent
       f-parent))
 
-(defvar omnisharp-emacs-src-path
-  (f-join omnisharp-emacs-root-path "src"))
-
 (defvar omnisharp-minimal-test-project-path
   (f-join omnisharp-emacs-root-path
           "test/MinimalProject"))
@@ -35,11 +32,9 @@
 (add-to-list 'load-path omnisharp-emacs-root-path)
 
 ;;; the load-path has to contain omnisharp-emacs-root-path
-(--each (f-files omnisharp-emacs-src-path
+(--each (f-files omnisharp-emacs-root-path
                  (lambda (file)
-                   (equal "el" (f-ext file)))
-                 ;; recursive
-                 t)
+                   (equal "el" (f-ext file))))
   (load-file it))
 
 (require 'omnisharp)
