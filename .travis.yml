@@ -3,10 +3,10 @@ sudo: required
 dist: trusty
 
 install:
-    - sudo sh -c 'echo "deb [arch=amd64] http://apt-mo.trafficmanager.net/repos/dotnet/ trusty main" > /etc/apt/sources.list.d/dotnetdev.list'
-    - sudo apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
+    - sudo sh -c 'echo "deb [arch=amd64] http://apt-mo.trafficmanager.net/repos/dotnet-release/ trusty main" > /etc/apt/sources.list.d/dotnetdev.list'
+    - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 417A0893
     - sudo apt-get -qq update
-    - sudo apt-get install -y dotnet-dev-1.0.0-rc4-004771 dotnet-hostfxr-1.0.2-beta-000914-00
+    - sudo apt-get install -y dotnet-dev-1.0.0-rc4-004771 dotnet-hostfxr-1.1.0 dotnet-sharedframework-microsoft.netcore.app-1.1.0
     - dotnet --version
 
 # https://github.com/dotnet/cli/issues/3657#issuecomment-227890589
@@ -19,6 +19,7 @@ addons:
     - libssl-dev
     - libunwind8
     - zlib1g
+    - wget
 
 before_script:
     # install evm (emacs version manager) and cask (dependency resolver/build tool)

@@ -5,12 +5,11 @@ if [[ $(dotnet --version) != "1.0"* ]]; then
     exit 1
 fi
 
-if [[ ! -r test/MinimalProject/project.lock.json ]]; then
-    echo "Restoring MinimalProject packages"
-    pushd test/MinimalProject
-    dotnet restore -v Warning
-    popd
-fi
+echo "Restoring MinimalProject packages"
+pushd test/MinimalProject
+dotnet restore
+dotnet build
+popd
 
 TERM=dumb SHELL=sh cask exec emacs \
     -Q \
