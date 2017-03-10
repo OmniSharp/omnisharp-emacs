@@ -3,5 +3,5 @@ example, [auto-complete tests][] are tests for functions in
 [auto-complete-actions][].
 
 [auto-complete tests]: ./auto-complete/
-[auto-complete-actions]: ../../src/actions/omnisharp-auto-complete-actions.el
+[auto-complete-actions]: ../../omnisharp-auto-complete-actions.el
 
