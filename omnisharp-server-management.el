@@ -159,8 +159,11 @@ its type."
           ((omnisharp--event-packet? packet)
            (omnisharp--handle-event-packet packet))
 
-          (t (omnisharp--log (format "<-- Received an unknown server packet: %s"
-                                     (prin1-to-string packet)))))))
+          (t (progn
+               (omnisharp--log (format "<-- Received an unknown server packet: %s"
+                                       (prin1-to-string packet)))
+               (message (concat "omnisharp-emacs: an unknown packet was received from the server;"
+                                " set omnisharp-debug to t and inspect *omnisharp-debug* buffer")))))))
 
 (defun omnisharp--remove-response-handler (server-info request-id)
   (setcdr (assoc :response-handlers server-info)
