@@ -158,8 +158,10 @@ something goes wrong, return a human-readable warning."
        (omnisharp--log (format "omnisharp--json-read-from-string error: %s reading input %s"
                                possible-error
                                json-string)))
-     (message (or error-message
-                  "Error communicating to the OmniSharpServer instance")))))
+     (let ((error-message-or-default (or error-message
+                                         "Error communicating to the OmniSharpServer instance")))
+       (message error-message-or-default)
+       '((ServerMessageParseError . error-message))))))
 
 (defun omnisharp--replace-symbol-in-buffer-with (symbol-to-replace
                                                  replacement-string)
