@@ -3,8 +3,8 @@
   :type '(choice (const :tag "Not Set" nil) string))
 
 (defun omnisharp--do-server-start (path-to-project)
-  (message (format "Starting OmniSharpServer using project folder/solution file: %s" path-to-project))
-  (message "using the server at: %s" omnisharp-server-executable-path)
+  (message (format "omnisharp-emacs: Starting OmniSharpServer using project folder/solution file: %s" path-to-project))
+  (message "omnisharp-emacs: using the server at: %s" omnisharp-server-executable-path)
 
   ;; Save all csharp buffers to ensure the server is in sync"
   (save-some-buffers t (lambda () (string-equal (file-name-extension (buffer-file-name)) "cs")))
@@ -26,7 +26,7 @@
              (set-process-filter 'omnisharp--handle-server-message)
              (set-process-sentinel (lambda (process event)
                                      (when (memq (process-status process) '(exit signal))
-                                       (message "OmniSharp server terminated")
+                                       (message "omnisharp-emacs: OmniSharp server terminated")
                                        (setq omnisharp--server-info nil)
                                        (if omnisharp--restart-server-on-stop
                                            (omnisharp--do-server-start omnisharp--last-project-path))))))))))
