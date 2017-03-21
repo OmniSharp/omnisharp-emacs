@@ -1335,8 +1335,8 @@ contents with the issue at point fixed."
                                      :matchplugin nil
                                      :match '((lambda (candidate) (string-match-p
                                                                    helm-pattern
-                                                                   (nth 1 (split-string
-                                                                           candidate ":" t)))))
+                                                                   (car (last (split-string
+                                                                               candidate ":" t))))))
                                      :candidates 'omnisharp--helm-find-symbols-candidates)
           :buffer "*Omnisharp Symbols*"
           :truncate-lines t))
