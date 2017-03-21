@@ -1,5 +1,13 @@
 # omnisharp-emacs
 
+## !THIS IS AN OLD VERSION!
+This branch contains an old version of omnisharp-emacs as is [released on MELPA](https://melpa.org/#/omnisharp).
+
+[omnisharp-emacs/feature-omnisharp-roslyn-support](https://github.com/OmniSharp/omnisharp-emacs/tree/feature-omnisharp-roslyn-support) branch is about to become the new "master" once we have issues on [this milestone](https://github.com/OmniSharp/omnisharp-emacs/milestone/1) resolved. A new version with version number 4.0 will then be issued to MELPA and spacemacs layer can be updated after that.
+
+Any help to make this faster is appreciated, -- just pick any issue on ["Prepare omnisharp-roslyn branch for release" milestone](https://github.com/OmniSharp/omnisharp-emacs/milestone/1) and contact us via github. Many of the issues on that milestone do not need that much of knowledge of elisp or `omnisharp-emacs` as most are just usability bugs.
+
+## Description
 [![Join the chat at https://gitter.im/OmniSharp/omnisharp-emacs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OmniSharp/omnisharp-emacs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 <a href="//travis-ci.org/OmniSharp/omnisharp-emacs">
     <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
