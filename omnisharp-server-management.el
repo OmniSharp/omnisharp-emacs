@@ -45,7 +45,7 @@ sending."
   ;; send request
   ;; store response handler associated with the request id
   (if (equal nil omnisharp--server-info)
-      (message (concat "OmniSharp server not running. "
+      (message (concat "omnisharp: OmniSharp server not running. "
                        "Start it with `omnisharp-start-omnisharp-server' first"))
     (-let* ((server-info omnisharp--server-info)
             ((&alist :process process
@@ -118,7 +118,7 @@ process buffer, and handle them as server events"
                   'Message message) (cdr (assoc 'Body packet))))
     (when (and (equal log-level "INFORMATION")
                (equal name "OmniSharp.Startup"))
-      (message (concat "omnisharp-emacs: " name ", " message)))
+      (message (concat "omnisharp: " name ", " message)))
     (when (equal log-level "ERROR")
       (message (format "<-- OmniSharp server error: %s"
                        (-first-item (s-lines message)))))
@@ -165,9 +165,7 @@ its type."
 
           (t (progn
                (omnisharp--log (format "<-- Received an unknown server packet: %s"
-                                       (prin1-to-string packet)))
-               (message (concat "omnisharp-emacs: an unknown packet was received from the server;"
-                                " set omnisharp-debug to t and inspect *omnisharp-debug* buffer")))))))
+                                       (prin1-to-string packet))))))))
 
 (defun omnisharp--remove-response-handler (server-info request-id)
   (setcdr (assoc :response-handlers server-info)
