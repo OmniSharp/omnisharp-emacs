@@ -5,13 +5,15 @@
 ;; Find some included steps at
 ;; https://github.com/ecukes/espuds/blob/master/espuds.el#L130
 
+(require 'ecukes)
+
 (Then "^I should see, ignoring line endings\\(?: \"\\(.+\\)\"\\|:\\)$"
-      "Asserts that the current buffer includes some text. Ignores
+  "Asserts that the current buffer includes some text. Ignores
 line endings, so windows CRLF is considered the same as Unix LF."
-      (lambda (expected)
-        (let ((actual (s-replace (string ?\C-m) (string ?\C-j) (buffer-string)))
-              (message "Expected '%s' to be part of '%s', but was not."))
-          (cl-assert (s-contains? expected actual) nil message expected actual))))
+  (lambda (expected)
+    (let ((actual (s-replace (string ?\C-m) (string ?\C-j) (buffer-string)))
+          (message "Expected '%s' to be part of '%s', but was not."))
+      (cl-assert (s-contains? expected actual) nil message expected actual))))
 
 (And "^I evaluate the command \"\\([^\"]+\\)\"$"
   (lambda (command-to-execute)
@@ -31,34 +33,36 @@ line endings, so windows CRLF is considered the same as Unix LF."
 
 (When "^My buffer contents are, and my point is at $:$"
   "Test setup. Only works reliably if there is one $ character"
-  (lambda (buffer-contents-to-insert)
+  (lambda (buffer-contents-to-insert callback)
     (erase-buffer)
     (insert buffer-contents-to-insert)
     (beginning-of-buffer)
     (search-forward "$")
-    (delete-backward-char 1)))
+    (delete-backward-char 1)
+    (omnisharp--update-buffer)
+    (funcall callback)))
 
 (Then "^point should be on line number \"\\([^\"]+\\)\"$"
-      (lambda (expected-line-number)
-        (let ((current-line-number (line-number-at-pos))
-              (expected-line-number (string-to-number expected-line-number)))
-          (cl-assert (= expected-line-number
-                        current-line-number)
-                     nil
-                     (concat
-                      "Expected point to be on line number '%s'"
-                      " but found it on '%s', the buffer containing:\n'%s'")
-                     expected-line-number
-                     current-line-number
-                     (buffer-string)))))
+  (lambda (expected-line-number)
+    (let ((current-line-number (line-number-at-pos))
+          (expected-line-number (string-to-number expected-line-number)))
+      (cl-assert (= expected-line-number
+                    current-line-number)
+                 nil
+                 (concat
+                  "Expected point to be on line number '%s'"
+                  " but found it on '%s', the buffer containing:\n'%s'")
+                 expected-line-number
+                 current-line-number
+                 (buffer-string)))))
 
 (And "^I save the buffer$"
-     'save-buffer)
+  'save-buffer)
 
-(When "^I open the Omnisharp server source file \"\\([^\"]+\\)\"$"
-      (lambda (file-path-to-open)
-        (find-file (f-join omnisharp-minimal-test-solution-path
-                           file-path-to-open))))
+(When "^I open the MinimalProject source file \"\\([^\"]+\\)\"$"
+  (lambda (file-path-to-open)
+    (find-file (f-join omnisharp-minimal-test-project-path
+                       file-path-to-open))))
 
 (Then "^point should be on a line containing \"\\([^\"]+\\)\"$"
   "The expected-line-contents must be contained in the current line"
@@ -94,6 +98,6 @@ line endings, so windows CRLF is considered the same as Unix LF."
                  (window-list)))))
 
 (When "^I switch to the window in the buffer \"\\([^\"]+\\)\"$"
-      (lambda (file-name)
-        (select-window (get-buffer-window file-name))))
+  (lambda (file-name)
+    (select-window (get-buffer-window file-name))))
 
