@@ -43,53 +43,38 @@
                "some solution.sln"
                "/another/path/to/OmniSharp.exe"))))))
 
-(ert-deftest flycheck-error-parser-raw-json-can-convert-syntax-errors-to-flycheck-errors ()
-  "The output from a /syntaxerrors call must be a valid input for the
-omnisharp--flycheck-error-parser-raw-json error parser"
-  (let ((quickfix-in-json-format
-         "{\"Errors\":[{\"Message\":\"Unexpected symbol `string\\u0027\\u0027 in class, struct, or interface member declaration\",
-                        \"Line\":22,
-                        \"Column\":20,
-                        \"FileName\":\"/foo/OmniSharpServer/OmniSharp/Common/QuickFix.cs\"}]}"))
-    (omnisharp--flycheck-error-parser-raw-json
-     quickfix-in-json-format
-     'checker
-     (get-buffer-create "some.cs"))))
+(defmacro with-test-buffer-contents (buffer-contents
+                                     code-to-run-in-buffer)
+  `(with-current-buffer (get-buffer-create "omnisharp-test-buffer")
+     (switch-to-buffer (get-buffer-create "omnisharp-test-buffer"))
+     (delete-region (point-min) (point-max))
+     (--map (insert (concat it "\n")) ,buffer-contents)
+     (beginning-of-buffer)
 
-(ert-deftest flycheck-error-parser-raw-json-can-convert-code-issues-to-flycheck-errors ()
-  "The output from a /getcodeissues call must be a valid input for the
-omnisharp--flycheck-error-parser-raw-json error parser"
-  (let ((quickfix-in-json-format
-         "{\"QuickFixes\":[{\"Text\":\"Parameter can be demoted to base class\",
-                            \"Line\":22,
-                            \"LogLevel\":\"Info\",
-                            \"Column\":20,
-                            \"FileName\":\"/foo/OmniSharpServer/OmniSharp/Common/QuickFix.cs\"}]}"))
-    (omnisharp--flycheck-error-parser-raw-json
-     quickfix-in-json-format
-     'checker
-     (get-buffer-create "some.cs"))))
+     ,code-to-run-in-buffer))
 
 (defmacro with-active-region-in-buffer (buffer-contents
                                         code-to-run-in-buffer)
   "Run CODE-TO-RUN-IN-BUFFER in a temp bufer with BUFFER-CONTENTS, and
 the region active between the markers region-starts-here and
 region-ends-here."
-  `(with-current-buffer (get-buffer-create "omnisharp-test-buffer")
-     (switch-to-buffer (get-buffer-create "omnisharp-test-buffer"))
-     (delete-region (point-min) (point-max))
-     (--map (insert (concat it "\n")) ,buffer-contents)
-     (beginning-of-buffer)
-     (re-search-forward "(region-starts-here)")
-     (replace-match "")
-     (setq region-start (point))
-     (re-search-forward "(region-ends-here)")
-     (replace-match "")
-     ;; select the text between the current position and the last one
-     (push-mark region-start)
-     (activate-mark)
+  `(with-test-buffer-contents
+    ,buffer-contents
 
-     ,code-to-run-in-buffer))
+    (progn
+      (evil-exit-visual-state)
+      ;; remove region-starts-here markers
+      (re-search-forward "(region-starts-here)")
+      (replace-match "")
+      (setq region-start (point))
+      (re-search-forward "(region-ends-here)")
+      (replace-match "")
+
+      ;; select the text between the current position and the last one
+      (push-mark region-start)
+      (activate-mark)
+
+      ,code-to-run-in-buffer)))
 
 ;; Region line and column helper tests.
 ;; Could be one test but on the other hand this way we know if only
@@ -125,7 +110,7 @@ region-ends-here."
      "line 3"
      "line 4"
      "(region-ends-here)line 5")
-   (should (equal 3
+   (should (equal 4
                   (omnisharp--region-start-column)))))
 
 (ert-deftest omnisharp--region-end-column-reports-correct-column ()
@@ -135,42 +120,55 @@ region-ends-here."
      "line 3"
      "line 4"
      "(region-ends-here)line 5")
-   ;; the minimum required column is 1 on the server side
-   (should (equal 1
-                  (omnisharp--region-end-column)))))
+   (should (equal 1 (omnisharp--region-end-column)))))
 
 (ert-deftest omnisharp--region-start-column-with-evil-mode-line-selection ()
-  "Using evil-mode the user may select a line with V. This must report
-the correct start and end columns: the start being the start of the
-line (0) and end being the length of the line."
-
   (with-current-buffer (get-buffer-create "omnisharp-test-buffer")
-    (delete-region (point-min) (point-max))
+    (erase-buffer)
     (insert "This is a line with a length of 34\n") ; this is tested
     (insert "Another line.\n")
     (insert "There is a bug that doesn't occur with just one line.\n")
+    (evil-visual-line
+     (progn (goto-line 1) (point))
+     (progn (goto-line 2) (point)))
+
+    (should (equal 1 (omnisharp--region-start-line)))
+    (should (equal 2 (omnisharp--region-end-line)))
+    (should (equal 1 (omnisharp--region-start-column)))
+    (should (equal 14 (omnisharp--region-end-column)))))
+
+(ert-deftest omnisharp--go-to-end-of-region-with-evil-selection-test ()
+  (with-current-buffer (get-buffer-create "omnisharp-test-buffer")
+    (evil-exit-visual-state)
+    (erase-buffer)
+    (insert "This is a line with a length of 34\n")
+    (insert "Another line")
+    (goto-line 1)
+
+    (evil-visual-select 0 5)
+
+    (omnisharp--goto-end-of-region)
+
+    (should (equal 1 (omnisharp--region-start-line)))
+    (should (equal 1 (omnisharp--region-end-line)))
+    (should (equal 1 (omnisharp--region-start-column)))
+    (should (equal 5 (omnisharp--region-end-column)))))
+
+(ert-deftest omnisharp--go-to-end-of-region-with-evil-line-selection-test ()
+  (with-current-buffer (get-buffer-create "omnisharp-test-buffer")
+    (evil-exit-visual-state)
+    (erase-buffer)
+    (insert "This is a line with a length of 34\n")
+    (insert "Another line")
     (goto-line 1)
     (evil-visual-line)
 
-    (should (equal 1
-                   (omnisharp--region-start-column)))
-    (should (equal 34
-                   (omnisharp--region-end-column)))))
+    (omnisharp--goto-end-of-region)
 
-
-(ert-deftest omnisharp--get-code-actions-from-api-works-with-a-region ()
-  "It should not crash on the emacs side of things when composing the
-request. This test doesn't care what the server thinks is correct
-data."
-  (with-active-region-in-buffer
-   '("line 1"
-     "lin(region-starts-here)e 2"
-     "line 3"
-     "line 4"
-     "(region-ends-here)line 5")
-   (with-stub
-     (stub omnisharp-post-message-curl-as-json)
-     (omnisharp--get-code-actions-from-api))))
+    (should (equal 1 (omnisharp--region-start-line)))
+    (should (equal 1 (omnisharp--region-end-line)))
+    (should (equal 1 (omnisharp--region-start-column)))
+    (should (equal 35 (omnisharp--region-end-column)))))
 
 (defun get-line-text (&optional line-number)
   "Returns the text on the current line or another line with the
@@ -197,21 +195,11 @@ number given"
 (ert-deftest activating-omnisharp-mode-should-not-start-server-if-running ()
   "When server is already running, a new server should not be started"
   (with-mock
-    (stub omnisharp--check-alive-status-worker => t)
-    (stub omnisharp-start-omnisharp-server)
-    (not-called start-process)
-    (not-called omnisharp--find-solution-file)
-    (omnisharp-mode)))
-
-(ert-deftest activating-omnisharp-mode-should-start-server ()
-  "Activating omnisharp-mode should start an OmniSharpServer"
-  (with-mock
-   (let ((path "/solution/directory/")
-         (solution-name "first-solution.sln"))
-     (mock (omnisharp--find-solution-files) => `(,path ,solution-name))
-     (stub omnisharp--check-alive-status-worker => nil)
-     (mock (omnisharp-start-omnisharp-server "/solution/directory/first-solution.sln"))
-     (omnisharp-mode))))
+   (stub omnisharp--check-alive-status-worker => t)
+   (stub omnisharp-start-omnisharp-server)
+   (not-called start-process)
+   (not-called omnisharp--find-solution-file)
+   (omnisharp-mode)))
 
 (ert-deftest omnisharp--write-quickfixes-to-compilation-buffer--has-expected-contents ()
   "Writing QuickFixes to the compilation buffer should have the
@@ -252,13 +240,7 @@ expected output in that buffer"
        ;; don't save old position to find-tag-marker-ring
        t))))
 
-(ert-deftest omnisharp-stop-server-calls-correct-api ()
-  (with-mock
-    (let ((omnisharp-host "host/"))
-      (mock (omnisharp-post-message-curl-async "host/stopserver" * *))
-      (omnisharp-stop-server))))
-
-(ert-deftest omnisharp--convert-auto-complete-json-to-popup-format-shows-correct-data ()
+(ert-deftest omnisharp--convert-auto-complete-result-to-popup-format-shows-correct-data ()
   (let* ((description "Verbosity Verbose; - description")
          (completion-text "Verbose - completion text")
          (snippet-text "Verbose$0")
@@ -272,7 +254,7 @@ expected output in that buffer"
              (CompletionText . ,completion-text))])
          (converted-popup-item
           (nth 0
-               (omnisharp--convert-auto-complete-json-to-popup-format
+               (omnisharp--convert-auto-complete-result-to-popup-format
                 auto-completions))))
 
     (should (equal description (popup-item-document converted-popup-item)))
@@ -282,3 +264,22 @@ expected output in that buffer"
     ;; An item looked like this:
     ;; #("Verbosity Verbose - display text" 0 32 (document "Verbosity Verbose; - description" value "Verbose - completion text"))
     ))
+
+(ert-deftest omnisharp--apply-text-change-to-buffer-text ()
+  (with-test-buffer-contents
+   ["namespace testing {"
+    "    public class WillBeRenamed {}"
+    "}"]
+   (should (equal (progn
+                    (omnisharp--apply-text-change-to-buffer
+                     `((NewText . "NewClassName")
+                       (StartLine . 2) (EndLine . 2)
+                       (StartColumn . 18) (EndColumn . 31)))
+                    (omnisharp--get-current-buffer-contents))
+                  (s-join "\n"
+                          ["namespace testing {"
+                           "    public class NewClassName {}"
+                           "}"
+                           ;; there is a trailing newline in the test
+                           ;; buffer too
+                           ""])))))

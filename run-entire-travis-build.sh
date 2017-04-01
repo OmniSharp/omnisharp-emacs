@@ -11,7 +11,7 @@ assertTestPasses() {
 }
 
 # https://github.com/cask/cask/issues/241
-find .cask -name "*.elc" | xargs rm
+find .cask -name "*.elc" -delete
 
 assertTestPasses "./run-tests.sh"
 assertTestPasses "./run-integration-tests.sh"
