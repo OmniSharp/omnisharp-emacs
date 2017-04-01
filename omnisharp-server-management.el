@@ -114,7 +114,11 @@ process buffer, and handle them as server events"
 
 (defun omnisharp--log-log-packet (packet)
   (-let (((&alist 'LogLevel log-level
+                  'Name name
                   'Message message) (cdr (assoc 'Body packet))))
+    (when (and (equal log-level "INFORMATION")
+               (equal name "OmniSharp.Startup"))
+      (message (concat "omnisharp-emacs: " name ", " message)))
     (when (equal log-level "ERROR")
       (message (format "<-- OmniSharp server error: %s"
                        (-first-item (s-lines message)))))
@@ -159,8 +163,11 @@ its type."
           ((omnisharp--event-packet? packet)
            (omnisharp--handle-event-packet packet))
 
-          (t (omnisharp--log (format "<-- Received an unknown server packet: %s"
-                                     (prin1-to-string packet)))))))
+          (t (progn
+               (omnisharp--log (format "<-- Received an unknown server packet: %s"
+                                       (prin1-to-string packet)))
+               (message (concat "omnisharp-emacs: an unknown packet was received from the server;"
+                                " set omnisharp-debug to t and inspect *omnisharp-debug* buffer")))))))
 
 (defun omnisharp--remove-response-handler (server-info request-id)
   (setcdr (assoc :response-handlers server-info)

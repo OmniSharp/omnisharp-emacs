@@ -150,7 +150,8 @@ the OmniSharp server understands."
 (defun omnisharp--json-read-from-string (json-string
                                          &optional error-message)
   "Deserialize the given JSON-STRING to a lisp object. If
-something goes wrong, return a human-readable warning."
+something goes wrong, return a pseudo-packet alist with keys
+ServerMessageParseError and Message."
   (condition-case possible-error
       (json-read-from-string json-string)
     (error
@@ -158,8 +159,10 @@ something goes wrong, return a human-readable warning."
        (omnisharp--log (format "omnisharp--json-read-from-string error: %s reading input %s"
                                possible-error
                                json-string)))
-     (message (or error-message
-                  "Error communicating to the OmniSharpServer instance")))))
+     (list (cons 'ServerMessageParseError
+                 (or error-message "Error communicating to the OmniSharpServer instance"))
+           (cons 'Message
+                 json-string)))))
 
 (defun omnisharp--replace-symbol-in-buffer-with (symbol-to-replace
                                                  replacement-string)
