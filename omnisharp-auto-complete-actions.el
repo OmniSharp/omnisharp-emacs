@@ -609,7 +609,7 @@ current buffer."
             (save-excursion
               (search-backward (omnisharp--current-word-or-empty-string)))))
 
-      (if (and completion-snippet omnisharp-company-template-use-yasnippet (fboundp 'yas-expand-snippet))
+      (if (and completion-snippet omnisharp-company-template-use-yasnippet (boundp 'yas-minor-mode) yas-minor-mode)
           (yas-expand-snippet
            completion-snippet
            current-symbol-start-point
