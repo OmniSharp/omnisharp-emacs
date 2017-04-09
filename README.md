@@ -28,9 +28,7 @@ You can install the server from source as detailed on [omnisharp-roslyn building
 
 ### On macOS with brew
 <pre>
-brew tap omnisharp/omnisharp-roslyn
-brew update
-brew install omnisharp
+brew install omnisharp/omnisharp-roslyn/omnisharp-mono
 </pre>
 
 Then you need to set the `omnisharp-server-executable-path`:
