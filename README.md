@@ -1,11 +1,7 @@
 # omnisharp-emacs
-<!--
-disabled for now, for the roslyn version
-
 <a href="//travis-ci.org/OmniSharp/omnisharp-emacs">
     <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
 </a>
--->
 
 omnisharp-emacs is a port of the awesome [omnisharp-roslyn][] server to the
 Emacs text editor. It provides IDE-like features for editing files in
@@ -13,6 +9,13 @@ C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
 See [omnisharp-emacs Features](doc/features.md).
+
+## Note to users after the 20170404 upgrade via MELPA
+Please see [issue #279](https://github.com/OmniSharp/omnisharp-emacs/issues/279)
+for help/comments on the upgrade.
+
+We're sorry for breaking your setup but we had to do the upgrade as
+the old omnisharp-server is no longer supported/maintained.
 
 ## Installation of the omnisharp-roslyn server application
 This emacs package requires the [omnisharp-roslyn][] server program.
