@@ -1,11 +1,11 @@
-;; -*- mode: Emacs-Lisp; lexical-binding: t; -*-
-;;; omnisharp.el --- Omnicompletion (intellisense) and more for C#
-;; Copyright (C) 2013 Mika Vilpas (GPLv3)
-;; Author: Mika Vilpas
-;; Version: 3.4
+;;; omnisharp.el --- Omnicompletion (intellisense) and more for C# -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2013-2017 Mika Vilpas and others (GPLv3)
+;; Author: Mika Vilpas and others
+;; Version: 4.0
 ;; Url: https://github.com/Omnisharp/omnisharp-emacs
-;; Package-Requires: ((json "1.2") (flycheck "30") (dash "2.12.1") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.10.0") (shut-up "0.3.2"))
-;; Keywords: csharp c# IDE auto-complete intellisense
+;; Package-Requires: ((emacs "24") (flycheck "30") (dash "2.12.0") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.10.0") (shut-up "0.3.2"))
+;; Keywords: languages csharp c# IDE auto-complete intellisense
 
 ;;; Commentary:
 ;; omnisharp-emacs is a port of the awesome OmniSharp server to the
@@ -305,7 +305,7 @@ the user selects a completion and the completion is inserted."
 
 (defun omnisharp--flycheck-start (checker callback)
   "Start an OmniSharp syntax check with CHECKER.
-CALLBACK is the status callback passed by Flycheck." 
+CALLBACK is the status callback passed by Flycheck."
   ;; Put the current buffer into the closure environment so that we have access
   ;; to it later.
   (let ((buffer (current-buffer)))
@@ -346,8 +346,7 @@ locations in the json."
 cursor at that location"
   (let* ((element-line (cdr (assoc 'Line element)))
          (element-column (cdr (assoc 'Column element)))
-         (element-filename (omnisharp--get-filename element))
-         (use-buffer (current-buffer)))
+         (element-filename (omnisharp--get-filename element)))
     (save-excursion
       (omnisharp-go-to-file-line-and-column-worker
        element-line
@@ -376,12 +375,11 @@ cursor at that location"
     (error nil)))
 
 (defun omnisharp-format-find-output-to-ido (item)
-  (let (filename (omnisharp--get-filename item))
-    (cons
-     (cons
-      (car (car item))
-      (concat (car (last (split-string filename "/"))) ": " (s-trim (cdr (car item)))))
-     (cdr item))))
+  (cons
+   (cons
+    (car (car item))
+    (concat (car (last (split-string filename "/"))) ": " (s-trim (cdr (car item)))))
+   (cdr item)))
 
 (defun omnisharp-format-symbol (item)
   (cons
@@ -428,7 +426,7 @@ cursor at that location"
                  (condition-case nil
                      (forward-sexp)
                    (error nil))
-                 
+
                  (when (> (point) start-point)
                    (setq found-point test-point)
                    (setq found-start t))
@@ -470,4 +468,3 @@ cursor at that location"
 (provide 'omnisharp)
 
 ;;; omnisharp.el ends here
-
