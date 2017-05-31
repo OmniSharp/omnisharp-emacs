@@ -672,6 +672,9 @@ is a more sophisticated matching framework than what popup.el offers."
       (when required-namespace-import
         (omnisharp--insert-namespace-import required-namespace-import)))))
 
+(defun omnisharp--method-name-p (name)
+  (string-match "(.*)$" name))
+
 (defun omnisharp--convert-auto-complete-result-to-popup-format (json-result-alist)
   (mapcar
    (-lambda ((&alist 'DisplayText display-text
@@ -681,6 +684,7 @@ is a more sophisticated matching framework than what popup.el offers."
                      'RequiredNamespaceImport require-ns-import))
             (popup-make-item display-text
                              :value (propertize completion-text 'Snippet snippet 'RequiredNamespaceImport require-ns-import)
+                             :symbol (if (omnisharp--method-name-p display-text) "f" "v")
                              :document description))
    json-result-alist))
 
