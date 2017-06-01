@@ -216,7 +216,9 @@ and complete members."
              . ,(omnisharp--t-or-json-false
                  omnisharp-auto-complete-want-importable-types))
 
-            (WordToComplete . ,(thing-at-point 'symbol)))
+            (WordToComplete . ,(thing-at-point 'symbol))
+
+            (WantKind . t))
 
           (omnisharp--get-request-object)))
 
@@ -672,6 +674,35 @@ is a more sophisticated matching framework than what popup.el offers."
       (when required-namespace-import
         (omnisharp--insert-namespace-import required-namespace-import)))))
 
+(defun omnisharp--convert-auto-complete-kind-to-popup-symbol-value (kind)
+  (pcase kind
+    ;; auto-complete's recommended rules
+    ;;; Symbol
+    ("Keyword" "s")
+    ;;; Function, Method
+    ("Method" "f")
+    ("Function" "f")
+    ("Constructor" "f")
+    ;;; Variable
+    ("Field" "v")
+    ("Variable" "v")
+    ("Property" "v")
+    ;;; Constant
+    ;;; Abbreviation
+    ("Value" "a")
+    ;; original rules
+    ("Text" "")
+    ("Class" "t")
+    ("Interface" "i")
+    ("Enum" "e")
+    ("Module" "m")
+    ("Unit" "u")
+    ("Snippet" "")
+    ("Color" "")
+    ("File" "f")
+    ("Reference" "r")
+    ))
+
 (defun omnisharp--convert-auto-complete-result-to-popup-format (json-result-alist)
   (mapcar
    (-lambda ((&alist 'DisplayText display-text
@@ -681,6 +712,7 @@ is a more sophisticated matching framework than what popup.el offers."
                      'RequiredNamespaceImport require-ns-import))
             (popup-make-item display-text
                              :value (propertize completion-text 'Snippet snippet 'RequiredNamespaceImport require-ns-import)
+                             :symbol (omnisharp--convert-auto-complete-kind-to-popup-symbol-value kind)
                              :document description))
    json-result-alist))
 
