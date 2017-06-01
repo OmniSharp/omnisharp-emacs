@@ -216,7 +216,9 @@ and complete members."
              . ,(omnisharp--t-or-json-false
                  omnisharp-auto-complete-want-importable-types))
 
-            (WordToComplete . ,(thing-at-point 'symbol)))
+            (WordToComplete . ,(thing-at-point 'symbol))
+
+            (WantKind . t))
 
           (omnisharp--get-request-object)))
 
