@@ -251,7 +251,8 @@ expected output in that buffer"
              (RequiredNamespaceImport . nil)
              (DisplayText . "Verbosity Verbose - display text")
              (Description . ,description)
-             (CompletionText . ,completion-text))])
+             (CompletionText . ,completion-text)
+             (Kind . "Verbose"))])
          (converted-popup-item
           (nth 0
                (omnisharp--convert-auto-complete-result-to-popup-format
