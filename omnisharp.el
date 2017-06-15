@@ -68,6 +68,136 @@ server backend."
       (make-local-variable 'eldoc-documentation-function)
       (setq eldoc-documentation-function 'omnisharp-eldoc-function))))
 
+;;
+;; interactive functions that are to be available via autoload
+;; (all autoloaded f-ns should go in omnisharp.el in order to make 
+;; internal file dependencies easier to manage when autoloading)
+;;
+
+;;;###autoload
+(defun omnisharp-start-omnisharp-server (path-to-project)
+  "Starts an OmniSharp server for a given path to a project file or a directory"
+  (interactive "GStart OmniSharp for project folder or solution file: ")
+  (omnisharp--start-omnisharp-server path-to-project))
+
+;;;###autoload
+(defun omnisharp-stop-server ()
+  "Stops Omnisharp server if running."
+  (interactive)
+  (omnisharp--stop-server))
+
+;;;###autoload
+(defun omnisharp-reload-solution ()
+  "Restarts omnisharp server on solution last loaded"
+  (interactive)
+  (omnisharp--reload-solution))
+
+;;;###autoload
+(defun omnisharp-check-alive-status ()
+  "Shows a message to the user describing whether the
+OmniSharpServer process specified in the current configuration is
+alive.
+\"Alive\" means it is running and not stuck. It also means the connection
+to the server is functional - I.e. The user has the correct host and
+port specified."
+  (interactive)
+  (omnisharp--check-alive-status))
+
+;;;###autoload
+(defun omnisharp-check-ready-status ()
+  "Shows a message to the user describing whether the
+OmniSharpServer process specified in the current configuration has
+finished loading the solution."
+  (interactive)
+  (omnisharp--check-ready-status))
+
+;;;###autoload
+(defun company-omnisharp (command &optional arg &rest ignored)
+  (interactive '(interactive))
+  "`company-mode' completion back-end using OmniSharp."
+
+  ;; If flx isn't installed, turn off flex matching
+  (when (and (not omnisharp-company-checked-for-flex)
+             (eq omnisharp-company-match-type 'company-match-flx))
+    (setq omnisharp-company-checked-for-flex t)
+    (when (not (require 'flx))
+      (setq omnisharp-company-match-type 'company-match-simple)))
+
+  (cl-case command
+    (interactive (company-begin-backend 'company-omnisharp))
+    (prefix (when (and (bound-and-true-p omnisharp-mode)
+                       (not (company-in-string-or-comment)))
+              (omnisharp-company--prefix)))
+
+    (candidates (if (eq omnisharp-company-match-type 'company-match-flx)
+                    ;;flx matching
+                    (progn
+                        ;; If the completion arg is empty, just return what the server sends
+                        (if (string= arg "")
+                            (omnisharp--get-company-candidates arg)
+                          ;; If this is a new arg, cache the results
+                          (when (or (null omnisharp-company-current-flx-arg-being-matched)
+                                    (not (string-match-p omnisharp-company-current-flx-arg-being-matched arg)))
+                            (setq omnisharp-company-current-flx-match-list (omnisharp--get-company-candidates arg))
+                            (setq omnisharp-company-current-flx-arg-being-matched arg))
+
+                          ;; Let flex filter the results
+                          (omnisharp-company-flx-score-filter-list arg
+                                                                   omnisharp-company-current-flx-match-list
+                                                                   omnisharp-company-flx-cache)))
+                    (omnisharp--get-company-candidates arg)))
+
+
+    ;; because "" doesn't return everything, and we don't cache if we're handling the filtering
+    (no-cache (or (equal arg "")
+                  (not (eq omnisharp-company-match-type 'company-match-simple))))
+
+    (match (if (eq omnisharp-company-match-type 'company-match-simple)
+               nil
+             0))
+
+    (annotation (omnisharp--company-annotation arg))
+
+    (meta (omnisharp--get-company-candidate-data arg 'DisplayText))
+
+    (require-match 'never)
+
+    (doc-buffer (let ((doc-buffer (company-doc-buffer
+                                   (omnisharp--get-company-candidate-data
+                                    arg 'Description))))
+                  (with-current-buffer doc-buffer
+                    (visual-line-mode))
+                  doc-buffer))
+
+    (ignore-case omnisharp-company-ignore-case)
+
+    (sorted (if (eq omnisharp-company-match-type 'company-match-simple)
+                (not omnisharp-company-sort-results)
+              t))
+
+    ;; Check to see if we need to do any templating
+    (post-completion (setq omnisharp-company-current-flx-arg-being-matched nil)
+                     (let* ((json-result (get-text-property 0 'omnisharp-item arg))
+                            (allow-templating (get-text-property 0 'omnisharp-allow-templating arg)))
+
+                       (omnisharp--tag-text-with-completion-info arg json-result)
+                       (when allow-templating
+                         ;; Do yasnippet completion
+                         (if (and omnisharp-company-template-use-yasnippet (boundp 'yas-minor-mode) yas-minor-mode)
+                             (-when-let (method-snippet (omnisharp--completion-result-item-get-method-snippet
+							 json-result))
+			       (omnisharp--snippet-templatify arg method-snippet json-result))
+                           ;; Fallback on company completion but make sure company-template is loaded.
+                           ;; Do it here because company-mode is optional
+                           (require 'company-template)
+                           (let ((method-base (omnisharp--get-method-base json-result)))
+                             (when (and method-base
+                                        (string-match-p "([^)]" method-base))
+                               (company-template-c-like-templatify method-base)))))))))
+
+;;
+;; easymenu
+;;
 (easy-menu-define omnisharp-mode-menu omnisharp-mode-map
   "Menu for omnisharp-mode"
   '("OmniSharp"
