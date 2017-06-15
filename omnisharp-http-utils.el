@@ -8,7 +8,6 @@
 (defun omnisharp--get-api-url (api-name)
   (concat (omnisharp--get-host) api-name))
 
-;;;###autoload
 (defun omnisharp-post-http-message (url callback &optional params async)
   "Post http request to server. Return result."
   (omnisharp--submit-request (omnisharp--get-api-url url) callback params async))

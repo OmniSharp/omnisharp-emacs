@@ -31,10 +31,8 @@
                                        (if omnisharp--restart-server-on-stop
                                            (omnisharp--do-server-start omnisharp--last-project-path))))))))))
 
-;;;###autoload
-(defun omnisharp-start-omnisharp-server (path-to-project)
-  "Starts an OmniSharp server for a given path to a project file or a directory"
-  (interactive "GStart OmniSharp for project folder or solution file: ")
+(defun omnisharp--start-omnisharp-server (path-to-project)
+  "Actual implementation for autoloaded omnisharp-start-omnisharp-server"
   (unless (bound-and-true-p omnisharp-server-executable-path)
     (error "Could not find the OmniSharp executable. Please set the variable omnisharp-server-executable-path to a valid path"))
 
@@ -43,18 +41,13 @@
       (omnisharp--do-server-start path-to-project)
     (error (format "Path does not lead to a valid project folder or solution file path: %s" path-to-project))))
 
-;;;###autoload
-(defun omnisharp-stop-server ()
-  "Stops Omnisharp server if running."
-  (interactive)
+(defun omnisharp--stop-server ()
+  "Actual implementation for autoloaded omnisharp-stop-server"
   (unless (equal nil omnisharp--server-info)
     (kill-process (cdr (assoc :process omnisharp--server-info)))))
 
-;;;###autoload
-(defun omnisharp-reload-solution ()
-  "Restarts omnisharp server on solution last loaded"
-  (interactive)
-
+(defun omnisharp--reload-solution ()
+  "Actual implementation for autoloaded omnisharp-reload-solution"
   (if (and (not (equal nil omnisharp--last-project-path))
            (not (equal nil omnisharp--server-info)))
       (progn 
@@ -62,15 +55,8 @@
         (kill-process (cdr (assoc :process omnisharp--server-info))))
     (message "Cannot reload project in Omnisharp - no project previously loaded")))
 
-;;;###autoload
-(defun omnisharp-check-alive-status ()
-  "Shows a message to the user describing whether the
-OmniSharpServer process specified in the current configuration is
-alive.
-\"Alive\" means it is running and not stuck. It also means the connection
-to the server is functional - I.e. The user has the correct host and
-port specified."
-  (interactive)
+(defun omnisharp--check-alive-status ()
+  "Actual implementation for autoloaded omnisharp-check-alive-status"
   (omnisharp--send-command-to-server
    "checkalivestatus"
    nil
@@ -81,12 +67,8 @@ port specified."
       (message "Server is alive and well. Happy coding!")
     (message "Server is not alive")))
 
-;;;###autoload
-(defun omnisharp-check-ready-status ()
-  "Shows a message to the user describing whether the
-OmniSharpServer process specified in the current configuration has
-finished loading the solution."
-  (interactive)
+(defun omnisharp--check-ready-status ()
+  "Actual implementation for autoloaded omnisharp--check-ready-status"
   (omnisharp--send-command-to-server
    "checkreadystatus"
    nil
