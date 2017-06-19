@@ -21,7 +21,7 @@
            (-doto (start-process
                    "OmniServer" ; process name
                    "OmniServer" ; buffer name
-                   omnisharp-server-executable-path
+                   dotnet-path omnisharp-server-executable-path
                    "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))
              (set-process-filter 'omnisharp--handle-server-message)
              (set-process-sentinel (lambda (process event)
