@@ -166,6 +166,16 @@ information.")
   :type '(choice (const :tag "Yes" t)
                  (const :tag "No" nil)))
 
+;; auto-complete-mode integration
+(defcustom omnisharp-auto-complete-template-use-yasnippet t
+  "Set to t if you want completion to happen via yasnippet
+  otherwise fall back on auto-complete's templating. Requires yasnippet
+  to be installed"
+
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
 (defun omnisharp-auto-complete (&optional invert-importable-types-setting)
   "If called with a prefix argument, will complete types that are not
 present in the current namespace or imported namespaces, inverting the
@@ -232,7 +242,25 @@ and complete members."
 ;; The library only seems to accept completions that have the same
 ;; leading characters as results. Oh well.
 (defvar ac-source-omnisharp
-  '((candidates . omnisharp--get-auto-complete-result-in-popup-format)))
+  '((candidates . omnisharp--get-auto-complete-result-in-popup-format)
+    (action . omnisharp--ac-expand)))
+
+(defun omnisharp--ac-expand()
+  (interactive)
+  (let* ((begin-point
+          (car ac-last-completion))
+         (completion-text
+          (cdr ac-last-completion))
+         (completion-value
+          (get-text-property 0 'value completion-text))
+         (completion-snippet
+          (get-text-property 0 'Snippet completion-value)))
+    (if (and
+         completion-snippet
+         omnisharp-auto-complete-template-use-yasnippet
+         (boundp 'yas-minor-mode)
+         yas-minor-mode)
+        (yas-expand-snippet completion-snippet begin-point))))
 
 (defun ac-complete-omnisharp nil
   (interactive)
