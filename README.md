@@ -46,6 +46,9 @@ Extract binary from [omnisharp-roslyn releases page](https://github.com/OmniShar
 ### On Windows (non-Cygwin)
 Use binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases).
 
+*NOTE: For the moment you HAVE to use the `omnisharp-win-x86-net46.zip` bundle as -x64- one makes emacs
+to crash in `src/w32proc.c:w32_executable_type`.* See https://github.com/OmniSharp/omnisharp-emacs/issues/315
+
 Then you need to set the `omnisharp-server-executable-path` the path
 to where you have extracted server file, e.g.:
 
