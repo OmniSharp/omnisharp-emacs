@@ -214,7 +214,7 @@ moving point."
     (omnisharp--get-request-object))))
 
 ;; this is actually used in tests only
-(defun omnisharp--create-ecukes-test-server (omnisharp-emacs-root-path)
+(defun omnisharp--create-test-server (omnisharp-emacs-root-path)
   (condition-case nil
       (kill-process "OmniServer")
     (error nil))

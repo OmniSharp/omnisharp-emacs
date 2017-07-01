@@ -3,9 +3,8 @@
 ;;; This file is a common place for buttercup testing related
 ;;; utilities and initialization
 
-;;; These are originally ported from old integration tests that used
-;;; ecukes, the emacs cucumber test runner. It aims for very readable
-;;; step definitions so that style is encouraged here too.
+;;; These are originally ported from old integration tests from legacy branch.
+;;; It aims for very readable step definitions so that style is encouraged here too.
 
 (require 'f)
 (require 's)
@@ -47,7 +46,7 @@
         (actual (s-replace (string ?\C-m) (string ?\C-j)
                            (substring-no-properties (buffer-string))))
         (message "Expected '%s' to be part of '%s', but was not."))
-    (cl-assert (s-contains? expected actual) nil message expected actual)))
+    (cl-assert (s-contains? expected actual) nil (format message expected actual))))
 
 (defun ot--evaluate (command-to-execute)
   (eval (read command-to-execute)))
@@ -183,12 +182,12 @@ request id."
              lines
              (buffer-string)))
 
-;; this is a poor man's version of action chains in ecukes
+;; this is a poor man's version of action chains
 (defun ot--keyboard-input (&rest text-vectors)
   "Simulates typing. Can be used to do interactive input, but
 detecting situations in the middle of input is impossible."
   (condition-case error
-      (execute-kbd-macro (reduce 'vconcat text-vectors))
+      (execute-kbd-macro (cl-reduce 'vconcat text-vectors))
     (error (print (format "ot--keyboard-input error: %s" error)))))
 
 (defun ot--meta-x-command (command)
@@ -238,7 +237,7 @@ with one."
   (interactive)
   (let ((omnisharp-server-executable-path (concat omnisharp-emacs-root-path
                                                   "/travis-stuff/omnisharp-roslyn/OmniSharp")))
-    (omnisharp--create-ecukes-test-server omnisharp-emacs-root-path)))
+    (omnisharp--create-test-server omnisharp-emacs-root-path)))
 
 (omnisharp-start-test-server)
 

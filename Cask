@@ -6,6 +6,7 @@
 (development
  (depends-on "helm")
  (depends-on "cl-lib")
+ (depends-on "cl")
  (depends-on "yasnippet")
  (depends-on "prodigy")
  (depends-on "buttercup")
@@ -17,7 +18,6 @@
  (depends-on "json")
  (depends-on "dash")
  (depends-on "popup")
- (depends-on "ecukes")
  (depends-on "espuds")
  (depends-on "auto-complete")
  (depends-on "flycheck")

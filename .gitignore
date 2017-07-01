@@ -2,7 +2,6 @@
 /melpa/
 /installation-output.txt
 /node_modules/
-/test/MinimalSolution/minimal/.ecukes-failing-scenarios
 # backup files by emacs
 /test/MinimalSolution/minimal/#*
 /test/MinimalSolution/minimal/RenameFileTest.cs
