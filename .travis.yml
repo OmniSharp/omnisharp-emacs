@@ -8,7 +8,7 @@ install:
     - echo "deb [arch=amd64] https://apt-mo.trafficmanager.net/repos/dotnet-release/ trusty main" | sudo tee /etc/apt/sources.list.d/dotnetdev.list
     - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 417A0893
     - sudo apt-get update
-    - sudo apt-get install -y mono-devel dotnet-dev-1.0.4
+    - sudo apt-get install -y mono-runtime dotnet-dev-1.0.4
 
 before_script:
     # install evm (emacs version manager) and cask (dependency resolver/build tool)
