@@ -1,24 +1,12 @@
 language: generic
 sudo: required
-dist: trusty
+dist: jessie
 
 install:
-    - sudo sh -c 'echo "deb [arch=amd64] http://apt-mo.trafficmanager.net/repos/dotnet/ trusty main" > /etc/apt/sources.list.d/dotnetdev.list'
-    - sudo apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
-    - sudo apt-get -qq update
-    - sudo apt-get install -y dotnet-dev-1.0.0-rc2-002543 dotnet-hostfxr-1.0.2-beta-000914-00
-    - dotnet --version
-
-# https://github.com/dotnet/cli/issues/3657#issuecomment-227890589
-addons:
-  apt:
-    packages:
-    - gettext
-    - libcurl4-openssl-dev
-    - libicu-dev
-    - libssl-dev
-    - libunwind8
-    - zlib1g
+    - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+    - echo "deb http://download.mono-project.com/repo/debian jessie main" | sudo tee /etc/apt/sources.list.d/mono-official.list
+    - sudo apt-get update
+    - sudo apt-get install -y mono-devel
 
 before_script:
     # install evm (emacs version manager) and cask (dependency resolver/build tool)
@@ -30,7 +18,7 @@ before_script:
     - emacs --version
     - cask install
     - cd travis-stuff
-    - OMNISHARP_TRAVIS_RUN=yes ./install-omnisharp-roslyn.sh
+    - ./install-omnisharp-roslyn.sh
     - cd ..
 
 script:
