@@ -24,6 +24,8 @@ You have three options here:
   * You can use M-x `omnisharp-install-server` to install omnisharp-server binary automatically. 
     * *NOTE: As of now this command works on Linux and macOS systems only. 
       Windows is planned but not implemented yet; -- see [omnisharp-emacs#275](https://github.com/OmniSharp/omnisharp-emacs/issues/275).*
+    * *NOTE 2*: This omnisharp server binary require [mono](http://www.mono-project.com/) to be installed on the system
+      (for macOS & Linux platforms only).
 
   * Download and extract server binaries
   manually and then point `omnisharp-server-executable-path` variable to the binary.
