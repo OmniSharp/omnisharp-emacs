@@ -143,16 +143,14 @@ request id."
   (let ((current-line (substring-no-properties (or (thing-at-point 'line) ""))))
     (cl-assert (s-contains? expected-line-contents current-line)
                nil
-               (concat "Expected the current line (number '%d') to contain"
-                       " '%s'. The current buffer contains:"
-                       "\n"
-                       "%s"
-                       "\n"
-                       "The current line contains: '%s'")
-               (line-number-at-pos)
-               expected-line-contents
-               (buffer-string)
-               current-line)))
+               (format
+                (concat "Expected the current line (%d) to contain '%s'.\n"
+                        "The current buffer contains:\n%s\n"
+                        "The current line contains: '%s'")
+                (line-number-at-pos)
+                expected-line-contents
+                (buffer-string)
+                current-line))))
 
 (defun ot--there-should-be-a-window-editing-the-file (file-name)
   (cl-assert (get-buffer-window file-name)
@@ -206,10 +204,18 @@ detecting situations in the middle of input is impossible."
   (edmacro-parse-keys key-or-chord))
 
 (defun ot--get-completions ()
-  (omnisharp--get-company-candidates "")
-  (-map (lambda(completion)
-          (cdr (assoc 'DisplayText completion)))
-        omnisharp--last-buffer-specific-auto-complete-result))
+  (let* ((get-candidates-result (omnisharp--get-company-candidates ""))
+         (fetcher (cdr get-candidates-result)))
+
+    ;; omnisharp--get-company-candidates returns an :async callback,
+    ;;; -- we need to invoke async machinery to get to the value of
+    ;; omnisharp--last-buffer-specific-auto-complete-result
+    (omnisharp--wait-until-request-completed (funcall fetcher (lambda (result) nil)))
+
+    (-map (lambda(completion)
+            (cdr (assoc 'DisplayText completion)))
+          omnisharp--last-buffer-specific-auto-complete-result)
+    ))
 
 (defmacro ot--set (symbol value)
   `(setq symbol ,value))
