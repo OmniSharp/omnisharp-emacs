@@ -3,8 +3,7 @@
 /installation-output.txt
 /node_modules/
 # backup files by emacs
-/test/MinimalSolution/minimal/#*
-/test/MinimalSolution/minimal/RenameFileTest.cs
-*~
-/travis-stuff/omnisharp-roslyn/
+/test/MinimalProject/obj/*
 /test/MinimalProject/KeystrokeTest.cs
+/travis-stuff/omnisharp-roslyn/
+*~

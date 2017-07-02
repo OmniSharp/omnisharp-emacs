@@ -10,7 +10,7 @@ fi
 if [[ ! -r test/MinimalProject/project.lock.json ]]; then
     echo "Restoring MinimalProject packages"
     pushd test/MinimalProject
-    dotnet restore -v Warning
+    dotnet restore
     popd
 fi
 
