@@ -19,15 +19,16 @@ the old omnisharp-server is no longer supported/maintained.
 
 ## Installation of the omnisharp-roslyn server application
 This emacs package requires the [omnisharp-roslyn][] server program.
-You can build the server yourself from the source or get precompiled 
-binaries from the [omnisharp-roslyn releases](https://github.com/OmniSharp/omnisharp-roslyn/releases) page.
 
-The server must be a recent one, e.g. at least from year 2016.
-If you haven't updated your server copy since that, you must upgrade.
+You can use M-x `omnisharp-install-server` to install omnisharp-server binary locally
+into `~/.emacs.d/.cache/omnisharp/server/vX.Y.Z` or download and extract server binaries
+manually and then point `omnisharp-server-executable-path` variable to the binary.
 
-You can install the server from source as detailed on [omnisharp-roslyn building page](https://github.com/OmniSharp/omnisharp-roslyn#building). Or use the following instructions.
+ * NOTE: As of now the `omnisharp-install-server` command should work on Linux and macOS systems only. See [omnisharp-emacs#275](https://github.com/OmniSharp/omnisharp-emacs/issues/275).
 
- * TODO: there are plans to add automatic server installation/update mechanism to `omnisharp-emacs` eventually. See [omnisharp-emacs#275](https://github.com/OmniSharp/omnisharp-emacs/issues/275). But for now you have to install it manually.
+You can also build the server yourself from the source or get precompiled 
+binaries from the [omnisharp-roslyn releases](https://github.com/OmniSharp/omnisharp-roslyn/releases) page. Building instructions for the server
+are detailed in [omnisharp-roslyn building page](https://github.com/OmniSharp/omnisharp-roslyn#building).
 
 ### On macOS with brew
 <pre>
@@ -40,7 +41,7 @@ Then you need to set the `omnisharp-server-executable-path`:
 (setq omnisharp-server-executable-path "/usr/local/bin/omnisharp")
 ```
 
-### On linux
+### On Linux
 Extract binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases).
 
 ### On Windows (non-Cygwin)
