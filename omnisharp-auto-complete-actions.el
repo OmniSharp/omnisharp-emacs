@@ -412,15 +412,20 @@ company-mode-friendly"
          ;; json. This is an emacs limitation.
          (completion-ignore-case omnisharp-company-ignore-case)
          (params
-          (omnisharp--create-auto-complete-request)))
+          (omnisharp--create-auto-complete-request))
+         (handler (lambda (result)
+                    (let* ((completion-list (mapcar #'omnisharp--make-company-completion
+                                                    omnisharp--last-buffer-specific-auto-complete-result)))
+                      (if (eq omnisharp-company-match-type 'company-match-simple)
+                          (all-completions pre completion-list)
+                        completion-list)))))
 
     ;; store auto-complete results
-    (omnisharp--wait-until-request-completed (omnisharp-auto-complete-worker params))
-    (let* ((completion-list (mapcar #'omnisharp--make-company-completion
-                                    omnisharp--last-buffer-specific-auto-complete-result)))
-      (if (eq omnisharp-company-match-type 'company-match-simple)
-          (all-completions pre completion-list)
-        completion-list))))
+    ;; (omnisharp--wait-until-request-completed (omnisharp-auto-complete-worker params))
+    (cons :async (lambda (cb)
+                   (omnisharp-auto-complete-worker
+                    params
+                    (lambda (result) (funcall cb (funcall handler result))))))))
 
 (defun omnisharp--company-annotation (candidate)
   (get-text-property 0 'omnisharp-ann candidate))
