@@ -30,7 +30,7 @@ before_script:
     - emacs --version
     - cask install
     - cd travis-stuff
-    - ./install-omnisharp-roslyn.sh
+    - OMNISHARP_TRAVIS_RUN=yes ./install-omnisharp-roslyn.sh
     - cd ..
 
 script:
