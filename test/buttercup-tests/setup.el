@@ -250,7 +250,7 @@ with one."
 ;; still sleep a bit because even with the input received the server
 ;; might still not be able to response to requests in-time for the
 ;; first test to run properly
-(sleep 3)
+(sleep-for 3)
 
 (setq create-lockfiles nil)
 
