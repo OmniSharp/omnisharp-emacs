@@ -19,17 +19,20 @@ the old omnisharp-server is no longer supported/maintained.
 
 ## Installation of the omnisharp-roslyn server application
 This emacs package requires the [omnisharp-roslyn][] server program.
-You can build the server yourself from the source or get precompiled 
-binaries from the [omnisharp-roslyn releases](https://github.com/OmniSharp/omnisharp-roslyn/releases) page.
 
-The server must be a recent one, e.g. at least from year 2016.
-If you haven't updated your server copy since that, you must upgrade.
+You have three options here:
+  * You can use M-x `omnisharp-install-server` to install omnisharp-server binary automatically. 
+    * *NOTE: As of now this command works on Linux and macOS systems only. 
+      Windows is planned but not implemented yet; -- see [omnisharp-emacs#275](https://github.com/OmniSharp/omnisharp-emacs/issues/275).*
+    * *NOTE 2*: This omnisharp server binary require [mono](http://www.mono-project.com/) to be installed on the system
+      (for macOS & Linux platforms only).
 
-You can install the server from source as detailed on [omnisharp-roslyn building page](https://github.com/OmniSharp/omnisharp-roslyn#building). Or use the following instructions.
+  * Download and extract server binaries
+  manually and then point `omnisharp-server-executable-path` variable to the binary.
 
- * TODO: there are plans to add automatic server installation/update mechanism to `omnisharp-emacs` eventually. See [omnisharp-emacs#275](https://github.com/OmniSharp/omnisharp-emacs/issues/275). But for now you have to install it manually.
+  * Build the server yourself from the source. Building instructions are detailed in [omnisharp-roslyn building page](https://github.com/OmniSharp/omnisharp-roslyn#building).
 
-### On macOS with brew
+### Manual installation on macOS with brew
 <pre>
 brew install omnisharp/omnisharp-roslyn/omnisharp-mono
 </pre>
@@ -40,10 +43,16 @@ Then you need to set the `omnisharp-server-executable-path`:
 (setq omnisharp-server-executable-path "/usr/local/bin/omnisharp")
 ```
 
-### On linux
+### Manual installation on Linux
 Extract binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases).
 
-### On Windows (non-Cygwin)
+Then you need to set the `omnisharp-server-executable-path`:
+
+```lisp
+(setq omnisharp-server-executable-path "<path-to-server-wrapper-script>")
+```
+
+### Manual installation on Windows (non-Cygwin)
 Use binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases).
 
 *NOTE: For the moment you HAVE to use the `omnisharp-win-x86-net46.zip` bundle as -x64- one makes emacs
@@ -56,7 +65,7 @@ to where you have extracted server file, e.g.:
 (setq omnisharp-server-executable-path "C:\\Bin\\omnisharp-roslyn\\OmniSharp.exe")
 ```
 
-### On Windows (with Cygwin)
+### Manual installation on windows (with Cygwin)
 Use binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases):
 
  - https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.9-beta22/omnisharp-win-x64-net46.zip

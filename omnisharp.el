@@ -4,7 +4,7 @@
 ;; Author: Mika Vilpas and others
 ;; Version: 4.0
 ;; Url: https://github.com/Omnisharp/omnisharp-emacs
-;; Package-Requires: ((emacs "24") (flycheck "30") (dash "2.12.0") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.10.0") (shut-up "0.3.2"))
+;; Package-Requires: ((emacs "24") (flycheck "30") (dash "2.12.0") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.10.0") (shut-up "0.3.2") (f "0.19.0"))
 ;; Keywords: languages csharp c# IDE auto-complete intellisense
 
 ;;; Commentary:
@@ -27,6 +27,7 @@
 (require 'flycheck)
 (require 's)
 (require 'shut-up)
+(require 'f)
 
 (require 'omnisharp-server-management)
 (require 'omnisharp-utils)
@@ -39,6 +40,7 @@
 (require 'omnisharp-helm-integration)
 (require 'omnisharp-solution-actions)
 (require 'omnisharp-format-actions)
+(require 'omnisharp-server-installation)
 
 ;;; Code:
 ;;;###autoload
@@ -110,6 +112,17 @@ OmniSharpServer process specified in the current configuration has
 finished loading the solution."
   (interactive)
   (omnisharp--check-ready-status))
+
+;;;###autoload
+(defun omnisharp-install-server (reinstall)
+  "Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version)"
+  (interactive "P")
+  (if (or (eq system-type 'darwin)
+          (eq system-type 'gnu/linux))
+      (omnisharp--install-server reinstall)
+    (message (format (concat "omnisharp: sorry, omnisharp-install-server does not support %s yet,"
+                             " please see https://github.com/OmniSharp/omnisharp-emacs/blob/master/README.md#installation-of-the-omnisharp-roslyn-server-application")
+                     system-type))))
 
 ;;;###autoload
 (defun company-omnisharp (command &optional arg &rest ignored)
