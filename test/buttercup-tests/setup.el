@@ -247,6 +247,11 @@ with one."
   (while (not (equal t (cdr (assoc :started? omnisharp--server-info))))
     (accept-process-output)))
 
+;; still sleep a bit because even with the input received the server
+;; might still not be able to response to requests in-time for the
+;; first test to run properly
+(sleep 3)
+
 (setq create-lockfiles nil)
 
 (print "buttercup test setup file loaded.")
