@@ -36,7 +36,7 @@
 
   (defun omnisharp--helm-jump-to-candidate (json-result)
     (omnisharp-go-to-file-line-and-column json-result)
-    (helm-highlight-current-line nil nil nil nil t))
+    (helm-highlight-current-line))
 
   ;;; Helm find symbols
   (defun omnisharp-helm-find-symbols ()
