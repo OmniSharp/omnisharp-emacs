@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 (defun omnisharp--path-to-server (path)
   (if (and path (eq system-type 'cygwin))
       (cygwin-convert-file-name-to-windows path)

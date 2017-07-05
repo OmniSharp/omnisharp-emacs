@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 
 (defun omnisharp--get-host ()
   "Makes sure omnisharp-host is ended by / "
