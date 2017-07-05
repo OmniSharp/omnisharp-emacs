@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 ;; this file contains settings that are used throughout the project
 
 (defgroup omnisharp ()

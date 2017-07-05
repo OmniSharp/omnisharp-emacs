@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 (defcustom omnisharp-server-executable-path nil
   "Path to OmniSharp server override. Should be set to non-nil if server is installed locally.
 Otherwise omnisharp request the user to do M-x `omnisharp-install-server` and that server
@@ -21,7 +23,7 @@ to use server installed via `omnisharp-install-server`.
                              " as detailed in https://github.com/OmniSharp/omnisharp-emacs/blob/master/README.md#installation-of-the-omnisharp-roslyn-server-application"))
             nil)))))
 
-(defun omnisharp--do-server-start (path-to-project server-executable)
+(defun omnisharp--do-server-start (path-to-project server-executable-path)
   (message (format "omnisharp: Starting OmniSharpServer using project folder/solution file: %s" path-to-project))
   (message "omnisharp: using the server at: %s" server-executable-path)
 
@@ -50,7 +52,7 @@ to use server installed via `omnisharp-install-server`.
                                        (if omnisharp--restart-server-on-stop
                                            (omnisharp--do-server-start
                                             omnisharp--last-project-path
-                                            server-executable))))))))))
+                                            server-executable-path))))))))))
 
 (defun omnisharp--start-omnisharp-server (path-to-project)
   "Actual implementation for autoloaded omnisharp-start-omnisharp-server"

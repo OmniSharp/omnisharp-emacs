@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 (defvar omnisharp--server-info nil)
 (defvar omnisharp--last-project-path nil)
 (defvar omnisharp--restart-server-on-stop nil)
@@ -170,7 +172,7 @@ its type."
 (defun omnisharp--remove-response-handler (server-info request-id)
   (setcdr (assoc :response-handlers server-info)
           (--remove (= (car it) request-id)
-                    (-non-nil response-handlers))))
+                    (-non-nil (cdr (assoc :response-handlers server-info))))))
 
 (defun omnisharp--handle-server-response-packet (packet server-info)
   "Calls the appropriate response callback for the received packet"

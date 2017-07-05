@@ -15,7 +15,7 @@
                          'face 'helm-grep-lineno)
              (cdr (assoc 'Text candidate)))
      candidate))
-  
+
   (defun omnisharp--helm-got-usages (quickfixes)
     (setq omnisharp-helm-usage-candidates (mapcar 'omnisharp--helm-usage-transform-candidate quickfixes))
     (helm :sources (helm-make-source "Omnisharp - Symbol Usages" 'helm-source-sync
