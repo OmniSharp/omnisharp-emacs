@@ -38,21 +38,24 @@ to use server installed via `omnisharp-install-server`.
   (setq omnisharp--server-info
         (make-omnisharp--server-info
          ;; use a pipe for the connection instead of a pty
-         (let ((process-connection-type nil))
-           (-doto (start-process
-                   "OmniServer" ; process name
-                   "OmniServer" ; buffer name
-                   server-executable-path
-                   "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))
-             (set-process-filter 'omnisharp--handle-server-message)
-             (set-process-sentinel (lambda (process event)
-                                     (when (memq (process-status process) '(exit signal))
-                                       (message "omnisharp: OmniSharp server terminated")
-                                       (setq omnisharp--server-info nil)
-                                       (if omnisharp--restart-server-on-stop
-                                           (omnisharp--do-server-start
-                                            omnisharp--last-project-path
-                                            server-executable-path))))))))))
+         (let ((original-process-connection-type process-connection-type))
+           (setq process-connection-type nil)
+           (let ((process (-doto (start-process
+                                  "OmniServer" ; process name
+                                  "OmniServer" ; buffer name
+                                  server-executable-path
+                                  "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))
+                            (set-process-filter 'omnisharp--handle-server-message)
+                            (set-process-sentinel (lambda (process event)
+                                                    (when (memq (process-status process) '(exit signal))
+                                                      (message "omnisharp: OmniSharp server terminated")
+                                                      (setq omnisharp--server-info nil)
+                                                      (if omnisharp--restart-server-on-stop
+                                                          (omnisharp--do-server-start
+                                                           omnisharp--last-project-path
+                                                           server-executable-path))))))))
+             (setq process-connection-type original-process-connection-type)
+             process)))))
 
 (defun omnisharp--start-omnisharp-server (path-to-project)
   "Actual implementation for autoloaded omnisharp-start-omnisharp-server"
