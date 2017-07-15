@@ -22,7 +22,7 @@ from the server side, i.e. 'Type or 'Documentation that will be
 displayed to the user."
   (omnisharp--send-command-to-server
    "typelookup"
-   (omnisharp--get-request-object)
+   (omnisharp--get-typelookup-request-object)
    (lambda (response)
      (let ((stuff-to-display (cdr (assoc type-property-name
                                          response))))

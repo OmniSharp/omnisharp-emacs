@@ -331,6 +331,12 @@ some cases. Work around this."
               params)
       params)))
 
+(defun omnisharp--get-typelookup-request-object ()
+  "Construct a Request object for typelookup endpoint based on the current buffer contents."
+  (append
+   '((IncludeDocumentation . t))
+   (omnisharp--get-request-object)))
+
 (defun omnisharp--get-request-object-for-emacs-side-use ()
   "Gets a Request class that can be only handled safely inside
 Emacs. This should not be transferred to the server backend - it might
