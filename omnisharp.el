@@ -117,12 +117,7 @@ finished loading the solution."
 (defun omnisharp-install-server (reinstall)
   "Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version)"
   (interactive "P")
-  (if (or (eq system-type 'darwin)
-          (eq system-type 'gnu/linux))
-      (omnisharp--install-server reinstall)
-    (message (format (concat "omnisharp: sorry, omnisharp-install-server does not support %s yet,"
-                             " please see https://github.com/OmniSharp/omnisharp-emacs/blob/master/README.md#installation-of-the-omnisharp-roslyn-server-application")
-                     system-type))))
+  (omnisharp--install-server reinstall))
 
 ;;;###autoload
 (defun company-omnisharp (command &optional arg &rest ignored)

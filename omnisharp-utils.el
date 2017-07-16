@@ -299,7 +299,7 @@ the developer's emacs unusable."
   "Makes a directory recursively, similarly to a 'mkdir -p'."
   (let* ((absolute-dir (expand-file-name dir))
          (components (f-split absolute-dir)))
-    (omnisharp--mkdirp-item (f-join (apply #'concat (-take 2 components))) (-drop 2 components))
+    (omnisharp--mkdirp-item (f-join (apply #'concat (-take 1 components))) (-drop 1 components))
     absolute-dir))
 
 (defun omnisharp--mkdirp-item (dir remaining)

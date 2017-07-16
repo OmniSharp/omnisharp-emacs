@@ -10,16 +10,21 @@ is built for. Also used to select version for automatic server installation."
   "Returns installation directory for automatic server installation."
   (f-join (expand-file-name "~") ".emacs.d" ".cache" "omnisharp" "server" (concat "v" omnisharp-expected-server-version)))
 
+(defun omnisharp--server-installation-executable-name ()
+  (if (eq system-type 'windows-nt)
+      "OmniSharp.exe"
+    "omnisharp"))
+
 (defun omnisharp--server-installation-path (&rest ok-if-missing)
   "Returns path to installed omnisharp server binary, if any."
-  (let* ((executable-name "omnisharp") ;; TODO: platform dependant
+  (let* ((executable-name (omnisharp--server-installation-executable-name))
          (executable-path (f-join (omnisharp--server-installation-dir) executable-name)))
     (if (or (f-exists-p executable-path) ok-if-missing)
         executable-path
       nil)))
 
 (defun omnisharp--server-installation-download-and-extract (url filename reinstall)
-  "Downloads and extracts a tgz binary into given directory."
+  "Downloads and extracts a tgz/zip into it's parent directory."
 
   ;; remove the file if reinstall is set
   (if (and reinstall (f-exists-p filename))
@@ -29,20 +34,50 @@ is built for. Also used to select version for automatic server installation."
     (message (format "omnisharp: downloading server binary from \"%s\"..." url))
     (url-copy-file url filename t))
 
-  (message (format "omnisharp: extracting into %s" (f-dirname filename)))
-  (call-process "tar" nil nil t "xf" filename "-C" (f-dirname filename)))
+  (let ((target-dir (f-dirname filename)))
+    (message (format "omnisharp: extracting \"%s\" into \"%s\""
+                     (f-filename filename)
+                     target-dir))
 
-(defun omnisharp--server-installation-prepare-wrapper-script (filename server-dir)
-  (unless (f-exists-p filename)
-    (f-write (format "#!/usr/bin/env bash\nmono %s $@\n" (f-join server-dir "OmniSharp.exe"))
-             'utf-8
-             (f-join server-dir filename))
-    (call-process "chmod" nil nil nil "0755" (f-join server-dir filename))))
+    (if (eq system-type 'windows-nt)
+        ;; on windows, we attempt to use powershell v5+, available on Windows 10+
+        (let ((powershell-version (substring
+                                   (shell-command-to-string "powershell -command \"(Get-Host).Version.Major\"")
+                                   0 -1)))
+          (if (>= (string-to-number powershell-version) 5)
+            (call-process "powershell"
+                          nil
+                          nil
+                          nil
+                          "-command"
+                          (concat "add-type -assembly system.io.compression.filesystem;"
+                                  "[io.compression.zipfile]::ExtractToDirectory(\"" filename "\", \"" target-dir "\")"))
+
+            (message (concat "omnisharp: for the 'M-x omnisharp-install-server' "
+                             " command to work on Windows you need to have powershell v5+ installed"))))
+      (progn
+        (call-process "tar" nil nil t "xf" filename "-C" target-dir)
+
+        ;; setup wrapper script on unix platforms
+        (let ((server-exe (omnisharp--server-installation-executable-name)))
+          (unless (f-exists-p server-exe)
+            (f-write (format "#!/usr/bin/env bash\nmono %s $@\n" (f-join target-dir "OmniSharp.exe"))
+                     'utf-8
+                     (f-join target-dir server-exe))
+            (set-file-modes (f-join target-dir server-exe) #o755)))))))
+
+(defun omnisharp--server-installation-tarball-name ()
+  "Resolves a tarball or zip file to use for this installation.
+Note that due to a bug in emacs on Windows we currently use the x86/32bit version.
+See https://github.com/OmniSharp/omnisharp-emacs/issues/315"
+  (if (eq system-type 'windows-nt)
+      "omnisharp-win-x86-net46.zip"
+    "omnisharp-mono.tar.gz"))
 
 (defun omnisharp--install-server (reinstall)
   "Implementation for autoloaded omnisharp-install-server in omnisharp.el."
   (let* ((server-dir (omnisharp--server-installation-dir))
-         (distro-tarball "omnisharp-mono.tar.gz") ;; TODO: platform specific
+         (distro-tarball (omnisharp--server-installation-tarball-name))
          (distro-url (concat "https://github.com/OmniSharp/omnisharp-roslyn/releases/download"
                              "/v" omnisharp-expected-server-version
                              "/" distro-tarball))
@@ -58,12 +93,11 @@ is built for. Also used to select version for automatic server installation."
                distro-url
                (f-join server-dir distro-tarball)
                reinstall)
-              (omnisharp--server-installation-prepare-wrapper-script "omnisharp" server-dir)
               (let ((executable-path (omnisharp--server-installation-path)))
                 (if executable-path
                     (message (format "omnisharp: server was installed to \"%s\"; you can now do M-x 'omnisharp-start-omnisharp-server' "
                                      executable-path))
-                  (message (concat "omnisharp: server could not be installed automatically."
+                  (message (concat "omnisharp: server could not be installed automatically. "
                                    "Please check https://github.com/OmniSharp/omnisharp-emacs/blob/master/README.md#installation-of-the-omnisharp-roslyn-server-application for instructions."))))))
       (message (format "omnisharp: server is already installed (%s)"
                        expected-executable-path)))))
