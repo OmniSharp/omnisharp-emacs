@@ -10,13 +10,6 @@ works in the background.
 
 See [omnisharp-emacs Features](doc/features.md).
 
-## Note to users after the 20170404 upgrade via MELPA
-Please see [issue #279](https://github.com/OmniSharp/omnisharp-emacs/issues/279)
-for help/comments on the upgrade.
-
-We're sorry for breaking your setup but we had to do the upgrade as
-the old omnisharp-server is no longer supported/maintained.
-
 ## Installation of the omnisharp-roslyn server application
 This emacs package requires the [omnisharp-roslyn][] server program.
 
