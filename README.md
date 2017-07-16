@@ -10,27 +10,24 @@ works in the background.
 
 See [omnisharp-emacs Features](doc/features.md).
 
-## Note to users after the 20170404 upgrade via MELPA
-Please see [issue #279](https://github.com/OmniSharp/omnisharp-emacs/issues/279)
-for help/comments on the upgrade.
-
-We're sorry for breaking your setup but we had to do the upgrade as
-the old omnisharp-server is no longer supported/maintained.
-
 ## Installation of the omnisharp-roslyn server application
 This emacs package requires the [omnisharp-roslyn][] server program.
 
 You have three options here:
   * You can use M-x `omnisharp-install-server` to install omnisharp-server binary automatically. 
-    * *NOTE: As of now this command works on Linux and macOS systems only. 
-      Windows is planned but not implemented yet; -- see [omnisharp-emacs#275](https://github.com/OmniSharp/omnisharp-emacs/issues/275).*
-    * *NOTE 2*: This omnisharp server binary require [mono](http://www.mono-project.com/) to be installed on the system
-      (for macOS & Linux platforms only).
+
+    * *NOTE: On Windows, this command requires PowerShell v5+ to be installed
+      – see [omnisharp-emacs#275](https://github.com/OmniSharp/omnisharp-emacs/issues/275).*
+
+    * *NOTE 2*: On macOS and Linux omnisharp server binary requires
+      [mono](http://www.mono-project.com/) to be installed on your system.
 
   * Download and extract server binaries
-  manually and then point `omnisharp-server-executable-path` variable to the binary.
+    manually and then point `omnisharp-server-executable-path` variable to the binary.
 
-  * Build the server yourself from the source. Building instructions are detailed in [omnisharp-roslyn building page](https://github.com/OmniSharp/omnisharp-roslyn#building).
+  * Build the server yourself from the source. 
+    Building instructions are detailed in 
+    [omnisharp-roslyn building page](https://github.com/OmniSharp/omnisharp-roslyn#building).
 
 ### Manual installation on macOS with brew
 <pre>
