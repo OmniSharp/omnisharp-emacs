@@ -61,7 +61,16 @@ is built for. Also used to select version for automatic server installation."
         ;; setup wrapper script on unix platforms
         (let ((server-exe (omnisharp--server-installation-executable-name)))
           (unless (f-exists-p server-exe)
-            (f-write (format "#!/usr/bin/env bash\nmono %s $@\n" (f-join target-dir "OmniSharp.exe"))
+            (f-write (format (concat "#!/usr/bin/env bash\n"
+                                     "MONO_ON_MACOS=\"/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono\"\n"
+                                     "if [[ -x \"$MONO_ON_MACOS\" ]]; then\n"
+                                     "    # mono may not be on $PATH on macOS, give it a helping hand\n"
+                                     "    MONO=\"$MONO_ON_MACOS\"\n"
+                                     "else\n"
+                                     "    # otherwise, we expect mono to be on $PATH\n"
+                                     "    MONO=mono\n"
+                                     "fi\n"
+                                     "$MONO " (f-join target-dir "OmniSharp.exe") " $@\n"))
                      'utf-8
                      (f-join target-dir server-exe))
             (set-file-modes (f-join target-dir server-exe) #o755)))))))
