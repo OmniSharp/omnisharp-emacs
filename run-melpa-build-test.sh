@@ -27,6 +27,14 @@ else
     sed --in-place 's/:branch "develop"/:branch "'$gitCurrentBranch'"/' $recipeFile
 fi
 
+# Custom recipe that uses forked repository instead of the
+# omnisharp official repository.
+
+if [ $TRAVIS_REPO_SLUG ]; then
+    echo "Running build for travis repository: $TRAVIS_REPO_SLUG"
+    sed --in-place 's/:repo "OmniSharp/omnisharp-emacs"/:repo "'$TRAVIS_REPO_SLUG'"/' $recipeFile
+fi
+
 echo ""
 cat $recipeFile
 
