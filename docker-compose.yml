@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.testing
+    image: omnisharp-testing
     volumes:
       - '.:/tmp/src'
   tests:
