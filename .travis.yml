@@ -6,13 +6,14 @@ services:
   - docker
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.14.0
-  - CACHE_DIR=$HOME/.cache/docker
-  - CACHE_FILE=$CACHE_DIR/omnisharp-testing.tar.gz
+  global:
+    - DOCKER_COMPOSE_VERSION=1.14.0
+    - CACHE_DIR=$HOME/.cache/docker
+    - CACHE_FILE=$CACHE_DIR/omnisharp-testing.tar.gz
 
 cache:
   directories:
-  - $CACHE_DIR
+    - $CACHE_DIR
 
 before_install:
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
