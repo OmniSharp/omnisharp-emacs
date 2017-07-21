@@ -8,10 +8,4 @@ services:
       - '.:/tmp/src'
   tests:
     <<: *base
-    command: bash -c "cp /tmp/src/*.el /usr/src/ && cp /tmp/src/test/*.el /usr/src/test/ && cp -r /tmp/src/test/buttercup-tests /usr/src/test/ && sh ./run-tests.sh"
-  integration-tests:
-    <<: *base
-    command: bash -c "cp /tmp/src/*.el /usr/src/ && cp /tmp/src/test/*.el /usr/src/test/ && cp -r /tmp/src/test/buttercup-tests /usr/src/test/ && sh ./run-integration-tests.sh"
-  melpa-build-test:
-    <<: *base
-    command: ./run-melpa-build-test.sh
+    command: bash -c "cp /tmp/src/*.el /usr/src/ && cp /tmp/src/test/*.el /usr/src/test/ && cp -r /tmp/src/test/buttercup-tests /usr/src/test/ && ./run-all-tests.sh"

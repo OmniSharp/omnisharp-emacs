@@ -43,8 +43,6 @@ RUN cask install
 COPY test/*.el test/
 COPY test/buttercup-tests test/buttercup-tests
 COPY ignored-from-melpa-build/*.el ignored-from-melpa-build/
-COPY *.sh ./
-COPY melpa-testing.recipe melpa-testing.recipe
+COPY test-stuff/* ./
 COPY .git .git
-RUN git checkout master
 
