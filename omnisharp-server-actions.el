@@ -20,7 +20,7 @@ to use server installed via `omnisharp-install-server`.
           (progn
             (message "omnisharp: No omnisharp server could be found.")
             (message (concat "omnisharp: Please use M-x 'omnisharp-install-server' or download server manually"
-                             " as detailed in https://github.com/OmniSharp/omnisharp-emacs/blob/master/README.md#installation-of-the-omnisharp-roslyn-server-application"))
+                             " as detailed in https://github.com/OmniSharp/omnisharp-emacs/blob/master/doc/server-installation.md"))
             nil)))))
 
 (defun omnisharp--do-server-start (path-to-project server-executable-path)
