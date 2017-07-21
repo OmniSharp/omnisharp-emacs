@@ -32,7 +32,7 @@ fi
 
 if [ $TRAVIS_REPO_SLUG ]; then
     echo "Running build for travis repository: $TRAVIS_REPO_SLUG"
-    sed --in-place 's/:repo "OmniSharp/omnisharp-emacs"/:repo "'$TRAVIS_REPO_SLUG'"/' $recipeFile
+    sed --in-place 's/:repo "OmniSharp\/omnisharp-emacs"/:repo "'$TRAVIS_REPO_SLUG'"/' $recipeFile
 fi
 
 echo ""
