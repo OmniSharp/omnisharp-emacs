@@ -107,7 +107,7 @@ See https://github.com/OmniSharp/omnisharp-emacs/issues/315"
                     (message (format "omnisharp: server was installed to \"%s\"; you can now do M-x 'omnisharp-start-omnisharp-server' "
                                      executable-path))
                   (message (concat "omnisharp: server could not be installed automatically. "
-                                   "Please check https://github.com/OmniSharp/omnisharp-emacs/blob/master/README.md#installation-of-the-omnisharp-roslyn-server-application for instructions."))))))
+                                   "Please check https://github.com/OmniSharp/omnisharp-emacs/blob/master/doc/server-installation.md for instructions."))))))
       (message (format "omnisharp: server is already installed (%s)"
                        expected-executable-path)))))
 
