@@ -43,6 +43,6 @@ RUN cask install
 COPY test/*.el test/
 COPY test/buttercup-tests test/buttercup-tests
 COPY ignored-from-melpa-build/*.el ignored-from-melpa-build/
-COPY test-stuff/* ./
+COPY test-stuff test-stuff
 COPY .git .git
 

@@ -15,7 +15,7 @@ git clone https://github.com/milkypostman/melpa
 
 # Custom recipe that uses the melpa-testing branch instead of the
 # usual develop, to showcase a minimal broken setup.
-recipeFile=./melpa-testing.recipe
+recipeFile=./test-stuff/melpa-testing.recipe
 git checkout -- $recipeFile
 
 if [ $TRAVIS_BRANCH ]; then
