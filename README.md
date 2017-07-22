@@ -136,31 +136,11 @@ configuration for evil-mode included in the project.
 
 ### How to run tests
 
-You can run test using following shell script.
+You can run all kind of tests by following shell script.
 
 ```sh
 ./run-tests.sh
-./run-integration-tests.sh
-./run-melpa-build-test.sh
 ```
-
-You can also use Docker to run test in completely isolated environment with your host machine.
-
-```
-docker-compose build
-docker-compose run --rm tests
-docker-compose run --rm integration-tests
-docker-compose run --rm melpa-build-test
-```
-
-Note that you don't need to re-build container image when you modified following files.
-
-- `./*.el`
-- `./test/*.el`
-- `./test/buttercup-tests/*.el`
-
-When you modified those files and want to run test, simply only run `docker-compose run --rm tests` or `docker-compose run --rm integration-tests` command, without `docker-compose build` command. Otherwise you need to re-build container images to apply modified files to container.
-
 
 * * * * *
 
