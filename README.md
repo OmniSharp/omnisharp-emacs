@@ -68,6 +68,17 @@ Usually all this customization goes in your custom `csharp-mode-hook` in your `i
 There is also an example configuration for evil-mode included in the project,
 please see `doc/example-config-for-evil-mode.el`.
 
+
+## Contributing
+
+### How to run tests
+
+You can run all kind of tests by following shell script.
+
+```sh
+./run-tests.sh
+```
+
 * * * * *
 
 Pull requests welcome!

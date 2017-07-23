@@ -10,6 +10,10 @@
 (require 's)
 (require 'shut-up)
 
+;;; Work around for emacs bug#18845
+(when (and (= emacs-major-version 24) (>= emacs-minor-version 4))
+  (require 'cl))
+
 ;;; These are displayed in the test output when a test opens a .cs
 ;;; file. Work around that by loading them in advance.
 (require 'csharp-mode)
