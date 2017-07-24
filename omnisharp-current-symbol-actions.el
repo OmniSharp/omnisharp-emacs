@@ -26,9 +26,12 @@ displayed to the user."
    (lambda (response)
      (let ((stuff-to-display (cdr (assoc type-property-name
                                          response))))
-       (message stuff-to-display)
+       (omnisharp--display-type-information stuff-to-display)
        (when add-to-kill-ring
          (kill-new stuff-to-display))))))
+
+(defun omnisharp--display-type-information (stuff-to-display)
+  (omnisharp--display-stuff stuff-to-display))
 
 (defun omnisharp-current-type-information-to-kill-ring ()
   "Shows the information of the current type and adds it to the kill
@@ -48,7 +51,7 @@ ring."
 
 (defun omnisharp--find-usages-show-response (quickfixes)
   (if (equal 0 (length quickfixes))
-      (message "No usages found.")
+      (omnisharp--display-result-message "No usages found.")
     (omnisharp--write-quickfixes-to-compilation-buffer
      quickfixes
      omnisharp--find-usages-buffer-name
@@ -67,7 +70,7 @@ ring."
                                                            &optional other-window)
   (-let (((&alist 'QuickFixes quickfixes) quickfix-response))
     (cond ((equal 0 (length quickfixes))
-           (message "No implementations found."))
+           (omnisharp--display-result-message "No implementations found."))
           ((equal 1 (length quickfixes))
            (omnisharp-go-to-file-line-and-column (-first-item (omnisharp--vector-to-list quickfixes))
                                                  other-window))
@@ -93,7 +96,7 @@ to select one (or more) to jump to."
    (omnisharp--get-request-object)
    (lambda (quickfixes)
      (cond ((equal 0 (length quickfixes))
-            (message "No implementations found."))
+            (omnisharp--display-result-message "No implementations found."))
 
            ;; Go directly to the implementation if there only is one
            ((equal 1 (length quickfixes))

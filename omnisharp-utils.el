@@ -310,4 +310,10 @@ the developer's emacs unusable."
   (unless (not remaining)
     (omnisharp--mkdirp-item (f-join dir (car (-take 1 remaining))) (-drop 1 remaining))))
 
+(defun omnisharp--display-stuff (stuff-to-display)
+  (message stuff-to-display))
+
+(defun omnisharp--display-result-message (message)
+  (omnisharp--display-stuff message))
+
 (provide 'omnisharp-utils)
