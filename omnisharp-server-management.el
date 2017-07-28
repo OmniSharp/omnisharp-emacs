@@ -14,6 +14,21 @@
     (:response-handlers . nil)
     (:started? . nil)))
 
+(defun omnisharp-server-running-p ()
+  "Returns t if omnisharp server is running. If not, it returns nil."
+  (not (equal nil omnisharp--server-info)))
+
+(defun omnisharp-file-in-current-project-p (file)
+  "Returns t if passed file is in the project which handled in current
+OmniSharp roslyn server process. If not, it returns nil."
+  (and omnisharp--last-project-path
+       (s-starts-with? omnisharp--last-project-path (expand-file-name file))))
+
+(defun omnisharp-buffer-file-in-current-project-p ()
+  "Returns t if current buffer's file is in the project which handled in current
+OmniSharp roslyn server process. If not, it returns nil."
+  (omnisharp-file-in-current-project-p (buffer-file-name)))
+
 (defun omnisharp--clear-response-handlers ()
   "For development time cleaning up impossible states of response
 handlers in the current omnisharp--server-info."
