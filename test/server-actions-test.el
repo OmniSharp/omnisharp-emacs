@@ -1,3 +1,4 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
 
 (ert-deftest check-ready-status-test ()
   (with-server-returning "checkreadystatus" t

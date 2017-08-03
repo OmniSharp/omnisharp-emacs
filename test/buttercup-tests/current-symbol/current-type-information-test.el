@@ -1,3 +1,5 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
+
 (describe "Current type information"
   (it "lists usages of the symbol under point"
     (ot--open-the-minimal-project-source-file "MyClassContainer.cs")

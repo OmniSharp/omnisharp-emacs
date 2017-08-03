@@ -1,3 +1,5 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
+;;
 ;; Test a few different kinds of code actions to see we can support
 ;; each one in a sensible manner.
 (describe "Fix code issue"

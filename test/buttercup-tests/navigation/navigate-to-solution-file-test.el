@@ -1,3 +1,5 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
+
 (describe "Navigate to solution file"
   (it "asks the user for a file in the current solution to navigate to and goes there"
     (-when-let (buffer (get-buffer "MyClass.cs"))

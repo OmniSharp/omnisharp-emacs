@@ -1,3 +1,5 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
+
 (describe "Find usages with ido"
   (before-each
     (ot--open-the-minimal-project-source-file "MyClassContainer.cs"))

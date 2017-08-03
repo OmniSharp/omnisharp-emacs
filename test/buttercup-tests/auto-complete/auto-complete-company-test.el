@@ -1,3 +1,5 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
+
 (describe "Auto-complete using the company interface"
 
   (before-each

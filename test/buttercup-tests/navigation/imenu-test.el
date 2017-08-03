@@ -1,3 +1,5 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
+
 (describe "Imenu integration"
   (it "builds an index of members in the current file"
     (ot--open-the-minimal-project-source-file "ImenuTest.cs")
