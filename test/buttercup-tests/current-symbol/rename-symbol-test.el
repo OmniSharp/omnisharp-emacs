@@ -1,3 +1,5 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
+
 (describe "Rename symbol"
   (it "renames a symbol referenced only in a single file"
     (ot--open-the-minimal-project-source-file "RenameFileTest.cs")

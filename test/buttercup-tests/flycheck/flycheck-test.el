@@ -1,4 +1,6 @@
 ;; -*- mode: Emacs-Lisp; lexical-binding: t; -*-
+;; License: GNU General Public License version 3, or (at your option) any later version
+
 (describe "Flycheck integration"
   (it "integrates flycheck with omnisharp"
     (ot--open-the-minimal-project-source-file "FlycheckTest.cs")

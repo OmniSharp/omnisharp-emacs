@@ -8,6 +8,8 @@ Emacs text editor. It provides IDE-like features for editing files in
 C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
+This package is licensed under GNU General Public License version 3, or (at your option) any later version.
+
 See [omnisharp-emacs Features](doc/features.md).
 
 ## Package Installation

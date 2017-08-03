@@ -1,3 +1,5 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
+
 (describe "Auto-complete using the popup interface"
   (before-each
     (ot--open-the-minimal-project-source-file "MyClassContainer.cs")

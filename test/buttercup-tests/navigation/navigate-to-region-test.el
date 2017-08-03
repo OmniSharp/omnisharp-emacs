@@ -1,3 +1,5 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
+
 (describe "Navigate to region"
   (it "asks the user for a region in the current file to navigate to and goes there"
 

@@ -1,3 +1,5 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
+
 (describe "Go to definition"
   (it "goes to definition in the same file"
     (ot--open-the-minimal-project-source-file "MyClassContainer.cs")

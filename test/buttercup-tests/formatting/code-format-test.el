@@ -1,3 +1,5 @@
+;; License: GNU General Public License version 3, or (at your option) any later version
+
 (describe "Code format"
   (before-each
     (ot--open-the-minimal-project-source-file "CodeFormatTest.cs"))
