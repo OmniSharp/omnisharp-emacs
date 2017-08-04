@@ -83,7 +83,7 @@ is built for. Also used to select version for automatic server installation."
                                      "    # otherwise, we expect mono to be on $PATH\n"
                                      "    MONO=mono\n"
                                      "fi\n"
-                                     "$MONO " (f-join target-dir "OmniSharp.exe") " $@\n"))
+                                     "$MONO " (f-join target-dir "OmniSharp.exe") " \"$@\"\n"))
                      'utf-8
                      (f-join target-dir server-exe))
             (set-file-modes (f-join target-dir server-exe) #o755)))))))
