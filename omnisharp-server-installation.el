@@ -13,7 +13,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(defcustom omnisharp-expected-server-version "1.19.0"
+(defcustom omnisharp-expected-server-version "1.22.0"
   "Version of the omnisharp-roslyn server that this omnisharp-emacs package
 is built for. Also used to select version for automatic server installation."
   :group 'omnisharp

@@ -18,14 +18,83 @@
   "Jump to the definition of the symbol under point. With prefix
 argument, use another window."
   (interactive "P")
-  (omnisharp--send-command-to-server
-   "gotodefinition"
-   (omnisharp--get-request-object)
-   (lambda (response)
-     (if (null (omnisharp--get-filename response))
-         (message
-          "Cannot go to definition as none was returned by the API.")
-       (omnisharp-go-to-file-line-and-column response other-window)))))
+  (let ((gotodefinition-request (append
+                                 '((WantMetadata . t))
+                                 (omnisharp--get-request-object))))
+    (omnisharp--send-command-to-server
+     "gotodefinition"
+     gotodefinition-request
+     (lambda (response)
+       (omnisharp--prepare-metadata-buffer-if-needed
+        (omnisharp--get-filename response)
+        (cdr (assoc 'MetadataSource response))
+        (lambda (buffer filename)
+          (omnisharp-go-to-file-line-and-column response
+                                                other-window
+                                                buffer)))))))
+
+(defun omnisharp--prepare-metadata-buffer-if-needed (filename
+                                                     metadata-source
+                                                     callback)
+  "Prepares metadata buffer if required (if FILENAME is missing and
+METADATA-SOURCE is available) and then invokes CALLBACK with either
+buffer or FILENAME of the file containing the definition.
+
+Metadata buffer is made readonly and both omnisharp-mode and csharp-mode's
+are enabled on this buffer."
+  (cond
+   ;; when gotodefinition returns FileName for the same
+   ;; metadata buffer as we're in:
+   ;;   just return current buffer
+   ((and (boundp 'omnisharp--metadata-source)
+         (string-equal filename omnisharp--metadata-source))
+    (funcall callback (current-buffer) nil))
+
+   ;; when gotodefinition returns an actual filename on the filesystem:
+   ;;   navigate to this file
+   (filename
+    (funcall callback nil filename))
+
+   ;; when gotodefinition returns metadata reference:
+   ;;   in this case we need to invoke /metadata endpoint to fetch
+   ;;   generated C# source for this type from the server (unless we
+   ;;   have it already in an existing buffer)
+   (metadata-source
+    (let* ((metadata-buffer-name (omnisharp--make-metadata-buffer-name
+                                  metadata-source))
+           (existing-metadata-buffer (get-buffer metadata-buffer-name)))
+      (if existing-metadata-buffer
+          ;; ok, we have this buffer for this metadata source loaded already
+          (funcall callback existing-metadata-buffer nil)
+
+        ;; otherwise we need to actually retrieve metadata-generated source
+        ;; and create a buffer for this type
+        (omnisharp--send-command-to-server
+         "metadata"
+         metadata-source
+         (lambda (response)
+           (let ((source (cdr (assoc 'Source response)))
+                 (source-name (cdr (assoc 'SourceName response)))
+                 (new-metadata-buffer (get-buffer-create metadata-buffer-name)))
+             (with-current-buffer new-metadata-buffer
+               (insert source)
+               (csharp-mode)
+               (omnisharp-mode)
+               (toggle-read-only 1)
+               (setq-local omnisharp--metadata-source source-name))
+             (funcall callback new-metadata-buffer nil)))))))
+   (t
+    (message
+     "Cannot go to definition as none was returned by the API."))))
+
+(defun omnisharp--make-metadata-buffer-name (metadata-source)
+  "Builds unique buffer name for the given MetadataSource object.
+This buffer name assumed to be stable and unique."
+
+  (let ((assembly-name (cdr (assoc 'AssemblyName metadata-source)))
+        (type-name (cdr (assoc 'TypeName metadata-source)))
+        (project-name (cdr (assoc 'ProjectName metadata-source))))
+    (concat "*omnisharp-metadata:" project-name ":" assembly-name ":" type-name "*")))
 
 (defun omnisharp-go-to-definition-other-window ()
   "Do `omnisharp-go-to-definition' displaying the result in a different window."

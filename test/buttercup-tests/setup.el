@@ -236,6 +236,21 @@ with one."
            (lambda (_prompt _quickfixes)
              (funcall ,answer-function _quickfixes))))
 
+(defun ot--wait-until-all-requests-completed (&optional timeout-seconds)
+  (setq timeout-seconds (or timeout-seconds 2))
+
+  (let ((start-time (current-time))
+        (process (cdr (assoc :process omnisharp--server-info))))
+    (while (cdr (assoc :response-handlers omnisharp--server-info))
+      (when (> (cadr (time-subtract (current-time) start-time))
+               timeout-seconds)
+        (progn
+          (let ((msg (format "All requests did not complete in %s seconds"
+                             timeout-seconds)))
+            (omnisharp--log msg)
+            (error msg))))
+      (accept-process-output process 0.1))))
+
 ;; Test suite setup. Start a test server process that can be used by
 ;; all tests
 (defun omnisharp-start-test-server ()

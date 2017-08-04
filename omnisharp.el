@@ -85,8 +85,9 @@ server backend."
       (setq eldoc-documentation-function 'omnisharp-eldoc-function))))
 
 ;;
-;; interactive functions that are to be available via autoload
-;; (all autoloaded f-ns should go in omnisharp.el in order to make 
+;; below are all the interactive functions that are to be available via autoload
+;;
+;; (autoloaded f-ns should go in omnisharp.el in order to make
 ;; internal file dependencies easier to manage when autoloading)
 ;;
 
@@ -330,15 +331,22 @@ some cases. Work around this."
   "Construct a Request object based on the current buffer contents."
   (let* ((line-number (number-to-string (line-number-at-pos)))
          (column-number (number-to-string (omnisharp--current-column)))
-         (buffer-contents (omnisharp--get-current-buffer-contents))
+         (buffer-contents (if (boundp 'omnisharp--metadata-source)
+                              nil
+                            (omnisharp--get-current-buffer-contents)))
          (filename-tmp (or buffer-file-name ""))
          (params `((Line     . ,line-number)
                    (Column   . ,column-number)
                    (Buffer   . ,buffer-contents))))
-    (if (/= 0 (length filename-tmp))
-        (cons (omnisharp--to-filename filename-tmp)
-              params)
-      params)))
+    (cond
+     ((boundp 'omnisharp--metadata-source)
+      (cons `(FileName . ,omnisharp--metadata-source)
+            params))
+     ((/= 0 (length filename-tmp))
+      (cons (omnisharp--to-filename filename-tmp)
+            params))
+     (t
+      params))))
 
 (defun omnisharp--get-typelookup-request-object ()
   "Construct a Request object for typelookup endpoint based on the current buffer contents."
@@ -363,15 +371,20 @@ not work on all platforms."
       params)))
 
 (defun omnisharp-go-to-file-line-and-column (json-result
-                                             &optional other-window)
+                                             &optional other-window
+                                             buffer)
   "Open file :FileName at :Line and :Column. If filename is not given,
 defaults to the current file. This function works for a
-QuickFix class json result."
+QuickFix class json result.
+
+Switches to BUFFER instead of :FileName when buffer is set."
   (omnisharp-go-to-file-line-and-column-worker
    (cdr (assoc 'Line json-result))
    (- (cdr (assoc 'Column json-result)) 1)
    (omnisharp--get-filename json-result)
-   other-window))
+   other-window
+   nil
+   buffer))
 
 (defun omnisharp--go-to-line-and-column (line column)
   (goto-char (point-min))
@@ -382,18 +395,20 @@ QuickFix class json result."
                                                     column
                                                     &optional filename
                                                     other-window
-                                                    dont-save-old-pos)
-  "Open file filename at line and column. If filename is not given,
-defaults to the current file. Saves the current location into the tag
-ring so that the user may return with (pop-tag-mark).
+                                                    dont-save-old-pos
+                                                    buffer)
+  "Open filename at line and column. Switches to BUFFER if provided,
+otherwise defaults to the current file if filename is not given.
+Saves the current location into the tag ring so that the user may
+return with (pop-tag-mark).
 
 If DONT-SAVE-OLD-POS is specified, will not save current position to
 find-tag-marker-ring. This is so this function may be used without
 messing with the ring."
 
   (let ((position-before-jumping (point-marker)))
-    (when filename
-      (omnisharp--find-file-possibly-in-other-window filename
+    (when (or buffer filename)
+      (omnisharp--find-file-possibly-in-other-window (or buffer filename)
                                                      other-window))
 
     ;; calling goto-line directly results in a compiler warning.
@@ -423,18 +438,23 @@ record that position. Otherwise record the current position."
   (ring-insert find-tag-marker-ring marker))
 
 (defun omnisharp--find-file-possibly-in-other-window
-  (filename &optional other-window)
-  "Open a buffer editing FILENAME. If no buffer for that filename
+  (file &optional other-window)
+  "Open a buffer editing FILE. If no buffer for that filename
 exists, a new one is created.
 If the optional argument OTHER-WINDOW is non-nil, uses another
-window."
+window.
+
+FILE can be a buffer in which case that buffer is selected."
 
   (cond
-   ((omnisharp--buffer-exists-for-file-name filename)
+   ((or (bufferp file)
+        (omnisharp--buffer-exists-for-file-name file))
     (let ((target-buffer-to-switch-to
-           (--first (string= (buffer-file-name it)
-                             filename)
-                    (buffer-list))))
+           (if (bufferp file)
+               file
+             (--first (string= (buffer-file-name it)
+                               file)
+                      (buffer-list)))))
       (if other-window
           (pop-to-buffer target-buffer-to-switch-to)
         (pop-to-buffer-same-window target-buffer-to-switch-to))))
@@ -443,7 +463,7 @@ window."
     (funcall (if other-window
                  'find-file-other-window
                'find-file)
-             filename))))
+             file))))
 
 (defun omnisharp--vector-to-list (vector)
   (append vector nil))
