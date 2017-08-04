@@ -5,5 +5,4 @@
 # backup files by emacs
 /test/MinimalProject/obj/*
 /test/MinimalProject/KeystrokeTest.cs
-/travis-stuff/omnisharp-roslyn/
 *~
