@@ -14,12 +14,6 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-(defcustom omnisharp-server-executable-path nil
-  "Path to OmniSharp server override. Should be set to non-nil if server is installed locally.
-Otherwise omnisharp request the user to do M-x `omnisharp-install-server` and that server
-executable will be used instead."
-  :type '(choice (const :tag "Not Set" nil) string))
-
 (defun omnisharp--resolve-omnisharp-server-executable-path ()
     "Attempts to resolve a path to local executable for the omnisharp-roslyn server.
 Will return `omnisharp-server-executable-path` override if set, otherwise will attempt

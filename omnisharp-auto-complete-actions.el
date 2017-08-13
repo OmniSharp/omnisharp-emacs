@@ -31,43 +31,10 @@ results of an auto-complete call.")
   "The header for the temporary buffer that is used to display the
 results of an auto-complete call.")
 
-(defcustom omnisharp-auto-complete-popup-help-delay nil
-  "The timeout after which the auto-complete popup will show its help
-  popup. Disabled by default because the help is often scrambled and
-  looks bad."
-  :group 'omnisharp
-  :type '(choice (const :tag "disabled" nil)
-                 integer))
-
-(defcustom omnisharp-auto-complete-popup-persist-help t
-  "Whether to keep the help window (accessed by pressing f1 while the
-popup window is active) open after any other key is
-pressed. Defaults to true."
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
 (defvar-local
   omnisharp--last-buffer-specific-auto-complete-result
   nil
   "Contains the last result of an autocomplete query.")
-
-(defcustom omnisharp-auto-complete-want-documentation t
-  "Whether to include auto-complete documentation for each and every
-response. This may be set to nil to get a speed boost for
-completions."
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-(defcustom omnisharp-auto-complete-want-importable-types nil
-  "Whether to search for autocompletions in all available
-namespaces. If a match is found for a new namespace, the namespace is
-automatically imported. This variable may be set to nil to get a speed
-boost for completions."
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-     (const :tag "No" nil)))
 
 (defvar omnisharp-auto-complete-popup-keymap
   (let ((keymap (make-sparse-keymap)))
@@ -108,86 +75,6 @@ information.")
 (defvar omnisharp-company-type-separator " : "
   "The string used to visually separate functions/variables from
   their types")
-
-(defcustom omnisharp-company-do-template-completion t
-  "Set to t if you want in-line parameter completion, nil
-  otherwise."
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-(defcustom omnisharp-company-template-use-yasnippet t 
-  "Set to t if you want completion to happen via yasnippet
-  otherwise fall back on company's templating. Requires yasnippet
-  to be installed"
-  
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-(defcustom omnisharp-company-ignore-case t
-  "If t, case is ignored in completion matches."
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-(defcustom omnisharp-company-strip-trailing-brackets nil
-  "If t, strips trailing <> and () from completions."
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-(defcustom omnisharp-company-begin-after-member-access t
-  "If t, begin completion when pressing '.' after a class, object
-  or namespace"
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-(defcustom omnisharp-company-sort-results t
-  "If t, autocompletion results are sorted alphabetically"
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-(defcustom omnisharp-imenu-support nil
-  "If t, activate imenu integration. Defaults to nil."
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-(defcustom omnisharp-eldoc-support t
-  "If t, activate eldoc integration - eldoc-mode must also be enabled for
-  this to work. Defaults to t."
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-(defcustom omnisharp-company-match-type 'company-match-simple
-  "Simple defaults to company's normal prefix matching (fast).
-   Server allows the omnisharp-server to do the matching (slow but does fuzzy matching).
-   Flex is experimental, and uses the flx library to match (fastish, good fuzzy matching)."
-  :group 'omnisharp
-  :type '(choice (const :tag "Simple" 'company-match-simple)
-                 (const :tag "Server" 'company-match-server)
-                 (const :tag "Flex" 'company-match-flx)))
-
-(defcustom omnisharp-company-match-sort-by-flx-score nil
-  "If omnisharp-company-match-type is 'company-match-flx', 
-   set this to 't' to order search results by the flx match score"
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
-
-;; auto-complete-mode integration
-(defcustom omnisharp-auto-complete-template-use-yasnippet t
-  "Set to t if you want completion to happen via yasnippet
-  otherwise fall back on auto-complete's templating. Requires yasnippet
-  to be installed"
-
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
 
 (defun omnisharp-auto-complete (&optional invert-importable-types-setting)
   "If called with a prefix argument, will complete types that are not
@@ -316,7 +203,7 @@ triggers a completion immediately"
     (if omnisharp-company-match-sort-by-flx-score
         (setq matches (sort matches (lambda (el1 el2) (> (nth 1 el1) (nth 1 el2)))))
       (setq matches (reverse matches)))
-    
+
     (mapcar 'car matches)))
 
 (defvar omnisharp-company-current-flx-match-list nil)
@@ -331,7 +218,7 @@ triggers a completion immediately"
 
 
 (defun omnisharp--yasnippet-tag-text-with-completion-info ()
-  "This is called after yasnippet has finished expanding a template. 
+  "This is called after yasnippet has finished expanding a template.
    It adds data to the completed text, which we later use in ElDoc"
   (when omnisharp-snippet-json-result
     (add-text-properties yas-snippet-beg yas-snippet-end
@@ -349,7 +236,7 @@ triggers a completion immediately"
   (when (not omnisharp-snippet-json-result)
     (setq omnisharp-snippet-json-result json-result)
     (add-hook 'yas-after-exit-snippet-hook 'omnisharp--yasnippet-tag-text-with-completion-info))
-  
+
   (delete-region (- (point) (length call)) (point))
   (yas-expand-snippet snippet))
 
@@ -399,7 +286,7 @@ SomeMethod(int parameter)' and the original value ITEM."
            (setq output (car (split-string completion "(\\|<"))))
           (method-base
            (setq output method-base)))
-    
+
     ;; When we aren't templating, show the full description of the
     ;; method, rather than just the return type
     (when (not allow-templating)
