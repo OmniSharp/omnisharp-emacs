@@ -12,14 +12,17 @@ This package is licensed under GNU General Public License version 3, or (at your
 
 See [omnisharp-emacs Features](doc/features.md).
 
+
 ## Package Installation
 This package requires Emacs 24.3 and above. It has been tested on
 Ubuntu, Windows 7+ and on macOS.
+
 
 ### Installation on Spacemacs
 Add `csharp` layer to `dotspacemacs-configuration-layers` on
 your `.spacemacs` file. `csharp-mode` and `omnisharp` packages
 will get installed automatically for you on restart.
+
 
 ### Installation on Regular Emacs
 To install, use [MELPA][].
@@ -49,26 +52,45 @@ For autocompletion via company mode you will also need this in your `init.el`:
  '(add-to-list 'company-backends 'company-omnisharp))
 ```
 
+## Configuration
+To start using omnisharp-emacs, start the server with
+`M-x omnisharp-start-omnisharp-server RET`. The command will prompt you for
+a project or solution file you want to work with.
+
+You will probably want to create a custom configuration for omnisharp-emacs
+in your normal coding sessions. Usually all this customization
+goes in your custom `csharp-mode-hook`.
+
+Here is a sample configuration script (that goes into your `~/.emacs.d/init.el`
+or in your `dotspacemacs/user-config()` in `~/.spacemacs`):
+
+```
+  (defun my-csharp-mode-setup ()
+    (setq indent-tabs-mode nil)
+    (setq c-syntactic-indentation t)
+    (c-set-style "ellemtel")
+    (setq c-basic-offset 4)
+    (setq truncate-lines t)
+    (setq tab-width 4)
+    (setq evil-shift-width 4)
+    (local-set-key (kbd "C-c C-c") 'recompile))
+
+  (add-hook 'csharp-mode-hook 'my-csharp-mode-setup t)
+```
+
+There is also an example configuration for evil-mode included in the project,
+please see `doc/example-config-for-evil-mode.el`.
+
+
 ## Server Installation
 This emacs package requires the [omnisharp-roslyn][] server program.
 Emacs will manage connection to the server as a subprocess.
 
-The easiest way to install the server is to invoke 
+The easiest/default way to install the server is to invoke 
 `M-x omnisharp-install-server` and follow instructions on minibufer.
 
 If that fails (or you feel adventurous) please see [installing omnisharp server](doc/server-installation.md) 
 on how to install the server manually.
-
-## Configuration
-To start using omnisharp-emacs, start the server with `M-x omnisharp-start-omnisharp-server RET`.
-The command will ask you for a project or solution file you want to code in.
-
-You will probably want to create a custom configuration for accessing
-omnisharp-emacs in your normal coding sessions.
-Usually all this customization goes in your custom `csharp-mode-hook` in your `init.el`.
-
-There is also an example configuration for evil-mode included in the project,
-please see `doc/example-config-for-evil-mode.el`.
 
 
 ## Contributing
