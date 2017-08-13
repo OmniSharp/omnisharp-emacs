@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013-2017 Mika Vilpas and others (GPLv3)
 ;; Author: Mika Vilpas and others
-;; Version: 4.0
+;; Version: 4.1
 ;; License: GNU General Public License version 3, or (at your option) any later version
 ;; Url: https://github.com/Omnisharp/omnisharp-emacs
 ;; Package-Requires: ((emacs "24") (flycheck "30") (dash "2.12.0") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.10.0") (shut-up "0.3.2") (f "0.19.0"))
