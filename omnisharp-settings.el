@@ -40,7 +40,7 @@ results of a 'find usages' call.")
 results of a 'find implementations' call.")
 
 (defvar omnisharp--ambiguous-symbols-buffer-name "* OmniSharp : Ambiguous unresolved symbols *"
-  "The name of the temporary buffer that is used to display any 
+  "The name of the temporary buffer that is used to display any
 ambiguous unresolved symbols of a 'fix usings' call.")
 
 (defvar omnisharp-find-usages-header
@@ -75,5 +75,130 @@ there are ambiguous unresolved symbols after running omnisharp-fix-usings")
     ;;(define-key map (kbd "C-c f") 'insert-foo)
     map)
   "Keymap for omnisharp-mode.")
+
+(defcustom omnisharp-server-executable-path nil
+  "Path to OmniSharp server override. Should be set to non-nil if server is installed locally.
+Otherwise omnisharp request the user to do M-x `omnisharp-install-server` and that server
+executable will be used instead."
+  :type '(choice (const :tag "Not Set" nil) string))
+
+(defcustom omnisharp-expected-server-version "1.22.0"
+  "Version of the omnisharp-roslyn server that this omnisharp-emacs package
+is built for. Also used to select version for automatic server installation."
+  :group 'omnisharp
+  :type 'string)
+
+(defcustom omnisharp-auto-complete-popup-help-delay nil
+  "The timeout after which the auto-complete popup will show its help
+  popup. Disabled by default because the help is often scrambled and
+  looks bad."
+  :group 'omnisharp
+  :type '(choice (const :tag "disabled" nil)
+                 integer))
+
+(defcustom omnisharp-auto-complete-popup-persist-help t
+  "Whether to keep the help window (accessed by pressing f1 while the
+popup window is active) open after any other key is
+pressed. Defaults to true."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-auto-complete-want-documentation t
+  "Whether to include auto-complete documentation for each and every
+response. This may be set to nil to get a speed boost for
+completions."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-auto-complete-want-importable-types nil
+  "Whether to search for autocompletions in all available
+namespaces. If a match is found for a new namespace, the namespace is
+automatically imported. This variable may be set to nil to get a speed
+boost for completions."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-company-do-template-completion t
+  "Set to t if you want in-line parameter completion, nil
+  otherwise."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-company-template-use-yasnippet t
+  "Set to t if you want completion to happen via yasnippet
+  otherwise fall back on company's templating. Requires yasnippet
+  to be installed"
+
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-company-ignore-case t
+  "If t, case is ignored in completion matches."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-company-strip-trailing-brackets nil
+  "If t, strips trailing <> and () from completions."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-company-begin-after-member-access t
+  "If t, begin completion when pressing '.' after a class, object
+  or namespace"
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-company-sort-results t
+  "If t, autocompletion results are sorted alphabetically"
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-imenu-support nil
+  "If t, activate imenu integration. Defaults to nil."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-eldoc-support t
+  "If t, activate eldoc integration - eldoc-mode must also be enabled for
+  this to work. Defaults to t."
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+(defcustom omnisharp-company-match-type 'company-match-simple
+  "Simple defaults to company's normal prefix matching (fast).
+   Server allows the omnisharp-server to do the matching (slow but does fuzzy matching).
+   Flex is experimental, and uses the flx library to match (fastish, good fuzzy matching)."
+  :group 'omnisharp
+  :type '(choice (const :tag "Simple" 'company-match-simple)
+                 (const :tag "Server" 'company-match-server)
+                 (const :tag "Flex" 'company-match-flx)))
+
+(defcustom omnisharp-company-match-sort-by-flx-score nil
+  "If omnisharp-company-match-type is 'company-match-flx',
+   set this to 't' to order search results by the flx match score"
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
+
+;; auto-complete-mode integration
+(defcustom omnisharp-auto-complete-template-use-yasnippet t
+  "Set to t if you want completion to happen via yasnippet
+  otherwise fall back on auto-complete's templating. Requires yasnippet
+  to be installed"
+
+  :group 'omnisharp
+  :type '(choice (const :tag "Yes" t)
+                 (const :tag "No" nil)))
 
 (provide 'omnisharp-settings)

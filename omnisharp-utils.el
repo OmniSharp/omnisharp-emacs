@@ -324,4 +324,17 @@ the developer's emacs unusable."
   (unless (not remaining)
     (omnisharp--mkdirp-item (f-join dir (car (-take 1 remaining))) (-drop 1 remaining))))
 
+(defmacro omnisharp--setq-and-restore (var value &rest body)
+  "Sets a variable and restores it to original value on unwind.
+Used in places where lexical binding is not what we want.
+
+TODO: there might be an easier way to do this but I couldn't find
+      something like this that works with lexical-binding: t;"
+  `(let ((orig-value ,var))
+     (unwind-protect
+         (progn
+           (setq ,var ,value)
+           (progn ,@body))
+       (setq ,var orig-value))))
+
 (provide 'omnisharp-utils)

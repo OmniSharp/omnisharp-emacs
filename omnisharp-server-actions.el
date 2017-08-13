@@ -14,12 +14,6 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-(defcustom omnisharp-server-executable-path nil
-  "Path to OmniSharp server override. Should be set to non-nil if server is installed locally.
-Otherwise omnisharp request the user to do M-x `omnisharp-install-server` and that server
-executable will be used instead."
-  :type '(choice (const :tag "Not Set" nil) string))
-
 (defun omnisharp--resolve-omnisharp-server-executable-path ()
     "Attempts to resolve a path to local executable for the omnisharp-roslyn server.
 Will return `omnisharp-server-executable-path` override if set, otherwise will attempt
@@ -52,24 +46,23 @@ to use server installed via `omnisharp-install-server`.
   (setq omnisharp--server-info
         (make-omnisharp--server-info
          ;; use a pipe for the connection instead of a pty
-         (let ((original-process-connection-type process-connection-type))
-           (setq process-connection-type nil)
-           (let ((process (-doto (start-process
-                                  "OmniServer" ; process name
-                                  "OmniServer" ; buffer name
-                                  server-executable-path
-                                  "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))
-                            (set-process-filter 'omnisharp--handle-server-message)
-                            (set-process-sentinel (lambda (process event)
-                                                    (when (memq (process-status process) '(exit signal))
-                                                      (message "omnisharp: OmniSharp server terminated")
-                                                      (setq omnisharp--server-info nil)
-                                                      (if omnisharp--restart-server-on-stop
-                                                          (omnisharp--do-server-start
-                                                           omnisharp--last-project-path
-                                                           server-executable-path))))))))
-             (setq process-connection-type original-process-connection-type)
-             process)))))
+         (omnisharp--setq-and-restore
+          process-connection-type nil
+
+          (-doto (start-process
+                  "OmniServer" ; process name
+                  "OmniServer" ; buffer name
+                  server-executable-path
+                  "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))
+            (set-process-filter 'omnisharp--handle-server-message)
+            (set-process-sentinel (lambda (process event)
+                                    (when (memq (process-status process) '(exit signal))
+                                      (message "omnisharp: OmniSharp server terminated")
+                                      (setq omnisharp--server-info nil)
+                                      (if omnisharp--restart-server-on-stop
+                                          (omnisharp--do-server-start
+                                           omnisharp--last-project-path
+                                           server-executable-path))))))))))
 
 (defun omnisharp--start-omnisharp-server (path-to-project)
   "Actual implementation for autoloaded omnisharp-start-omnisharp-server"
