@@ -56,7 +56,6 @@
     (interactive)
     (helm :sources (helm-make-source "Omnisharp - Find Symbols" 'helm-source-sync
                                      :action 'omnisharp--helm-jump-to-candidate
-                                     :matchplugin nil
                                      :match '((lambda (candidate) (string-match-p
                                                                    helm-pattern
                                                                    (nth 1 (split-string
