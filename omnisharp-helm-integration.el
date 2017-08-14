@@ -57,11 +57,11 @@
     (helm :sources (helm-make-source "Omnisharp - Find Symbols" 'helm-source-sync
                                      :action 'omnisharp--helm-jump-to-candidate
                                      :volatile t
-                                     :candidates (lambda () (omnisharp--helm-find-symbols-candidates helm-pattern)))
+                                     :candidates 'omnisharp--helm-find-symbols-candidates)
           :truncate-lines t))
 
-  (defun omnisharp--helm-find-symbols-candidates (filter)
-    (if (string= filter "")
+  (defun omnisharp--helm-find-symbols-candidates ()
+    (if (string= helm-pattern "")
         ;; we want to wait for at least one char before we trigger
         ;; server search because listing all the symbols can take a lot
         ;; of time on large projects
@@ -70,7 +70,7 @@
       (let (candidates)
         (omnisharp--send-command-to-server-sync
          "findsymbols"
-         `((Filter . ,filter))
+         `((Filter . ,helm-pattern))
          (-lambda ((&alist 'QuickFixes quickfixes))
            (setq candidates
                  (-map 'omnisharp--helm-find-symbols-transform-candidate
@@ -80,10 +80,13 @@
   (defun omnisharp--helm-find-symbols-transform-candidate (candidate)
     "Convert a quickfix entry into helm output"
     (cons
-     (format "%s : %s"
+     (format "%s : %s(%s)"
+             (propertize (nth 0 (split-string (cdr (assoc 'Text candidate)) "("))
+                         'face 'helm-grep-match)
              (propertize (omnisharp--get-filename candidate)
                          'face 'helm-grep-file)
-             (nth 0 (split-string (cdr (assoc 'Text candidate)) "(")))
+             (propertize (number-to-string (cdr (assoc 'Line candidate)))
+                         'face 'helm-grep-lineno))
      candidate)))
 
 (provide 'omnisharp-helm-integration)
