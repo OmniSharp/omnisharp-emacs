@@ -54,6 +54,7 @@ to use server installed via `omnisharp-install-server`.
                   "OmniServer" ; buffer name
                   server-executable-path
                   "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))
+            (lambda (process) (buffer-disable-undo (process-buffer process)))
             (set-process-filter 'omnisharp--handle-server-message)
             (set-process-sentinel (lambda (process event)
                                     (when (memq (process-status process) '(exit signal))
