@@ -28,6 +28,9 @@
 ;; that works in the background.
 ;;
 ;; See the project home page for more information.
+
+
+(require 'csharp-mode)
 (require 'json)
 (require 'cl-lib)
 (require 'files)
@@ -43,6 +46,7 @@
 (require 'shut-up)
 (require 'f)
 
+(require 'omnisharp-settings)
 (require 'omnisharp-server-management)
 (require 'omnisharp-utils)
 (require 'omnisharp-http-utils)
@@ -50,7 +54,6 @@
 (require 'omnisharp-auto-complete-actions)
 (require 'omnisharp-current-symbol-actions)
 (require 'omnisharp-navigation-actions)
-(require 'omnisharp-settings)
 (require 'omnisharp-helm-integration)
 (require 'omnisharp-solution-actions)
 (require 'omnisharp-format-actions)
