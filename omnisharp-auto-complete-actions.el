@@ -324,8 +324,7 @@ company-mode-friendly"
                    (omnisharp-auto-complete-worker
                     params
                     (lambda (result)
-                      (omnisharp--setq-and-restore
-                       completion-ignore-case omnisharp-company-ignore-case
+                      (let ((completion-ignore-case omnisharp-company-ignore-case))
                        (funcall cb (funcall handler result)))))))))
 
 (defun omnisharp--company-annotation (candidate)

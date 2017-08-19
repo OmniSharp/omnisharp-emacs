@@ -46,10 +46,8 @@ to use server installed via `omnisharp-install-server`.
   (setq omnisharp--server-info
         (make-omnisharp--server-info
          ;; use a pipe for the connection instead of a pty
-         (omnisharp--setq-and-restore
-          process-connection-type nil
-
-          (-doto (start-process
+         (let ((process-connection-type nil))
+	   (-doto (start-process
                   "OmniServer" ; process name
                   "OmniServer" ; buffer name
                   server-executable-path
