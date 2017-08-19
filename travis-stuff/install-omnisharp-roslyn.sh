@@ -15,7 +15,7 @@ if [ ! -d "omnisharp-roslyn" ]; then
 
     if [ ! -x "OmniSharp" ]; then
         echo "#!/usr/bin/env bash" > OmniSharp
-        echo "mono $PWD/OmniSharp.exe \$@" >> OmniSharp
+        echo "mono --assembly-loader=strict $PWD/OmniSharp.exe \$@" >> OmniSharp
         chmod +x OmniSharp
     fi
 fi
