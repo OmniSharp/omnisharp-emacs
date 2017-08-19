@@ -1,7 +1,9 @@
 #!/bin/bash
 
-if [[ $(dotnet --version) != "1.0"* ]]; then
-    echo "Must install the .NET CLI 1.0.* http://dotnet.github.io/"
+echo "'dotnet --version' reports:" $(dotnet --version)
+
+if [[ $(dotnet --version) != "1.1"* ]]; then
+    echo "Must install the .NET CLI 1.1.* http://dotnet.github.io/"
     exit 1
 fi
 
