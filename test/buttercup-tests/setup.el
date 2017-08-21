@@ -253,11 +253,16 @@ with one."
 
 ;; Test suite setup. Start a test server process that can be used by
 ;; all tests
+
 (defun omnisharp-start-test-server ()
   (interactive)
   (let ((omnisharp-server-executable-path (concat omnisharp-emacs-root-path
                                                   "/travis-stuff/omnisharp-roslyn/OmniSharp")))
-    (omnisharp--create-test-server omnisharp-emacs-root-path)))
+    (condition-case nil
+        (kill-process "OmniServer")
+      (error nil))
+    (omnisharp--do-server-start (s-concat omnisharp-emacs-root-path
+                                          "/test/MinimalProject"))))
 
 (omnisharp-start-test-server)
 

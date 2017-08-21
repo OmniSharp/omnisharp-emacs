@@ -228,14 +228,6 @@ moving point."
     "updatebuffer"
     (omnisharp--get-request-object))))
 
-;; this is actually used in tests only
-(defun omnisharp--create-test-server (omnisharp-emacs-root-path)
-  (condition-case nil
-      (kill-process "OmniServer")
-    (error nil))
-  (omnisharp-start-omnisharp-server (s-concat omnisharp-emacs-root-path
-                                              "/test/MinimalProject")))
-
 (defun omnisharp--update-files-with-text-changes (file-name text-changes)
   (let ((file (find-file (omnisharp--convert-backslashes-to-forward-slashes
                           file-name))))
@@ -321,6 +313,21 @@ the developer's emacs unusable."
   (unless (f-directory-p dir)
     (f-mkdir dir))
   (unless (not remaining)
-    (omnisharp--mkdirp-item (f-join dir (car (-take 1 remaining))) (-drop 1 remaining))))
+    (omnisharp--mkdirp-item (f-join dir (car (-take 1 remaining)))
+                            (-drop 1 remaining))))
+
+(defun omnisharp--resolve-solution-file-candidates ()
+  "Resolves a list of .csproj and .sln file candidates to be used
+for starting a server based on the current buffer."
+  (let ((dir (file-name-directory (or buffer-file-name "")))
+        (candidates nil))
+    (while (and dir (not (f-root-p dir)))
+      (setq candidates (append candidates
+                               (f-files dir (lambda (filename)
+                                              (string-match-p
+                                               "\\(\\.sln\\|\\.csproj\\)$"
+                                               filename)))))
+      (setq dir (f-parent dir)))
+    candidates))
 
 (provide 'omnisharp-utils)
