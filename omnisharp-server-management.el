@@ -13,19 +13,36 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+;;;
+;; omnisharp--server-info an assoc list is used to track all the metadata
+;; about currently running server.
+;;
+;; NOTE 1: this will go away with multi-server functionality
+;; NOTE 2: you shouldn't use this in user code, this is implementation detail
+;;
+;; keys:
+;;  :process           - process of the server
+;;  :request-id        - used for and incremented on every outgoing request
+;;  :response-handlers - alist of (request-id . response-handler)
+;;  :started?          - t if server reported it has started OK and is ready
+;;  :project-path      - path to server project .sln, .csproj or directory
+;;  :project-root      - project root directory (based on project-path)
 (defvar omnisharp--server-info nil)
+
 (defvar omnisharp--last-project-path nil)
 (defvar omnisharp--restart-server-on-stop nil)
 (defvar omnisharp-use-http nil "Set to t to use http instead of stdio.")
 
-(defun make-omnisharp--server-info (process)
-  `((:process . ,process)
-    ;; This is incremented for each request. Do not modify it in other
-    ;; places.
-    (:request-id . 1)
-    ;; alist of (request-id . response-handler)
-    (:response-handlers . nil)
-    (:started? . nil)))
+(defun make-omnisharp--server-info (process project-path)
+  (let ((project-root (if (f-dir-p project-path) project-path
+                        (f-dirname project-path))))
+    ;; see notes on (defvar omnisharp--server-info)
+    `((:process . ,process)
+      (:request-id . 1)
+      (:response-handlers . nil)
+      (:started? . nil)
+      (:project-path . ,project-path)
+      (:project-root . ,project-root))))
 
 (defun omnisharp--clear-response-handlers ()
   "For development time cleaning up impossible states of response

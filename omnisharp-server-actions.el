@@ -61,7 +61,8 @@ to use server installed via `omnisharp-install-server`.
                                          (message "omnisharp: OmniSharp server terminated")
                                          (setq omnisharp--server-info nil)
                                          (if omnisharp--restart-server-on-stop
-                                             (omnisharp--do-server-start omnisharp--last-project-path)))))))))))
+                                             (omnisharp--do-server-start omnisharp--last-project-path)))))))
+           path-to-project))))
 
 (defun omnisharp--start-omnisharp-server (no-autodetect)
   "Actual implementation for autoloaded omnisharp-start-omnisharp-server.
