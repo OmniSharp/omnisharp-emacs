@@ -35,7 +35,7 @@ to use server installed via `omnisharp-install-server`.
   (let ((server-executable-path (omnisharp--resolve-omnisharp-server-executable-path)))
     (message (format "omnisharp: Starting OmniSharpServer using project folder/solution file: %s"
                      path-to-project))
-    (message "omnisharp: using the server at: %s" server-executable-path)
+    (message "omnisharp: using server binary on %s" server-executable-path)
 
     ;; Save all csharp buffers to ensure the server is in sync"
     (save-some-buffers t (lambda () (string-equal (file-name-extension (buffer-file-name)) "cs")))
@@ -63,14 +63,15 @@ to use server installed via `omnisharp-install-server`.
                                          (if omnisharp--restart-server-on-stop
                                              (omnisharp--do-server-start omnisharp--last-project-path)))))))))))
 
-(defun omnisharp--start-omnisharp-server ()
+(defun omnisharp--start-omnisharp-server (no-autodetect)
   "Actual implementation for autoloaded omnisharp-start-omnisharp-server.
 
 Will query user for a path to project/solution file to start the server with."
   (let ((server-executable-path (omnisharp--resolve-omnisharp-server-executable-path))
         (project-file-candidates (nreverse (omnisharp--resolve-solution-file-candidates))))
     (if server-executable-path
-        (if (require 'helm-grep nil 'noerror)
+        (if (and (not no-autodetect)
+                 (require 'helm-grep nil 'noerror))
             (helm :sources (helm-build-sync-source "Omnisharp - Start Server"
                              :candidates project-file-candidates
                              :action 'omnisharp--do-server-start))

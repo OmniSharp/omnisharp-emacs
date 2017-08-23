@@ -95,10 +95,10 @@ server backend."
 ;;
 
 ;;;###autoload
-(defun omnisharp-start-omnisharp-server ()
+(defun omnisharp-start-omnisharp-server (&optional no-autodetect)
   "Starts an OmniSharp server for a given path to a project or solution file"
-  (interactive)
-  (omnisharp--start-omnisharp-server))
+  (interactive "P")
+  (omnisharp--start-omnisharp-server no-autodetect))
 
 ;;;###autoload
 (defun omnisharp-stop-server ()
