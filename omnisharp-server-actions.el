@@ -71,6 +71,7 @@ Will query user for a path to project/solution file to start the server with."
         (project-file-candidates (nreverse (omnisharp--resolve-solution-file-candidates))))
     (if server-executable-path
         (if (and (not no-autodetect)
+                 project-file-candidates
                  (require 'helm-grep nil 'noerror))
             (helm :sources (helm-build-sync-source "Omnisharp - Start Server"
                              :candidates project-file-candidates
