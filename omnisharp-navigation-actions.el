@@ -80,8 +80,8 @@ are enabled on this buffer."
                (insert source)
                (csharp-mode)
                (omnisharp-mode)
-               (toggle-read-only 1)
-               (setq-local omnisharp--metadata-source source-name))
+               (setq-local omnisharp--metadata-source source-name)
+               (toggle-read-only 1))
              (funcall callback new-metadata-buffer nil)))))))
    (t
     (message

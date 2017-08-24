@@ -69,6 +69,7 @@ server backend."
   :keymap omnisharp-mode-map
   (omnisharp--init-imenu-support)
   (omnisharp--init-eldoc-support)
+  (omnisharp--attempt-to-start-server-for-buffer)
 
   ;; These are selected automatically when flycheck is enabled
   (add-to-list 'flycheck-checkers 'csharp-omnisharp-codecheck))
@@ -502,7 +503,9 @@ CALLBACK is the status callback passed by Flycheck."
    running in the background"
                                  :start #'omnisharp--flycheck-start
                                  :modes '(csharp-mode)
-                                 :predicate (lambda () (and omnisharp-mode omnisharp--server-info)))
+                                 :predicate (lambda () (and omnisharp-mode
+                                                            omnisharp--server-info
+                                                            (not (boundp 'omnisharp--metadata-source)))))
 
 (defun omnisharp--flycheck-error-parser (response checker buffer)
   "Takes a QuickFixResponse result. Returns flycheck errors created based on the

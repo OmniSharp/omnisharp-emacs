@@ -53,9 +53,12 @@ For autocompletion via company mode you will also need this in your `init.el`:
 ```
 
 ## Configuration
-To start using omnisharp-emacs, start the server with
-`M-x omnisharp-start-omnisharp-server RET`. The command will prompt you for
-a project or solution file you want to work with.
+`omnisharp-emacs` will attempt to start a server automatically for you when
+opening a .cs file (if a server has not been started already). Otherwise, you
+will need to start the server with `M-x omnisharp-start-omnisharp-server RET`.
+should it fail to find a .sln file or project root (via projectile). The command
+will prompt you for a solution file or project root directory you want to work
+with.
 
 You will probably want to create a custom configuration for omnisharp-emacs
 in your normal coding sessions. Usually all this customization
