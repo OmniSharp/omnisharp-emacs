@@ -14,61 +14,12 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-(defun omnisharp--resolve-omnisharp-server-executable-path ()
-    "Attempts to resolve a path to local executable for the omnisharp-roslyn server.
-Will return `omnisharp-server-executable-path` override if set, otherwise will attempt
-to use server installed via `omnisharp-install-server`.
-
- Failing all that an error message will be shown and nil returned."
-    (if omnisharp-server-executable-path
-        omnisharp-server-executable-path
-      (let ((server-installation-path (omnisharp--server-installation-path)))
-        (if server-installation-path
-            server-installation-path
-          (progn
-            (message "omnisharp: No omnisharp server could be found.")
-            (message (concat "omnisharp: Please use M-x 'omnisharp-install-server' or download server manually"
-                             " as detailed in https://github.com/OmniSharp/omnisharp-emacs/blob/master/doc/server-installation.md"))
-            nil)))))
-
-(defun omnisharp--do-server-start (path-to-project)
-  (let ((server-executable-path (omnisharp--resolve-omnisharp-server-executable-path)))
-    (message (format "omnisharp: Starting OmniSharpServer using project folder/solution file: %s"
-                     path-to-project))
-    (message "omnisharp: using server binary on %s" server-executable-path)
-
-    ;; Save all csharp buffers to ensure the server is in sync"
-    (save-some-buffers t (lambda () (string-equal (file-name-extension (buffer-file-name)) "cs")))
-
-    (setq omnisharp--last-project-path path-to-project)
-
-    ;; this can be set by omnisharp-reload-solution to t
-    (setq omnisharp--restart-server-on-stop nil)
-
-    (setq omnisharp--server-info
-          (make-omnisharp--server-info
-           ;; use a pipe for the connection instead of a pty
-           (let ((process-connection-type nil))
-             (-doto (start-process
-                     "OmniServer" ; process name
-                     "OmniServer" ; buffer name
-                     server-executable-path
-                     "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))
-               (lambda (process) (buffer-disable-undo (process-buffer process)))
-               (set-process-filter 'omnisharp--handle-server-message)
-               (set-process-sentinel (lambda (process event)
-                                       (when (memq (process-status process) '(exit signal))
-                                         (message "omnisharp: OmniSharp server terminated")
-                                         (setq omnisharp--server-info nil)
-                                         (if omnisharp--restart-server-on-stop
-                                             (omnisharp--do-server-start omnisharp--last-project-path)))))))))))
-
 (defun omnisharp--start-omnisharp-server (no-autodetect)
   "Actual implementation for autoloaded omnisharp-start-omnisharp-server.
 
 Will query user for a path to project/solution file to start the server with."
   (let ((server-executable-path (omnisharp--resolve-omnisharp-server-executable-path))
-        (project-file-candidates (nreverse (omnisharp--resolve-solution-file-candidates))))
+        (project-file-candidates (omnisharp--resolve-sln-candidates)))
     (if server-executable-path
         (if (and (not no-autodetect)
                  project-file-candidates
@@ -77,10 +28,10 @@ Will query user for a path to project/solution file to start the server with."
                              :candidates project-file-candidates
                              :action 'omnisharp--do-server-start))
           (let ((path-to-project (read-file-name
-                                  "Start OmniSharp for project or solution file: ")))
+                                  "Start OmniSharp for project folder or solution file: ")))
             (if (file-exists-p path-to-project)
                 (omnisharp--do-server-start path-to-project)
-              (error (format "Path does not lead to a valid project folder or solution file path: %s"
+              (error (format "Path does not lead to a valid project directory or solution file path: %s"
                              path-to-project))))))))
 
 (defun omnisharp--stop-server ()
@@ -92,7 +43,7 @@ Will query user for a path to project/solution file to start the server with."
   "Actual implementation for autoloaded omnisharp-reload-solution"
   (if (and (not (equal nil omnisharp--last-project-path))
            (not (equal nil omnisharp--server-info)))
-      (progn 
+      (progn
         (setq omnisharp--restart-server-on-stop t)
         (kill-process (cdr (assoc :process omnisharp--server-info))))
     (message "Cannot reload project in Omnisharp - no project previously loaded")))
