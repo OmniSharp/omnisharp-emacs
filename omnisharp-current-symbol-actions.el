@@ -52,7 +52,7 @@ ring."
 (defun omnisharp-find-usages ()
   "Find usages for the symbol under point"
   (interactive)
-  (omnisharp--message-at-point "Finding usages...")
+  (omnisharp--message "Finding usages...")
   (omnisharp--send-command-to-server
    "findusages"
    (omnisharp--get-request-object)
