@@ -353,4 +353,12 @@ for starting a server based on the current buffer."
   (or (boundp 'omnisharp--metadata-source)
       (s-starts-with-p "*omnisharp-metadata:" (buffer-name))))
 
+(defun omnisharp--message (text)
+  "Displays passed text using message function."
+  (message "%s" text))
+
+(defun omnisharp--message-at-point (text)
+  "Displays passed text at point using popup-tip function."
+  (popup-tip (format "%s" text)))
+
 (provide 'omnisharp-utils)
