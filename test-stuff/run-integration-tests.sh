@@ -7,8 +7,6 @@ if [[ $(dotnet --version) != "1.1"* ]]; then
     exit 1
 fi
 
-(cd travis-stuff && ./install-omnisharp-roslyn.sh)
-
 if [[ ! -r test/MinimalProject/project.lock.json ]]; then
     echo "Restoring MinimalProject packages"
     pushd test/MinimalProject

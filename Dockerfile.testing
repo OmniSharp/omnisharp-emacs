@@ -2,33 +2,24 @@ FROM microsoft/dotnet:1.1.2-sdk
 
 WORKDIR /usr/src
 
-# Install dependencies and softwares
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
-    && echo "deb http://download.mono-project.com/repo/debian jessie main" | tee /etc/apt/sources.list.d/mono-official.list \
-    && apt-get update \
-    && apt-get install -y \
-    make \
-    git \
-    emacs24-nox \
-    msbuild \
-    mono-complete \
+# Install dependencies
+RUN apt-get update \
+    && apt-get install -y git emacs24-nox wget curl make \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Cask
 RUN curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python
 ENV PATH /root/.cask/bin:$PATH
 
-# Install omnisharp-roslyn server
-WORKDIR /usr/src/travis-stuff
-COPY travis-stuff/install-omnisharp-roslyn.sh install-omnisharp-roslyn.sh
-RUN ./install-omnisharp-roslyn.sh
-WORKDIR /usr/src
+# Install omnisharp server
+RUN mkdir -p ./travis-stuff/omnisharp-roslyn
+RUN (cd ./travis-stuff/omnisharp-roslyn \
+    && wget https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.24.0/omnisharp-linux-x64.tar.gz \
+    && tar xzf omnisharp-linux-x64.tar.gz)
 
 # Install sample project's dependencies
 COPY test/MinimalProject test/MinimalProject
-WORKDIR /usr/src/test/MinimalProject
-RUN dotnet restore
-WORKDIR /usr/src
+RUN (cd ./test/MinimalProject && dotnet restore)
 
 # Install omnisharp and it's dependency packages via Cask
 COPY Cask Cask
