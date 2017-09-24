@@ -82,7 +82,7 @@ Otherwise omnisharp request the user to do M-x `omnisharp-install-server` and th
 executable will be used instead."
   :type '(choice (const :tag "Not Set" nil) string))
 
-(defcustom omnisharp-expected-server-version "1.22.0"
+(defcustom omnisharp-expected-server-version "1.24.0"
   "Version of the omnisharp-roslyn server that this omnisharp-emacs package
 is built for. Also used to select version for automatic server installation."
   :group 'omnisharp
