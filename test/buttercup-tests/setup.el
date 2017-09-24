@@ -257,7 +257,7 @@ with one."
 (defun omnisharp-start-test-server ()
   (interactive)
   (let ((omnisharp-server-executable-path (concat omnisharp-emacs-root-path
-                                                  "/travis-stuff/omnisharp-roslyn/OmniSharp")))
+                                                  "/travis-stuff/omnisharp-roslyn/run")))
     (condition-case nil
         (kill-process "OmniServer")
       (error nil))
