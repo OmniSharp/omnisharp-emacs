@@ -40,7 +40,7 @@ Then you need to set the `omnisharp-server-executable-path`:
 ## Manual installation on Windows (non-Cygwin)
 Use binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases).
 
-*NOTE: For the moment you HAVE to use the `omnisharp-win-x86-net46.zip` bundle as -x64- one makes emacs
+*NOTE: For the moment you HAVE to use the `omnisharp-win-x86.zip` bundle as -x64- one makes emacs
 to crash in `src/w32proc.c:w32_executable_type`.* See https://github.com/OmniSharp/omnisharp-emacs/issues/315
 
 Then you need to set the `omnisharp-server-executable-path` the path
@@ -53,7 +53,7 @@ to where you have extracted server file, e.g.:
 ## Manual installation on windows (with Cygwin)
 Use binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases):
 
- - https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.9-beta22/omnisharp-win-x64-net46.zip
+ - https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.24.0/omnisharp-win-x86.zip
  
 If I use omnisharp-roslyn net46 directly, omnisharp-emacs hangs when interacting via stdio.
 This seems to be a difference in how console IO is handled in newer versions of .Net.

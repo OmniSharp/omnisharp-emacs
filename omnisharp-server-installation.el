@@ -74,7 +74,7 @@
   "Resolves a tarball or zip file to use for this installation.
 Note that due to a bug in emacs on Windows we currently use the x86/32bit version.
 See https://github.com/OmniSharp/omnisharp-emacs/issues/315"
-  (cond ((eq system-type 'windows-nt) "omnisharp-win-x86-net46.zip")
+  (cond ((eq system-type 'windows-nt) "omnisharp-win-x86.zip")
         ((eq system-type 'darwin) "omnisharp-osx.tar.gz")
         ((eq system-type 'gnu/linux) "omnisharp-linux-x64.tar.gz")
         (t "omnisharp-mono.tar.gz")))
