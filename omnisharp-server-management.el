@@ -63,9 +63,14 @@ to use server installed via `omnisharp-install-server`.
 
 (defun omnisharp--do-server-start (path-to-project)
   (let ((server-executable-path (omnisharp--resolve-omnisharp-server-executable-path)))
-    (message (format "omnisharp: Starting OmniSharpServer using project folder/solution file: %s"
+    (message (format "omnisharp: Starting OmniSharpServer using project folder/solution file: %s %s"
+                     path-to-project
+                     "(check *omnisharp-log* buffer for omnisharp server log)"))
+
+    (omnisharp--log-reset)
+    (omnisharp--log (format "Starting OmniSharpServer using project folder/solution file: %s"
                      path-to-project))
-    (message "omnisharp: using server binary on %s" server-executable-path)
+    (omnisharp--log (format "using server binary on %s" server-executable-path))
 
     ;; Save all csharp buffers to ensure the server is in sync"
     (save-some-buffers t (lambda () (string-equal (file-name-extension (buffer-file-name)) "cs")))
@@ -198,13 +203,9 @@ process buffer, and handle them as server events"
   (-let (((&alist 'LogLevel log-level
                   'Name name
                   'Message message) (cdr (assoc 'Body packet))))
-    (when (and (equal log-level "INFORMATION")
-               (equal name "OmniSharp.Startup"))
-      (message (concat "omnisharp: " name ", " message)))
-    (when (equal log-level "ERROR")
-      (message (format "<-- OmniSharp server error: %s"
-                       (-first-item (s-lines message)))))
-    (omnisharp--log (format "%s: %s" log-level message))))
+    (omnisharp--log (format "%s: %s, %s" log-level name message))
+    (if (string-equal name "OmniSharp.Startup")
+        (message (format "omnisharp: %s, %s" name message)))))
 
 (defun omnisharp--event-packet? (packet)
   (and (equal "event" (cdr (assoc 'Type packet)))))

@@ -152,15 +152,22 @@ the OmniSharp server understands."
 (defun omnisharp--get-current-buffer-contents ()
   (buffer-substring-no-properties (buffer-end 0) (buffer-end 1)))
 
+(defun omnisharp--log-reset ()
+  "Kills the *omnisharp-log* buffer"
+  (let ((log-buffer (get-buffer "*omnisharp-log*")))
+    (if log-buffer
+        (kill-buffer log-buffer))))
+
 (defun omnisharp--log (single-or-multiline-log-string)
-  (when omnisharp-debug
-    (shut-up
-      (let* ((log-buffer (get-buffer-create "*omnisharp-debug*")))
-        (save-window-excursion
-          (with-current-buffer log-buffer
-            (end-of-buffer)
-            (insert single-or-multiline-log-string)
-            (insert "\n")))))))
+  "Writes message to the log."
+  (shut-up
+    (let* ((log-buffer (get-buffer-create "*omnisharp-log*")))
+      (save-window-excursion
+        (with-current-buffer log-buffer
+          (end-of-buffer)
+          (insert (format-time-string "[%H:%M:%S] "))
+          (insert single-or-multiline-log-string)
+          (insert "\n"))))))
 
 (defun omnisharp--json-read-from-string (json-string
                                          &optional error-message)
