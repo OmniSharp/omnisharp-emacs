@@ -8,7 +8,8 @@ Emacs text editor. It provides IDE-like features for editing files in
 C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
-This package is licensed under GNU General Public License version 3, or (at your option) any later version.
+This package is licensed under GNU General Public License version 3, 
+or (at your option) any later version.
 
 See [omnisharp-emacs Features](doc/features.md).
 
@@ -16,6 +17,17 @@ See [omnisharp-emacs Features](doc/features.md).
 ## Package Installation
 This package requires Emacs 24.3 and above. It has been tested on
 Ubuntu, Windows 7+ and on macOS.
+
+
+### External Dependencies
+You may need to have one or more of .NET SDKs (and mono – on UNIX platforms)
+installed for your project to be properly processed by  omnisharp server. 
+
+Note that multiple .NET SDKs can be installed in parallel, too.
+
+See:
+ - [.NET (Core) SDKs](https://www.microsoft.com/net/targeting)
+ - [mono project](http://www.mono-project.com/download/)
 
 
 ### Installation on Spacemacs
@@ -92,8 +104,26 @@ Emacs will manage connection to the server as a subprocess.
 The easiest/default way to install the server is to invoke 
 `M-x omnisharp-install-server` and follow instructions on minibufer.
 
-If that fails (or you feel adventurous) please see [installing omnisharp server](doc/server-installation.md) 
-on how to install the server manually.
+If that fails (or you feel adventurous) please see 
+[installing omnisharp server](doc/server-installation.md) on how to install the
+server manually.
+
+
+## Troubleshooting
+
+Most of the time (if the server has been installed properly) you can diagnose
+issues by looking at the `*omnisharp-log*` buffer where `omnisharp-emacs` emits
+any log messages from the omnisharp server.
+
+
+### Missing .NET SDKs
+You may find that your project can not be loaded when .NET SDK is not installed 
+on your machine.
+
+A log line indicating the problem would look like this on `*omnisharp-log*`:
+```
+[19:24:59] WARNING: Microsoft.Build.Exceptions.InvalidProjectFileException: The SDK 'Microsoft.NET.Sdk' specified could not be found. ...
+```
 
 
 ## Contributing
