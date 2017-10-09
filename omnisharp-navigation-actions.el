@@ -121,7 +121,7 @@ selected member. With prefix argument, use another window."
 (defun omnisharp--choose-and-go-to-quickfix-ido
   (quickfixes &optional other-window)
   "Given a list of QuickFixes in list format (not JSON), displays them
-in an ido-completing-read prompt and jumps to the chosen one's
+in an completing-read prompt and jumps to the chosen one's
 Location.
 
 If OTHER-WINDOW is given, will jump to the result in another window."
@@ -133,7 +133,7 @@ If OTHER-WINDOW is given, will jump to the result in another window."
 
 (defun omnisharp--choose-quickfix-ido (quickfixes)
   "Given a list of QuickFixes, lets the user choose one using
-ido-completing-read. Returns the chosen element."
+completing-read. Returns the chosen element."
   ;; Ido cannot navigate non-unique items reliably. It either gets
   ;; stuck, or results in that we cannot reliably determine the index
   ;; of the item. Work around this by prepending the index of all items
@@ -149,7 +149,7 @@ ido-completing-read. Returns the chosen element."
            quickfixes))
 
          (chosen-quickfix-text
-          (omnisharp--ido-completing-read
+          (omnisharp--completing-read
            "Go to: "
            ;; TODO use a hashmap if too slow.
            ;; This algorithm is two iterations in the worst case

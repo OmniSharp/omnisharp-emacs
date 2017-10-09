@@ -51,7 +51,7 @@ refactoring they want to run. Then runs the action."
                 (if (<= (length action-names) 0)
                     (message "No refactorings available at this position.")
 
-                  (let* ((chosen-action-name (omnisharp--ido-completing-read
+                  (let* ((chosen-action-name (omnisharp--completing-read
                                               "Run code action: "
                                               action-names))
                          (chosen-action

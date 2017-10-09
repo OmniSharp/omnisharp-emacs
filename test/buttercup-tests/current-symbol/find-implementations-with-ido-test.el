@@ -2,7 +2,8 @@
 
 (describe "Find implementations with ido"
   (before-each
-    (ot--open-the-minimal-project-source-file "MyClassContainer.cs"))
+    (ot--open-the-minimal-project-source-file "MyClassContainer.cs")
+    (spy-on completing-read-function))
 
   (it "navigates to the only implementation when only one found"
     (ot--buffer-contents-and-point-at-$
@@ -10,7 +11,8 @@
      "public class SomeClass : IInterface {}")
 
     (ot--evaluate-and-wait-for-server-response "(omnisharp-find-implementations-with-ido)")
-    (ot--point-should-be-on-a-line-containing "public class SomeClass : IInterface {}"))
+    (ot--point-should-be-on-a-line-containing "public class SomeClass : IInterface {}")
+    (expect completing-read-function :not :to-have-been-called))
 
   (it "lets the user choose one with ido when more than one found"
     (ot--buffer-contents-and-point-at-$
@@ -18,9 +20,5 @@
      "public class SomeClass : IInterface {}"
      "public class SomeClass2 : IInterface {}")
 
-    (ot--keyboard-input
-     (ot--meta-x-command "omnisharp-find-implementations-with-ido")
-     ;; choose the first item
-     (ot--press-key "RET"))
-
-    (ot--point-should-be-on-a-line-containing "public class SomeClass : IInterface {}")))
+    (ot--evaluate-and-wait-for-server-response "(omnisharp-find-implementations-with-ido)")
+    (expect completing-read-function :to-have-been-called)))

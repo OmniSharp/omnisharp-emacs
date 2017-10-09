@@ -295,16 +295,16 @@ changes to be applied to that buffer instead."
       (accept-process-output process 0.1)))
   request-id)
 
-(defun omnisharp--ido-completing-read (&rest args)
-  "Mockable wrapper for ido-completing-read.
-The problem with mocking ido-completing-read directly is that
+(defun omnisharp--completing-read (&rest args)
+  "Mockable wrapper for completing-read.
+The problem with mocking completing-read directly is that
 sometimes the mocks are not removed when an error occurs. This renders
 the developer's emacs unusable."
-  (apply 'ido-completing-read args))
+  (apply 'completing-read args))
 
 (defun omnisharp--read-string (&rest args)
   "Mockable wrapper for read-string, see
-`omnisharp--ido-completing-read' for the explanation."
+`omnisharp--completing-read' for the explanation."
   (apply 'read-string args))
 
 (defun omnisharp--mkdirp (dir)

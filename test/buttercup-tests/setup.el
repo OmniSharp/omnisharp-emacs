@@ -224,15 +224,15 @@ detecting situations in the middle of input is impossible."
 (defmacro ot--set (symbol value)
   `(setq symbol ,value))
 
-(defmacro ot--answer-omnisharp--ido-completing-read-with (answer-function)
+(defmacro ot--answer-omnisharp--completing-read-with (answer-function)
   "Automatically select the first candidate given to
-omnisharp--ido-completing-read. This could be done by controlling
+omnisharp--completing-read. This could be done by controlling
 ido with the keyboard like in other tests, but ido is not easy to
 control programmatically.
 
 ANSWER-FUNCTION should receive a list of choices (strings) and respond
 with one."
-  `(spy-on 'omnisharp--ido-completing-read :and-call-fake
+  `(spy-on 'omnisharp--completing-read :and-call-fake
            (lambda (_prompt _quickfixes)
              (funcall ,answer-function _quickfixes))))
 
