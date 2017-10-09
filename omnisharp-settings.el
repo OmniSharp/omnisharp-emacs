@@ -76,6 +76,11 @@ there are ambiguous unresolved symbols after running omnisharp-fix-usings")
     map)
   "Keymap for omnisharp-mode.")
 
+(defcustom omnisharp-cache-directory (f-join (locate-user-emacs-file ".cache") "omnisharp")
+  "Directory to store files that omnisharp produces."
+  :group 'omnisharp
+  :type 'directory)
+
 (defcustom omnisharp-server-executable-path nil
   "Path to OmniSharp server override. Should be set to non-nil if server is installed locally.
 Otherwise omnisharp request the user to do M-x `omnisharp-install-server` and that server
