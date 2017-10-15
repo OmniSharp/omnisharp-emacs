@@ -22,11 +22,11 @@ Will query user for a path to project/solution file to start the server with."
         (project-file-candidates (omnisharp--resolve-sln-candidates)))
     (if server-executable-path
         (if (and (not no-autodetect)
-                 project-file-candidates
-                 (require 'helm-grep nil 'noerror))
-            (helm :sources (helm-build-sync-source "Omnisharp - Start Server"
-                             :candidates project-file-candidates
-                             :action 'omnisharp--do-server-start))
+                 project-file-candidates)
+            (omnisharp--do-server-start (completing-read "Omnisharp - Start Server"
+                                                         project-file-candidates
+                                                         nil
+                                                         t))
           (let ((path-to-project (read-file-name
                                   "Start OmniSharp for project folder or solution file: ")))
             (if (file-exists-p path-to-project)
