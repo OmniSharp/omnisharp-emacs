@@ -15,7 +15,7 @@
 
 (defun omnisharp--server-installation-dir ()
   "Returns installation directory for automatic server installation."
-  (f-join (expand-file-name "~") ".emacs.d" ".cache" "omnisharp" "server" (concat "v" omnisharp-expected-server-version)))
+  (f-join omnisharp-cache-directory "server" (concat "v" omnisharp-expected-server-version)))
 
 (defun omnisharp--server-installation-executable-name ()
   (if (eq system-type 'windows-nt)
