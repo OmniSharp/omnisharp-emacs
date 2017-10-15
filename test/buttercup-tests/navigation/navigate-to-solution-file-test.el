@@ -18,7 +18,7 @@
     (-when-let (buffer (get-buffer "MyClass.cs"))
       (kill-buffer buffer))
 
-    (ot--answer-omnisharp--ido-completing-read-with
+    (ot--answer-omnisharp--completing-read-with
      (lambda (choices)
        (--first (s-contains? "MyClass.cs" it)
                 choices)))

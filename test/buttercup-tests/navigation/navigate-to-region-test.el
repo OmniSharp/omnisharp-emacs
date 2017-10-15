@@ -23,7 +23,7 @@
      "    #endregion awesome"
      "$"
      "}")
-    (ot--answer-omnisharp--ido-completing-read-with
+    (ot--answer-omnisharp--completing-read-with
      (lambda (choices)
        (--first (s-contains? "awesome" it)
                 choices)))

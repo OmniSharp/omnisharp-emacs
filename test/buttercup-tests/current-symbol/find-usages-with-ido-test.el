@@ -15,7 +15,7 @@
      "    }"
      "}")
 
-    (ot--answer-omnisharp--ido-completing-read-with #'-first-item)
+    (ot--answer-omnisharp--completing-read-with #'-first-item)
 
     (omnisharp--wait-until-request-completed (omnisharp-find-usages-with-ido))
 

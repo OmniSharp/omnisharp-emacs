@@ -13,7 +13,7 @@
      "        Gu$id.NewGuid();"
      "    }"
      "}")
-    (ot--answer-omnisharp--ido-completing-read-with (lambda (choices) "using System;"))
+    (ot--answer-omnisharp--completing-read-with (lambda (choices) "using System;"))
     (omnisharp--wait-until-request-completed (omnisharp-run-code-action-refactoring))
     (ot--buffer-should-contain "using System;"))
 
@@ -28,7 +28,7 @@
      "    }"
      "}")
 
-    (ot--answer-omnisharp--ido-completing-read-with
+    (ot--answer-omnisharp--completing-read-with
      (lambda (choices)
        (--first (s-contains? "Extract Method" it)
                 choices)))
@@ -65,7 +65,7 @@
      "        }"
      "    }"
      "}")
-    (ot--answer-omnisharp--ido-completing-read-with
+    (ot--answer-omnisharp--completing-read-with
      (lambda (choices)
        (--first (equal it
                        "Generate class for 'MyNewClass' in 'MyNamespace' (in new file)")

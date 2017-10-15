@@ -17,7 +17,7 @@
 
     ;; automatically select the first candidate given to
     ;; omnisharp--choose-quickfix-ido.
-    (ot--answer-omnisharp--ido-completing-read-with #'-first-item)
+    (ot--answer-omnisharp--completing-read-with #'-first-item)
 
     (omnisharp--wait-until-request-completed
      (omnisharp-navigate-to-current-file-member))

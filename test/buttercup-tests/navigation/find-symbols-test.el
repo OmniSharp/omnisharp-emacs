@@ -26,7 +26,7 @@
      "}")
     ;; automatically select the first candidate given to
     ;; omnisharp--choose-quickfix-ido.
-    (ot--answer-omnisharp--ido-completing-read-with
+    (ot--answer-omnisharp--completing-read-with
      (lambda (choices)
        (--first (s-contains? "MyClassContainer" it)
                 choices)))

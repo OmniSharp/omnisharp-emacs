@@ -490,10 +490,10 @@ is a more sophisticated matching framework than what popup.el offers."
            ;; This is only the display text. The text to be inserted
            ;; in the buffer will be fetched with this
            ;;
-           ;; TODO does ido-completing-read allow a custom format that
+           ;; TODO does completing-read allow a custom format that
            ;; could store these, as with popup-make-item ?
            (user-chosen-display-text
-            (omnisharp--ido-completing-read
+            (omnisharp--completing-read
              "Complete: "
              display-texts))
 
