@@ -134,6 +134,9 @@ sending."
   (if (equal nil omnisharp--server-info)
       (message (concat "omnisharp: OmniSharp server not running. "
                        "Start it with `omnisharp-start-omnisharp-server' first"))
+    (if (not (s-starts-with? "/" api-name))
+        (setq api-name (concat "/" api-name)))
+
     (-let* ((server-info omnisharp--server-info)
             ((&alist :process process
                      :request-id request-id) server-info)
