@@ -169,7 +169,7 @@ request responded by the server."
 
 (defun omnisharp--make-request-packet (api-name contents request-id)
   (-concat `((Arguments . ,contents))
-           `((Command . ,api-name)
+           `((Command . ,(concat "/" api-name))
              (Seq . ,request-id))))
 
 (defun omnisharp--handle-server-message (process message-part)
