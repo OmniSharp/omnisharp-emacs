@@ -14,7 +14,7 @@ ENV PATH /root/.cask/bin:$PATH
 # Install omnisharp server
 RUN mkdir -p ./travis-stuff/omnisharp-roslyn
 RUN (cd ./travis-stuff/omnisharp-roslyn \
-    && wget https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.24.0/omnisharp-linux-x64.tar.gz \
+    && wget https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.26.0/omnisharp-linux-x64.tar.gz \
     && tar xzf omnisharp-linux-x64.tar.gz)
 
 # Install sample project's dependencies
