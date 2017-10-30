@@ -51,28 +51,17 @@ to where you have extracted server file, e.g.:
 ```
 
 ## Manual installation on windows (with Cygwin)
-Use binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases):
+Spawning omnisharp-roslyn from cygwin on the microsoft .net framework will result in hangs as described in:
 
- - https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.26.0/omnisharp-win-x86.zip
- 
-If I use omnisharp-roslyn net46 directly, omnisharp-emacs hangs when interacting via stdio.
-This seems to be a difference in how console IO is handled in newer versions of .Net.
-My workaround involves using a wrapper written in C#:
+https://cygwin.com/ml/cygwin/2013-12/msg00345.html
 
-https://gist.github.com/corngood/d982c3c21c016127a2f1600dc895c000
+To work around this, you can run it on mono.
 
-You need to compile the wrapper against an older .net framework (3.5 seems to work). A simple way to use the wrapper is to create a shell script like:
-
-```shell
+- Install latest mono runtime http://www.mono-project.com/download/
+- Download and unpack mono release from https://github.com/OmniSharp/omnisharp-roslyn/releases
+- Create an `omnisharp` shell script like:
+```
 #!/bin/sh
-set -e
-[path-to-wrapper-exe] "$(cygpath -w [path-to-omnisharp-exe])" "$@"
-```
-
-If you name this script OmniSharp, and put it in your path (e.g. /usr/local/bin/OmniSharp),
-`omnisharp-emacs` should find it and launch omnisharp correctly.
-Or you can point to it directly in your init.el
-
-```lisp
-(setq omnisharp-server-executable-path "/home/<username>/bin/OmniSharp")
-```
+exec [cygwin path to mono]/mono "$(cygpath -wa [cygwin path to omnisharp]/OmniSharp.exe)" "$@"
+``` 
+- Set `omnisharp-server-executable-path` to the shell script.
