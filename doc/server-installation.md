@@ -53,7 +53,7 @@ to where you have extracted server file, e.g.:
 ## Manual installation on windows (with Cygwin)
 Use binary from [omnisharp-roslyn releases page](https://github.com/OmniSharp/omnisharp-roslyn/releases):
 
- - https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.24.0/omnisharp-win-x86.zip
+ - https://github.com/OmniSharp/omnisharp-roslyn/releases/download/v1.26.0/omnisharp-win-x86.zip
  
 If I use omnisharp-roslyn net46 directly, omnisharp-emacs hangs when interacting via stdio.
 This seems to be a difference in how console IO is handled in newer versions of .Net.
