@@ -48,21 +48,21 @@
 
     (cond
      ((eq system-type 'windows-nt)
-      (;; on windows, we attempt to use powershell v5+, available on Windows 10+
-       (let ((powershell-version (substring
-                                  (shell-command-to-string "powershell -command \"(Get-Host).Version.Major\"")
-                                  0 -1)))
-         (if (>= (string-to-number powershell-version) 5)
-             (call-process "powershell"
-                           nil
-                           nil
-                           nil
-                           "-command"
-                           (concat "add-type -assembly system.io.compression.filesystem;"
-                                   "[io.compression.zipfile]::ExtractToDirectory(\"" filename "\", \"" target-dir "\")"))
+      ;; on windows, we attempt to use powershell v5+, available on Windows 10+
+      (let ((powershell-version (substring
+                                 (shell-command-to-string "powershell -command \"(Get-Host).Version.Major\"")
+                                 0 -1)))
+        (if (>= (string-to-number powershell-version) 5)
+            (call-process "powershell"
+                          nil
+                          nil
+                          nil
+                          "-command"
+                          (concat "add-type -assembly system.io.compression.filesystem;"
+                                  "[io.compression.zipfile]::ExtractToDirectory(\"" filename "\", \"" target-dir "\")"))
 
-           (message (concat "omnisharp: for the 'M-x omnisharp-install-server' "
-                            " command to work on Windows you need to have powershell v5+ installed"))))))
+          (message (concat "omnisharp: for the 'M-x omnisharp-install-server' "
+                           " command to work on Windows you need to have powershell v5+ installed")))))
 
      ((or (eq system-type 'gnu/linux)
           (eq system-type 'darwin))
