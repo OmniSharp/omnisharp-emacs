@@ -161,9 +161,10 @@ name to rename to, defaulting to the current name of the symbol."
       ;; the user does not feel disoriented
       (omnisharp-go-to-file-line-and-column location-before-rename)
 
-      (omnisharp--message "Rename complete in files: \n%s"
+      (omnisharp--message
+       (format "Rename complete in files: \n%s"
                (-interpose "\n" (--map (omnisharp--get-filename it)
-                                       modified-file-responses))))))
+                                       modified-file-responses)))))))
 
 (defun omnisharp--apply-text-changes (modified-file-response)
   (-let (((&alist 'Changes changes) modified-file-response))
