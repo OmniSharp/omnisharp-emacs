@@ -23,4 +23,5 @@
  (depends-on "flycheck")
  (depends-on "csharp-mode")
  (depends-on "evil")
+ (depends-on "f")
  (depends-on "company"))
