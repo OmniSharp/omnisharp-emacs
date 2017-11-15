@@ -558,22 +558,6 @@ cursor at that location"
         result)
     (error nil)))
 
-(defun omnisharp-format-find-output-to-ido (item)
-  (cons
-   (cons
-    (car (car item))
-    (concat (car (last (split-string filename "/"))) ": " (s-trim (cdr (car item)))))
-   (cdr item)))
-
-(defun omnisharp-format-symbol (item)
-  (cons
-   (cons
-    (car (car item))
-    (mapconcat
-     'identity
-     (reverse (delete "in" (split-string (cdr (car item)) "[\t\n ()]" t))) "."))
-   (cdr item)))
-
 (defun omnisharp--get-eldoc-fontification-buffer ()
   (let ((buffer (get-buffer omnisharp--eldoc-fontification-buffer-name)))
     (if (buffer-live-p buffer)
