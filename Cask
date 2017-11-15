@@ -4,9 +4,9 @@
 (package-file "omnisharp.el")
 
 (development
- (depends-on "helm")
- (depends-on "cl-lib")
  (depends-on "cl")
+ (depends-on "cl-lib")
+ (depends-on "helm")
  (depends-on "yasnippet")
  (depends-on "prodigy")
  (depends-on "buttercup")
@@ -23,4 +23,5 @@
  (depends-on "flycheck")
  (depends-on "csharp-mode")
  (depends-on "evil")
+ (depends-on "f")
  (depends-on "company"))

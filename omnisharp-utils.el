@@ -164,7 +164,7 @@ the OmniSharp server understands."
     (let* ((log-buffer (get-buffer-create "*omnisharp-log*")))
       (save-window-excursion
         (with-current-buffer log-buffer
-          (end-of-buffer)
+          (goto-char (point-max))
           (insert (format-time-string "[%H:%M:%S] "))
           (insert single-or-multiline-log-string)
           (insert "\n"))))))

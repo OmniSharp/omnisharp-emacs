@@ -26,6 +26,9 @@ COPY Cask Cask
 COPY omnisharp*.el ./
 RUN cask install
 
+# run cask build to check if the thing compiles to byte code
+RUN ! (cask build 2>&1 | tee /dev/stderr | grep -iq "^.*\\.el:.*:Error:")
+
 # Copy other files
 # COPY doc doc
 # COPY features-tbd-on-the-server-side features-tbd-on-the-server-side
