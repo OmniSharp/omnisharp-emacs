@@ -47,7 +47,7 @@ After MELPA is configured correctly, use
 
 <pre>
 M-x package-refresh-contents RET
-M-x package-install omnisharp RET
+M-x package-install RET omnisharp RET
 </pre>
 to install.
 
