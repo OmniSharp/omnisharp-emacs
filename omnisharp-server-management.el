@@ -380,7 +380,7 @@ and attempts to start it if it is not."
 
             ((and server-project-root (not filename-in-scope))
              (message (format (concat "omnisharp: buffer will not be managed by omnisharp: "
-                                      "%s is outside the root directory for the project loaded on the "
+                                      "%s is outside the root directory of the project loaded on the "
                                       "current OmniSharp server: %s")
                               filename
                               server-project-root)))))))
