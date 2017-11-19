@@ -621,10 +621,11 @@ cursor at that location"
                              (omnisharp--completion-result-get-item response 'Type))
                             (current-type-documentation
                              (string-trim-right
-                              (omnisharp--completion-result-get-item response 'Documentation)))
+                              (or (omnisharp--completion-result-get-item response 'Documentation)
+                                  "")))
                             (have-type (and current-type-information (not (string= "" current-type-information))))
                             (have-doc (and current-type-documentation (not (string= "" current-type-documentation))))
-                            (message-to-show (concat (omnisharp--eldoc-fontify-string current-type-information)
+                            (message-to-show (concat (if current-type-information (omnisharp--eldoc-fontify-string current-type-information))
                                                      (if (and have-type have-doc) "\n\n")
                                                      current-type-documentation)))
                        (if (or have-type have-doc)
