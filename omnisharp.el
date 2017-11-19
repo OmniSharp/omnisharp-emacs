@@ -559,22 +559,6 @@ cursor at that location"
         result)
     (error nil)))
 
-(defun omnisharp--get-eldoc-fontification-buffer ()
-  (let ((buffer (get-buffer omnisharp--eldoc-fontification-buffer-name)))
-    (if (buffer-live-p buffer)
-        buffer
-      (with-current-buffer (generate-new-buffer omnisharp--eldoc-fontification-buffer-name)
-        (ignore-errors
-          (let ((csharp-mode-hook nil))
-            (csharp-mode)))
-        (current-buffer)))))
-
-(defun omnisharp--eldoc-fontify-string (str)
-  (with-current-buffer (omnisharp--get-eldoc-fontification-buffer)
-    (delete-region (point-min) (point-max))
-    (font-lock-fontify-region (point) (progn (insert str ";") (point)))
-    (buffer-substring (point-min) (1- (point-max)))))
-
 (defun omnisharp--jump-to-enclosing-func ()
   "Jumps to the closing brace of the current function definition"
   (interactive)
@@ -604,6 +588,22 @@ cursor at that location"
                 (t (setq found-start t))))))
     (goto-char found-point)))
 
+(defun omnisharp--get-eldoc-fontification-buffer ()
+  (let ((buffer (get-buffer omnisharp--eldoc-fontification-buffer-name)))
+    (if (buffer-live-p buffer)
+        buffer
+      (with-current-buffer (generate-new-buffer omnisharp--eldoc-fontification-buffer-name)
+        (ignore-errors
+          (let ((csharp-mode-hook nil))
+            (csharp-mode)))
+        (current-buffer)))))
+
+(defun omnisharp--eldoc-fontify-string (str)
+  (with-current-buffer (omnisharp--get-eldoc-fontification-buffer)
+    (delete-region (point-min) (point-max))
+    (font-lock-fontify-region (point) (progn (insert str ";") (point)))
+    (buffer-substring (point-min) (1- (point-max)))))
+
 (defun omnisharp-eldoc-function ()
   "Returns a doc string appropriate for the current context.
    If point is on an empty char, it looks for data on any previous completions.
@@ -615,14 +615,20 @@ cursor at that location"
               (condition-case nil
                   (omnisharp--send-command-to-server
                    "typelookup"
-                   (omnisharp--get-request-object)
+                   (omnisharp--get-typelookup-request-object)
                    (lambda (response)
-                     (let ((current-type-information
-                            (omnisharp--completion-result-get-item
-                             response
-                             'Type)))
-                       (if (and current-type-information (not (string= "" current-type-information)))
-                           (eldoc-message (omnisharp--eldoc-fontify-string current-type-information))))))
+                     (let* ((current-type-information
+                             (omnisharp--completion-result-get-item response 'Type))
+                            (current-type-documentation
+                             (string-trim-right
+                              (omnisharp--completion-result-get-item response 'Documentation)))
+                            (have-type (and current-type-information (not (string= "" current-type-information))))
+                            (have-doc (and current-type-documentation (not (string= "" current-type-documentation))))
+                            (message-to-show (concat (omnisharp--eldoc-fontify-string current-type-information)
+                                                     (if (and have-type have-doc) "\n\n")
+                                                     current-type-documentation)))
+                       (if (or have-type have-doc)
+                           (eldoc-message message-to-show)))))
                 (error nil (ignore)))
               nil))
       (error nil (ignore)))))
