@@ -79,8 +79,11 @@ See https://github.com/OmniSharp/omnisharp-emacs/issues/315"
         ((eq system-type 'gnu/linux) "omnisharp-linux-x64.tar.gz")
         (t "omnisharp-mono.tar.gz")))
 
-(defun omnisharp--install-server (reinstall)
-  "Implementation for autoloaded omnisharp-install-server in omnisharp.el."
+(defun omnisharp--install-server (reinstall &rest silent-installation)
+  "Implementation for autoloaded omnisharp-install-server in omnisharp.el.
+
+REINSTALL can be set 't to force reinstallation.
+SILENT-INSTALLATION value of 't means user is not involved."
   (let* ((server-dir (omnisharp--server-installation-dir))
          (distro-tarball (omnisharp--server-installation-tarball-name))
          (distro-url (concat "https://github.com/OmniSharp/omnisharp-roslyn/releases/download"
@@ -88,8 +91,9 @@ See https://github.com/OmniSharp/omnisharp-emacs/issues/315"
                              "/" distro-tarball))
          (expected-executable-path (omnisharp--server-installation-path t)))
     (if (or reinstall (not (f-exists-p expected-executable-path)))
-        (if (y-or-n-p (format "omnisharp: this will download and extract ~20-30 MB from \"%s\"; do you want to continue?"
-                              distro-url))
+        (if (or silent-installation
+                (y-or-n-p (format "omnisharp: this will download and extract ~20-30 MB from \"%s\"; do you want to continue?"
+                                  distro-url)))
             (progn
               (message (format "omnisharp: attempting to download and install OmniSharp server into %s"
                                server-dir))
@@ -100,11 +104,13 @@ See https://github.com/OmniSharp/omnisharp-emacs/issues/315"
                reinstall)
               (let ((executable-path (omnisharp--server-installation-path)))
                 (if executable-path
-                    (message (format "omnisharp: server was installed as \"%s\"; you can now do M-x 'omnisharp-start-omnisharp-server' "
-                                     executable-path))
+                    (if (not silent-installation)
+                        (message (format "omnisharp: server was installed as \"%s\"; you can now do M-x 'omnisharp-start-omnisharp-server' "
+                                         executable-path)))
                   (message (concat "omnisharp: server could not be installed automatically. "
                                    "Please check https://github.com/OmniSharp/omnisharp-emacs/blob/master/doc/server-installation.md for instructions."))))))
-      (message (format "omnisharp: server is already installed (%s)"
-                       expected-executable-path)))))
+      (if (not silent-installation)
+          (message (format "omnisharp: server is already installed (%s)"
+                           expected-executable-path))))))
 
 (provide 'omnisharp-server-installation)
