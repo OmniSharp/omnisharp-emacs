@@ -22,7 +22,7 @@ new roslyn version of omnisharp-emacs yet.
 
 
 ## Package Installation
-This package requires Emacs 24.3 and above. It has been tested on
+This package requires Emacs 24.4 and above. It has been tested on
 Ubuntu, Windows 7+ and on macOS.
 
 
