@@ -16,7 +16,9 @@ package. See [Configuration](#configuration) section below on how to enable
 This package is licensed under GNU General Public License version 3, 
 or (at your option) any later version.
 
-See [omnisharp-emacs Features](doc/features.md).
+See [omnisharp-emacs Features](doc/features.md). Please note that information
+in the Features page is outdated and some commands are not ported to the
+new roslyn version of omnisharp-emacs yet.
 
 
 ## Package Installation
