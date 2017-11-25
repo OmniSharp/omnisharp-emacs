@@ -8,8 +8,7 @@ Emacs text editor. It provides IDE-like features for editing files in
 C# solutions in Emacs, provided by an OmniSharp server instance that
 works in the background.
 
-Note that C# syntax highlighting and indenting is provided by `csharp-mode`
-(https://github.com/josteink/csharp-mode) which is a dependency of this 
+Note that C# syntax highlighting and indenting is provided by [`csharp-mode`](https://github.com/josteink/csharp-mode) which is a dependency of this 
 package. See [Configuration](#configuration) section below on how to enable
 `omnsharp-mode` via the `csharp-mode` hook.
 
