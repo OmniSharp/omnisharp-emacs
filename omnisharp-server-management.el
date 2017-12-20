@@ -357,7 +357,8 @@ have not been returned before."
   "Checks if the server for the project of the buffer is running
 and attempts to start it if it is not."
 
-  (unless (omnisharp--buffer-contains-metadata)
+  (unless (or (omnisharp--buffer-contains-metadata)
+              (not (buffer-file-name)))
     (let* ((filename (buffer-file-name))
            (server-project-root (if omnisharp--server-info (cdr (assoc :project-root omnisharp--server-info)) nil))
            (filename-in-scope (and server-project-root
