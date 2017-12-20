@@ -88,6 +88,7 @@ to use server installed via `omnisharp-install-server`.
                             "OmniServer" ; process name
                             "OmniServer" ; buffer name
                             server-executable-path
+                            "--encoding" "utf-8"
                             "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))))
              (buffer-disable-undo (process-buffer omnisharp-process))
              (set-process-filter omnisharp-process 'omnisharp--handle-server-message)
