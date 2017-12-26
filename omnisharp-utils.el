@@ -280,7 +280,7 @@ changes to be applied to that buffer instead."
 
 (defun omnisharp--wait-until-request-completed (request-id
                                                 &optional timeout-seconds)
-  (setq timeout-seconds (or timeout-seconds 2))
+  (setq timeout-seconds (or timeout-seconds 30))
 
   (let ((start-time (current-time))
         (process (cdr (assoc :process omnisharp--server-info))))
