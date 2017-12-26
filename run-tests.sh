@@ -15,6 +15,7 @@ if ! check_command_exists docker-compose; then
     exit 1
 fi
 
+mkdir -p test-cache/emacs-d-cache
+
 docker-compose build
 docker-compose run --rm tests
-

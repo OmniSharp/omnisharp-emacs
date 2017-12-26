@@ -3,6 +3,7 @@
 /installation-output.txt
 /node_modules/
 # backup files by emacs
+/test-cache/
 /test/MinimalProject/obj/*
 /test/MinimalProject/KeystrokeTest.cs
 *~
