@@ -31,17 +31,19 @@
 * Solution manipulation
     * Add/remove the current file
     * Add/remove selected files in the dired directory editor
+    * The user may choose whether they want to build in the emacs
+      `*compilation*` buffer or at OmniSharp's end (non-asynchronous,
+      that is, blocking)
+    * Jump to errors like in normal `*compilation*` output
+    * Request for a list of compilation errors/warnings directly from
+      omnisharp server w/o a compilation, using
+      `M-x omnisharp-solution-errors`
 * Override selected superclass member
 * Run a refactoring on the current position
     * Uses the refactorings from the NRefactory library, which is also
       used by the MonoDevelop and SharpDevelop IDEs
     * When used with a selection, prompts to extract a method from the
       selection where possible
-* Solution building
-    * The user may choose whether they want to build in the emacs
-      `*compilation*` buffer or at OmniSharp's end (non-asynchronous,
-      that is, blocking)
-    * Jump to errors like in normal `*compilation*` output
 * Format the current buffer
     * Currently only one formatting style supported, easy to add more.
 * Fix using statements
