@@ -10,14 +10,16 @@ works in the background.
 
 Note that C# syntax highlighting and indenting is provided by [`csharp-mode`](https://github.com/josteink/csharp-mode) which is a dependency of this 
 package. See [Configuration](#configuration) section below on how to enable
-`omnsharp-mode` via the `csharp-mode` hook.
+`omnisharp-mode` via the `csharp-mode` hook.
 
 This package is licensed under GNU General Public License version 3, 
 or (at your option) any later version.
 
-See [omnisharp-emacs Features](doc/features.md). Please note that information
-in the Features page is outdated and some commands are not ported to the
-new roslyn version of omnisharp-emacs yet.
+
+## Features
+Please see [omnisharp-emacs Features](doc/features.md). Please note that information
+on the Features page is outdated and some commands are not ported to the new roslyn
+version of `omnisharp-emacs` yet.
 
 
 ## Package Installation
@@ -37,9 +39,9 @@ See:
 
 
 ### Installation on Spacemacs
-Add `csharp` layer to `dotspacemacs-configuration-layers` on
-your `.spacemacs` file. `csharp-mode` and `omnisharp` packages
-will get installed automatically for you on restart.
+Add `csharp` layer to `dotspacemacs-configuration-layers` on your `.spacemacs`
+file and restart emacs. `csharp-mode` and `omnisharp` packages will get
+installed automatically for you on restart.
 
 
 ### Installation on Regular Emacs
@@ -55,48 +57,81 @@ to install.
 When installing the `omnisharp` package `package.el` will also 
 automatically pull in `csharp-mode` for you as well.
 
-To automatically load omnisharp-emacs when editing csharp files, add
-something like this to `csharp-mode-hook` on your `init.el`:
+You can also add
+```
+(package-install 'omnisharp)
+```
+to your `init.el` to force installation of `omnisharp-emacs` on
+every install.
 
+
+## Configuration
+This section describes an example configuration for `omnisharp-emacs`.
+This is not required if you are using spacemacs unless you want to 
+override existing bindings, etc.
+
+### Applying omnisharp-mode and auto-starting server when visiting C# files
+Add this to `csharp-mode-hook` to your `init.el` to automatically invoke
+`omnisharp-emacs` when opening C# files:
 ```
 (add-hook 'csharp-mode-hook 'omnisharp-mode)
 ```
 
-For autocompletion via company mode you will also need this in your `init.el`:
+`omnisharp-emacs` will attempt to start a server automatically for you when
+opening a .cs file (if a server has not been started already). Otherwise, you
+will need to start the server with `M-x omnisharp-start-omnisharp-server RET`
+should it fail to find a .sln file or project root (via projectile). It will
+prompt you for a solution file or project root directory you want to work
+with.
 
+### Autocompletion
+For autocompletion via [company](https://github.com/company-mode/company-mode)
+mode to work you will also need this in your `init.el`:
 ```
 (eval-after-load
  'company
  '(add-to-list 'company-backends 'company-omnisharp))
+
+(add-hook 'csharp-mode-hook #'company-mode)
 ```
 
-## Configuration
-`omnisharp-emacs` will attempt to start a server automatically for you when
-opening a .cs file (if a server has not been started already). Otherwise, you
-will need to start the server with `M-x omnisharp-start-omnisharp-server RET`.
-should it fail to find a .sln file or project root (via projectile). The command
-will prompt you for a solution file or project root directory you want to work
-with.
-
-You will probably want to create a custom configuration for omnisharp-emacs
-in your normal coding sessions. Usually all this customization
-goes in your custom `csharp-mode-hook`.
-
-Here is a sample configuration script (that goes into your `~/.emacs.d/init.el`
-or in your `dotspacemacs/user-config()` in `~/.spacemacs`):
+### Flycheck
+`omnisharp-emacs` supports [Flycheck](https://github.com/flycheck/flycheck)
+and it can be enabled automatically by hooking up `flycheck-mode` to be enabled
+for `csharp-mode` buffers:
 
 ```
-  (defun my-csharp-mode-setup ()
-    (setq indent-tabs-mode nil)
-    (setq c-syntactic-indentation t)
-    (c-set-style "ellemtel")
-    (setq c-basic-offset 4)
-    (setq truncate-lines t)
-    (setq tab-width 4)
-    (setq evil-shift-width 4)
-    (local-set-key (kbd "C-c C-c") 'recompile))
+(add-hook 'csharp-mode-hook #'flycheck-mode)
+```
 
-  (add-hook 'csharp-mode-hook 'my-csharp-mode-setup t)
+### Combined setup example
+
+This is an example code that will enable `company-mode` and `flycheck-mode`
+and will set some formatting variables for `csharp-mode`. Also, it shows how
+to setup keybindings for `csharp-mode`.
+
+```
+(eval-after-load
+  'company
+  '(add-to-list 'company-backends #'company-omnisharp))
+
+(defun my-csharp-mode-setup ()
+  (omnisharp-mode)
+  (company-mode)
+  (flycheck-mode)
+
+  (setq indent-tabs-mode nil)
+  (setq c-syntactic-indentation t)
+  (c-set-style "ellemtel")
+  (setq c-basic-offset 4)
+  (setq truncate-lines t)
+  (setq tab-width 4)
+  (setq evil-shift-width 4)
+
+  (local-set-key (kbd "C-c r r") 'omnisharp-run-code-action-refactoring)
+  (local-set-key (kbd "C-c C-c") 'recompile))
+
+(add-hook 'csharp-mode-hook 'my-csharp-mode-setup t)
 ```
 
 There is also an example configuration for evil-mode included in the project,
@@ -116,7 +151,6 @@ server manually.
 
 
 ## Troubleshooting
-
 Most of the time (if the server has been installed properly) you can diagnose
 issues by looking at the `*omnisharp-log*` buffer where `omnisharp-emacs` emits
 any log messages from the omnisharp server.
