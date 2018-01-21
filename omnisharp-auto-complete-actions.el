@@ -190,27 +190,6 @@ triggers a completion immediately"
           symbol)
       'stop)))
 
-(defun omnisharp-company-flx-score-filter-list (query candidates cache)
-  (let ((matches nil))
-    (dolist (candidate candidates)
-      (let* ((completion-text (omnisharp--get-company-candidate-data
-                               candidate
-                               'CompletionText))
-             (flx-val (flx-score completion-text query cache)))
-        (when (not (null flx-val))
-          (setq matches (cons (cons candidate flx-val) matches)))))
-
-    (if omnisharp-company-match-sort-by-flx-score
-        (setq matches (sort matches (lambda (el1 el2) (> (nth 1 el1) (nth 1 el2)))))
-      (setq matches (reverse matches)))
-
-    (mapcar 'car matches)))
-
-(defvar omnisharp-company-current-flx-match-list nil)
-(defvar omnisharp-company-current-flx-arg-being-matched nil)
-(defvar omnisharp-company-checked-for-flex nil)
-(defvar omnisharp-company-flx-cache nil)
-
 (defun omnisharp--tag-text-with-completion-info (call json-result)
   "Adds data to the completed text which we then use in ElDoc"
   (add-text-properties (- (point) (length call)) (- (point) 1)

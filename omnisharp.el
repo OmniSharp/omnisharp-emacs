@@ -144,37 +144,13 @@ finished loading the solution."
   (interactive '(interactive))
   "`company-mode' completion back-end using OmniSharp."
 
-  ;; If flx isn't installed, turn off flex matching
-  (when (and (not omnisharp-company-checked-for-flex)
-             (eq omnisharp-company-match-type 'company-match-flx))
-    (setq omnisharp-company-checked-for-flex t)
-    (when (not (require 'flx))
-      (setq omnisharp-company-match-type 'company-match-simple)))
-
   (cl-case command
     (interactive (company-begin-backend 'company-omnisharp))
     (prefix (when (and (bound-and-true-p omnisharp-mode)
                        (not (company-in-string-or-comment)))
               (omnisharp-company--prefix)))
 
-    (candidates (if (eq omnisharp-company-match-type 'company-match-flx)
-                    ;;flx matching
-                    (progn
-                        ;; If the completion arg is empty, just return what the server sends
-                        (if (string= arg "")
-                            (omnisharp--get-company-candidates arg)
-                          ;; If this is a new arg, cache the results
-                          (when (or (null omnisharp-company-current-flx-arg-being-matched)
-                                    (not (string-match-p omnisharp-company-current-flx-arg-being-matched arg)))
-                            (setq omnisharp-company-current-flx-match-list (omnisharp--get-company-candidates arg))
-                            (setq omnisharp-company-current-flx-arg-being-matched arg))
-
-                          ;; Let flex filter the results
-                          (omnisharp-company-flx-score-filter-list arg
-                                                                   omnisharp-company-current-flx-match-list
-                                                                   omnisharp-company-flx-cache)))
-                    (omnisharp--get-company-candidates arg)))
-
+    (candidates (omnisharp--get-company-candidates arg))
 
     ;; because "" doesn't return everything, and we don't cache if we're handling the filtering
     (no-cache (or (equal arg "")
@@ -204,8 +180,7 @@ finished loading the solution."
               t))
 
     ;; Check to see if we need to do any templating
-    (post-completion (setq omnisharp-company-current-flx-arg-being-matched nil)
-                     (let* ((json-result (get-text-property 0 'omnisharp-item arg))
+    (post-completion (let* ((json-result (get-text-property 0 'omnisharp-item arg))
                             (allow-templating (get-text-property 0 'omnisharp-allow-templating arg)))
 
                        (omnisharp--tag-text-with-completion-info arg json-result)

@@ -182,19 +182,10 @@ boost for completions."
 
 (defcustom omnisharp-company-match-type 'company-match-simple
   "Simple defaults to company's normal prefix matching (fast).
-   Server allows the omnisharp-server to do the matching (slow but does fuzzy matching).
-   Flex is experimental, and uses the flx library to match (fastish, good fuzzy matching)."
+   Server allows the omnisharp-server to do the matching (slow but does fuzzy matching)."
   :group 'omnisharp
   :type '(choice (const :tag "Simple" 'company-match-simple)
-                 (const :tag "Server" 'company-match-server)
-                 (const :tag "Flex" 'company-match-flx)))
-
-(defcustom omnisharp-company-match-sort-by-flx-score nil
-  "If omnisharp-company-match-type is 'company-match-flx',
-   set this to 't' to order search results by the flx match score"
-  :group 'omnisharp
-  :type '(choice (const :tag "Yes" t)
-                 (const :tag "No" nil)))
+                 (const :tag "Server" 'company-match-server)))
 
 ;; auto-complete-mode integration
 (defcustom omnisharp-auto-complete-template-use-yasnippet t
