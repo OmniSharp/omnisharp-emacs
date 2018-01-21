@@ -70,7 +70,7 @@ to use server installed via `omnisharp-install-server`.
     (omnisharp--log-reset)
     (omnisharp--log (format "Starting OmniSharpServer using project folder/solution file: %s"
                      path-to-project))
-    (omnisharp--log (format "using server binary on %s" server-executable-path))
+    (omnisharp--log (format "Using server binary on %s" server-executable-path))
 
     ;; Save all csharp buffers to ensure the server is in sync"
     (save-some-buffers t (lambda () (string-equal (file-name-extension (buffer-file-name)) "cs")))
@@ -346,12 +346,13 @@ have not been returned before."
           (beginning-of-line)
           (let ((text (s-lines (buffer-substring-no-properties
                                 (point)
-                                (process-mark process)))))
+                                (process-mark process))))
+                (trim-bom (lambda (s) (string-remove-prefix "\ufeff" (string-remove-prefix "\ufeff" s)))))
             ;; don't store messages in the process buffer unless
             ;; debugging, as they can slow emacs down when they pile
             ;; up
             (when (not omnisharp-debug) (erase-buffer))
-            (--filter (not (s-blank? it)) text)))))))
+            (-map trim-bom (--filter (not (s-blank? it)) text))))))))
 
 (defun omnisharp--attempt-to-start-server-for-buffer ()
   "Checks if the server for the project of the buffer is running
