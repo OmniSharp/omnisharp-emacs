@@ -40,7 +40,7 @@ See:
 
 ### Installation on Spacemacs
 Add `csharp` layer to `dotspacemacs-configuration-layers` on your `.spacemacs`
-file and restart emacs. `csharp-mode` and `omnisharp` packages will get
+file and restart Emacs. `csharp-mode` and `omnisharp` packages will get
 installed automatically for you on restart.
 
 
