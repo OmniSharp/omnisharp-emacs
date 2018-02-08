@@ -40,8 +40,9 @@ See:
 
 ### Installation on Spacemacs
 Add `csharp` layer to `dotspacemacs-configuration-layers` on your `.spacemacs`
-file and restart Emacs. `csharp-mode` and `omnisharp` packages will get
-installed automatically for you on restart.
+file and restart Emacs or run `dotspacemacs/sync-configuration-layers` (`SPC f e R`
+in evil mode, `M-m f e R` in Emacs mode).
+`csharp-mode` and `omnisharp` packages will get installed automatically for you on restart.
 
 
 ### Installation on Regular Emacs
