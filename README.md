@@ -162,6 +162,23 @@ issues by looking at the `*omnisharp-log*` buffer where `omnisharp-emacs` emits
 any log messages from the omnisharp server.
 
 
+### macOS: Mono.framework not on $PATH
+Some projects may fail to load in omnisharp-server when Mono.framework is not
+on $PATH or $PATH is not picked up by emacs.
+
+An example output in *omnisharp-log* is:
+```
+[12:23:33] ERROR: OmniSharp.MSBuild.ProjectFile.ProjectFileInfo, The reference assemblies for
+framework ".NETFramework,Version=v3.5" were not found. To resolve this, install the SDK or
+Targeting Pack for this framework version or retarget your application to a version of the framework
+for which you have the SDK or Targeting Pack installed. Note that assemblies will be resolved from
+the Global Assembly Cache (GAC) and will be used in place of reference assemblies. Therefore your
+assembly may not be correctly targeted for the framework you intend.
+```
+
+See [issue #426](https://github.com/OmniSharp/omnisharp-emacs/issues/426).
+
+
 ### Missing .NET SDKs
 You may find that your project can not be loaded when .NET SDK is not installed 
 on your machine.
