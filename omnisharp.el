@@ -59,6 +59,7 @@
 (require 'omnisharp-solution-actions)
 (require 'omnisharp-format-actions)
 (require 'omnisharp-server-installation)
+(require 'omnisharp-test-actions)
 
 ;;; Code:
 ;;;###autoload
