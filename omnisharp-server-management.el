@@ -24,6 +24,7 @@
 ;;  :process           - process of the server
 ;;  :request-id        - used for and incremented on every outgoing request
 ;;  :response-handlers - alist of (request-id . response-handler)
+;;  :event-handlers    - alist of (event . event-handler)
 ;;  :started?          - t if server reported it has started OK and is ready
 ;;  :project-path      - path to server project .sln, .csproj or directory
 ;;  :project-root      - project root directory (based on project-path)
@@ -40,6 +41,7 @@
     `((:process . ,process)
       (:request-id . 1)
       (:response-handlers . nil)
+      (:event-handlers . nil)
       (:started? . nil)
       (:project-path . ,project-path)
       (:project-root . ,project-root))))
@@ -123,6 +125,23 @@ The variable ASYNC has no effect when not using http."
 (defun omnisharp--send-command-to-server-http (api-name contents response-handler &optional async)
   "Sends the given command via curl"
   (omnisharp-post-http-message api-name response-handler contents async))
+
+(defun omnisharp--register-server-event-handler
+  (event-name event-handler)
+  (-let* ((server-info omnisharp--server-info))
+    (setcdr (assoc :event-handlers server-info)
+      (-concat `((,event-name . event-handler))
+        (cdr (assoc :event-handlers server-info))
+        )
+      )
+    )
+  )
+
+(defun omnisharp--unregister-server-event-handler (event-name)
+  (-let* ((server-info omnisharp--server-info))
+    (setcdr (assoc :event-handlers server-info)
+      (--remove (equal (car it) event-name)
+        (-non-nil (cdr (assoc :event-handlers server-info)))))))
 
 (defun omnisharp--send-command-to-server-stdio (api-name contents &optional response-handler)
   "Sends the given command to the server and associates a
