@@ -40,15 +40,59 @@
                                           )
                                      )
                       ))
+              (omnisharp--register-server-event-handler "TestMessage" 'omnisharp--handle-test-message-event)
               ;;(message (json-encode request-message))
               (omnisharp--send-command-to-server "/v2/runtestsinclass"
                 request-message
-                (lambda (resp) (message "%s" resp))
+                (lambda (resp)
+                  (message "%s" resp)
+                  (omnisharp--unregister-server-event-handler "TestMessage")
                 )
-
-
               ))))
       ))
+    )
+  )
+
+(defun omnisharp--handle-test-message-event (message)
+  (-let* (
+           ((&alist 'Body body) message)
+           ((&alist 'Message log-message) body))
+    (let (
+           (existing-buffer (get-buffer omnisharp--test-results-buffer-name)))
+;;      (omnisharp--append-lines-to-compilation-buffer log-message existing-buffer)
+      (if existing-buffer
+        (with-current-buffer existing-buffer
+          (setq buffer-read-only nil)
+          (goto-char (point-max))
+          (insert log-message)
+          (insert "\n")
+          (setq buffer-read-only t)
+          )
+        )
+      )
+    )
+  )
+
+(defun omnisharp--prepare-test-result-buffer ()
+  ""
+  (let ((existing-buffer (get-buffer omnisharp--test-results-buffer-name))
+         (solution-root-dir (cdr (assoc :project-root omnisharp--server-info))))
+    (if existing-buffer
+      (progn
+        (with-current-buffer existing-buffer
+          (setq buffer-read-only nil)
+          (erase-buffer)
+          (setq buffer-read-only t)
+          (setq default-directory solution-root-dir))
+        existing-buffer)
+      (let ((buffer (get-buffer-create omnisharp--test-results-buffer-name)))
+        (with-current-buffer buffer
+          (setq default-directory solution-root-dir)
+          (compilation-mode)
+          buffer)
+        )
+      )
+    )
   )
 
 (defun omnisharp--get-class-declarations-from-response (response)
