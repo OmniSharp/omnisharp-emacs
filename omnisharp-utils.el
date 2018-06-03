@@ -89,6 +89,24 @@ recognizes, so that the user may jump to the results."
         (setq buffer-read-only t))
       (display-buffer buffer-to-write-to))))
 
+(defun omnisharp--append-lines-to-compilation-buffer
+  (lines-to-write buffer-to-write-to)
+  (with-current-buffer buffer-to-write-to
+    (goto-char (point-max))
+    ;; read-only-mode new in Emacs 24.3
+    (if (fboundp 'read-only-mode)
+      (read-only-mode nil)
+      (setq buffer-read-only nil))
+    (mapc (lambda (element)
+            (insert element)
+            (insert "\n"))
+      lines-to-write)
+    (compilation-mode)
+    (if (fboundp 'read-only-mode)
+      (read-only-mode t)
+      (setq buffer-read-only t))
+    (display-buffer buffer-to-write-to)))
+
 (defun omnisharp--find-usages-output-to-compilation-output
   (json-result-single-element)
   "Converts a single element of a /findusages JSON response to a
