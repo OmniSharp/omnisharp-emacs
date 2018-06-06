@@ -40,6 +40,7 @@
                                           )
                                      )
                       ))
+              (omnisharp--prepare-test-result-buffer)
               (omnisharp--register-server-event-handler "TestMessage" 'omnisharp--handle-test-message-event)
               ;;(message (json-encode request-message))
               (omnisharp--send-command-to-server "/v2/runtestsinclass"
