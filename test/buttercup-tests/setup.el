@@ -270,8 +270,8 @@ with one."
 ;; still sleep a bit because even with the input received the server
 ;; might still not be able to response to requests in-time for the
 ;; first test to run properly
-(print "waiting for the server to spin up (3 secs)..")
-(sleep-for 3)
+(print "waiting for the server to spin up (10 secs)..")
+(sleep-for 10)
 
 (setq create-lockfiles nil)
 
