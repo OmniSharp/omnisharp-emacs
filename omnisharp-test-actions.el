@@ -46,7 +46,7 @@
               (omnisharp--send-command-to-server "/v2/runtestsinclass"
                 request-message
                 (lambda (resp)
-                  (message "%s" resp)
+                  ;;(message "%s" resp)
                   (omnisharp--unregister-server-event-handler "TestMessage")
                 )
               ))))
@@ -102,18 +102,19 @@
            (omnisharp--vector-to-list (alist-get 'TopLevelTypeDefinitions response))))
 
 (defun omnisharp--get-test-info-for-class (classes)
-  (-map
-    (-lambda (info) info)
-    (omnisharp--vector-to-list
-      (-mapcat
-        (lambda (x3) (alist-get 'Features x3))
-        (-filter
-          (lambda (x2) (equal "MethodDeclaration" (alist-get 'Kind x2)))
-          (-mapcat
-            (lambda (x1) (omnisharp--vector-to-list (alist-get 'ChildNodes x1)))
-            classes)
-          )))
-    )
+  (omnisharp--vector-to-list
+    (-mapcat
+      (lambda (x3) (omnisharp--vector-to-list (alist-get 'Features x3)))
+      (-filter 'omnisharp--is-test-method?
+        (-mapcat
+          (lambda (x1) (omnisharp--vector-to-list (alist-get 'ChildNodes x1)))
+          classes)
+        )))
+  )
+
+(defun omnisharp--is-test-method? (node)
+  (and (equal "MethodDeclaration" (alist-get 'Kind node))
+    (< 0 (length (alist-get 'Features node))))
   )
 
 (defun omnisharp--current-file-members-as-tree (callback)
