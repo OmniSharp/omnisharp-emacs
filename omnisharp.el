@@ -136,7 +136,7 @@ finished loading the solution."
 
 ;;;###autoload
 (defun omnisharp-install-server (reinstall)
-  "Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version)"
+  "Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(tversion)"
   (interactive "P")
   (omnisharp--install-server reinstall))
 
@@ -616,6 +616,10 @@ cursor at that location"
 ;; nunit-console.exe on windows uses this format
 (add-to-list 'compilation-error-regexp-alist
              '(" in \\(.+\\):line \\([0-9]+\\)" 1 2))
+
+;; dotnet test with xunit project
+;; [xUnit.net 00:00:00.6080370]         /TestProject/UnitTest1.cs(15,0): at TestProject.UnitTest1.Test1()
+(add-to-list 'compilation-error-regexp-alist '("\\[xUnit.net .*\\] +\\(.*\\)(\\([[:digit:]]+\\),\\([[:digit:]]+\\))" 1 2 3))
 
 (provide 'omnisharp)
 
