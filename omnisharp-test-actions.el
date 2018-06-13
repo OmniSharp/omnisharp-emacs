@@ -48,6 +48,7 @@
                 (lambda (resp)
                   ;;(message "%s" resp)
                   (omnisharp--unregister-server-event-handler "TestMessage")
+                  (display-buffer omnisharp--test-results-buffer-name)
                 )
               ))))
       ))
