@@ -270,8 +270,21 @@ with one."
 ;; still sleep a bit because even with the input received the server
 ;; might still not be able to response to requests in-time for the
 ;; first test to run properly
-(print "waiting for the server to spin up (10 secs)..")
-(sleep-for 10)
+(print "waiting for the server to spin up (5 secs)..")
+(print (current-time-string))
+
+;; sleep-for doesn't work in some versions of emacs.  Using current-time-string
+;; to ensure from output that we are actually waiting for the server to started
+;; and using a hack to force wait which was from this link
+;; https://stackoverflow.com/questions/14698081/elisp-sleep-for-doesnt-block-when-running-a-test-in-ert
+;;(sleep-for 10)
+(let ((now (float-time))
+       (process-connection-type nil))
+  (start-process "tmp" "*tmp*" "bash" "-c" "sleep 1; echo hi")
+  (while (< (- (float-time) now) 5)
+    (sleep-for 1))
+  )
+(print (current-time-string))
 
 (setq create-lockfiles nil)
 
