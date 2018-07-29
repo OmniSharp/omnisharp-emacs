@@ -189,6 +189,17 @@ A log line indicating the problem would look like this on `*omnisharp-log*`:
 ```
 
 
+### Error loading csproj file
+You may encounter an issue where omnisharp server fails to load a project, this looks like on `*omnisharp-log*`:
+```
+[22:46:22] WARNING: OmniSharp.MSBuild.MSBuildProjectSystem, Failed to load project file '/Users/{user}/temp/temp.csproj'.
+```
+
+To fix this, on Linux, you may need to install the `msbuild-stable` package.
+
+This issue and a fix has been reported on [issue #430](https://github.com/OmniSharp/omnisharp-emacs/issues/430).
+
+
 ## Contributing
 
 ### How to run tests
