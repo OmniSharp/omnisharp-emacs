@@ -383,8 +383,8 @@ result."
   (save-excursion
     (end-of-thing 'symbol)
     (omnisharp-auto-complete-worker
-     (omnisharp--create-auto-complete-request))
-    (omnisharp-show-last-auto-complete-result)))
+     (omnisharp--create-auto-complete-request)
+     (lambda (_)(omnisharp-show-last-auto-complete-result)))))
 
 (defun omnisharp--auto-complete-display-function-popup
   (json-result-alist)
