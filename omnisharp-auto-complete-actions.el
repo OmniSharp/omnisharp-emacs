@@ -289,22 +289,19 @@ company-mode-friendly"
   (let* ((json-false :json-false)
          ;; json-false helps distinguish between null and false in
          ;; json. This is an emacs limitation.
-         (params (omnisharp--create-auto-complete-request))
-         (handler (lambda (result)
-                    (let* ((completion-list (mapcar #'omnisharp--make-company-completion
-                                                    omnisharp--last-buffer-specific-auto-complete-result)))
-                      (if (eq omnisharp-company-match-type 'company-match-simple)
-                          (all-completions pre completion-list)
-                        completion-list)))))
+         (params (omnisharp--create-auto-complete-request)))
 
-    ;; store auto-complete results
-    ;; (omnisharp--wait-until-request-completed (omnisharp-auto-complete-worker params))
-    (cons :async (lambda (cb)
-                   (omnisharp-auto-complete-worker
-                    params
-                    (lambda (result)
-                      (let ((completion-ignore-case omnisharp-company-ignore-case))
-                       (funcall cb (funcall handler result)))))))))
+    (cons :async
+          (lambda (cb)
+            (omnisharp-auto-complete-worker params)
+            (let ((completion-ignore-case omnisharp-company-ignore-case))
+              (funcall
+               cb
+               (let* ((completion-list (mapcar #'omnisharp--make-company-completion
+                                               omnisharp--last-buffer-specific-auto-complete-result)))
+                 (if (eq omnisharp-company-match-type 'company-match-simple)
+                     (all-completions pre completion-list)
+                   completion-list))))))))
 
 (defun omnisharp--company-annotation (candidate)
   (get-text-property 0 'omnisharp-ann candidate))
