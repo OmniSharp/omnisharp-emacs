@@ -149,7 +149,7 @@ This emacs package requires the [omnisharp-roslyn][] server program.
 Emacs will manage connection to the server as a subprocess.
 
 The easiest/default way to install the server is to invoke 
-`M-x omnisharp-install-server` and follow instructions on minibufer.
+`M-x omnisharp-install-server` and follow instructions on minibuffer.
 
 If that fails (or you feel adventurous) please see 
 [installing omnisharp server](doc/server-installation.md) on how to install the
