@@ -293,15 +293,18 @@ company-mode-friendly"
 
     (cons :async
           (lambda (cb)
-            (omnisharp-auto-complete-worker params)
-            (let ((completion-ignore-case omnisharp-company-ignore-case))
-              (funcall
-               cb
-               (let* ((completion-list (mapcar #'omnisharp--make-company-completion
-                                               omnisharp--last-buffer-specific-auto-complete-result)))
-                 (if (eq omnisharp-company-match-type 'company-match-simple)
-                     (all-completions pre completion-list)
-                   completion-list))))))))
+            (omnisharp-auto-complete-worker
+             params
+             (lambda (result)
+               (let ((completion-ignore-case omnisharp-company-ignore-case))
+                 (funcall
+                  cb
+                  (let* ((completion-list
+                          (mapcar #'omnisharp--make-company-completion
+                                  result)))
+                    (if (eq omnisharp-company-match-type 'company-match-simple)
+                        (all-completions pre completion-list)
+                      completion-list))))))))))
 
 (defun omnisharp--company-annotation (candidate)
   (get-text-property 0 'omnisharp-ann candidate))
