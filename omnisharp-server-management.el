@@ -275,15 +275,11 @@ its type."
         (-let (((request-id . response-handler) id-and-handler))
           (condition-case maybe-error-data
               (progn
-                (omnisharp--log (if (equal success? :json-false)
-                                    (format "<-- %s %s: request failed"
+                (if (equal success? :json-false)
+                    (omnisharp--log (format "<-- %s %s: request failed"
                                             request-id
                                             command
-                                            (prin1-to-string body))
-                                  (format "<-- %s %s: %s"
-                                          request-id
-                                          command
-                                          (prin1-to-string body))))
+                                            (prin1-to-string body))))
                 (omnisharp--remove-response-handler server-info request-id)
                 (when (equal t success?)
                   (apply response-handler (list body))))
