@@ -65,12 +65,13 @@ for the whole solution."
                          (filename (string-remove-prefix (concat default-directory "/") (cdr (assoc 'FileName item))))
                          (line (cdr (assoc 'Line item)))
                          (col (cdr (assoc 'Column item)))
-                         (text (cdr (assoc 'Text item))))
+                         (text (cdr (assoc 'Text item)))
+                         (id (or (cdr (assoc 'Id item)) "CS0000")))
                      (if (or (not errors-only)
                              (string= log-level "error"))
                          (insert (concat filename
                                          "(" (number-to-string line) "," (number-to-string col) "): "
-                                         log-level " CS0000" ": "
+                                         log-level " " id ": "
                                          text
                                          "\n")))))
                  (insert (concat "\nomnisharp-solution-errors: finished, "

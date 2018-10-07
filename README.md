@@ -149,7 +149,7 @@ This emacs package requires the [omnisharp-roslyn][] server program.
 Emacs will manage connection to the server as a subprocess.
 
 The easiest/default way to install the server is to invoke 
-`M-x omnisharp-install-server` and follow instructions on minibufer.
+`M-x omnisharp-install-server` and follow instructions on minibuffer.
 
 If that fails (or you feel adventurous) please see 
 [installing omnisharp server](doc/server-installation.md) on how to install the
@@ -187,6 +187,17 @@ A log line indicating the problem would look like this on `*omnisharp-log*`:
 ```
 [19:24:59] WARNING: Microsoft.Build.Exceptions.InvalidProjectFileException: The SDK 'Microsoft.NET.Sdk' specified could not be found. ...
 ```
+
+
+### Error loading csproj file
+You may encounter an issue where omnisharp server fails to load a project, this looks like on `*omnisharp-log*`:
+```
+[22:46:22] WARNING: OmniSharp.MSBuild.MSBuildProjectSystem, Failed to load project file '/Users/{user}/temp/temp.csproj'.
+```
+
+To fix this, on Linux, you may need to install the `msbuild-stable` package.
+
+This issue and a fix has been reported on [issue #430](https://github.com/OmniSharp/omnisharp-emacs/issues/430).
 
 
 ## Contributing

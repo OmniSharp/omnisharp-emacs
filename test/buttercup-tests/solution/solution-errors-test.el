@@ -30,7 +30,7 @@
 
     (ot--switch-to-the-window-in-the-buffer "*omnisharp-solution-errors*")
 
-    (ot--buffer-should-contain "MyClass.cs(1,1): warning CS0000: Unnecessary using directive.")
-    (ot--buffer-should-contain "MyClass.cs(6,14): error CS0000: Invalid token '-' in class, struct, or interface member declaration")
-    (ot--buffer-should-contain "MyClass.cs(7,5): error CS0000: Invalid token '}' in class, struct, or interface member declaration")
+    (ot--buffer-should-contain "MyClass.cs(1,1): warning CS8019: Unnecessary using directive.")
+    (ot--buffer-should-contain "MyClass.cs(6,14): error CS1519: Invalid token '-' in class, struct, or interface member declaration")
+    (ot--buffer-should-contain "MyClass.cs(7,5): error CS1519: Invalid token '}' in class, struct, or interface member declaration")
     (ot--buffer-should-contain "omnisharp-solution-errors: finished")))
