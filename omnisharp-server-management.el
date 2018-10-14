@@ -131,11 +131,7 @@ The variable ASYNC has no effect when not using http."
   (-let* ((server-info omnisharp--server-info))
     (setcdr (assoc :event-handlers server-info)
       (-concat `((,event-name . ,event-handler))
-        (cdr (assoc :event-handlers server-info))
-        )
-      )
-    )
-  )
+        (cdr (assoc :event-handlers server-info))))))
 
 (defun omnisharp--unregister-server-event-handler (event-name)
   (-let* ((server-info omnisharp--server-info))

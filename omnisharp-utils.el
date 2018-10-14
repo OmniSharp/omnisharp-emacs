@@ -89,24 +89,6 @@ recognizes, so that the user may jump to the results."
         (setq buffer-read-only t))
       (display-buffer buffer-to-write-to))))
 
-(defun omnisharp--append-lines-to-compilation-buffer
-  (lines-to-write buffer-to-write-to)
-  (with-current-buffer buffer-to-write-to
-    (goto-char (point-max))
-    ;; read-only-mode new in Emacs 24.3
-    (if (fboundp 'read-only-mode)
-      (read-only-mode nil)
-      (setq buffer-read-only nil))
-    (mapc (lambda (element)
-            (insert element)
-            (insert "\n"))
-      lines-to-write)
-    (compilation-mode)
-    (if (fboundp 'read-only-mode)
-      (read-only-mode t)
-      (setq buffer-read-only t))
-    (display-buffer buffer-to-write-to)))
-
 (defun omnisharp--find-usages-output-to-compilation-output
   (json-result-single-element)
   "Converts a single element of a /findusages JSON response to a
@@ -385,5 +367,23 @@ for starting a server based on the current buffer."
 (defun omnisharp--message-at-point (format-string &rest args)
   "Displays passed text at point using popup-tip function."
   (popup-tip (apply 'format (cons format-string args))))
+
+(defun omnisharp--truncate-symbol-name (name trunc-length)
+  "This attempts to truncate a fully-qualified dotnet symbol name to given length.
+Basically, in case NAME is longer than TRUNC-LENGTH it will replace text in the middle
+with ellipsis (...) so the result would fit into TRUNC-LENGTH.
+
+It assumes the tail of NAME is more important than the beginning as that usually
+has namespaces and parent class name."
+
+  (if (< (length name) trunc-length)
+      name
+    (let* ((trunc-length (- trunc-length 3)) ; take ellipsis into account
+           (trunc-1/4th (/ trunc-length 4))
+           (head-len (max 0 (- trunc-length (* trunc-1/4th 3))))
+           (tail-len (max 0 (- trunc-length head-len)))
+           (head (substring name 0 head-len))
+           (tail (substring name (- (length name) tail-len))))
+      (concat head "..." tail))))
 
 (provide 'omnisharp-utils)

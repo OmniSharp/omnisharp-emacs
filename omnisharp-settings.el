@@ -32,7 +32,7 @@ instance that works in the background."
   "The name of the temporary buffer that is used to display the
 results of a 'find usages' call.")
 
-(defvar omnisharp--test-results-buffer-name "* Omnisharp : Test Results *"
+(defvar omnisharp--unit-test-results-buffer-name "* Omnisharp : Unit Test Results *"
   "The name of the temporary buffer that is used to display the results
 of a 'run tests' call.")
 

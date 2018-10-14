@@ -59,7 +59,7 @@
 (require 'omnisharp-solution-actions)
 (require 'omnisharp-format-actions)
 (require 'omnisharp-server-installation)
-(require 'omnisharp-test-actions)
+(require 'omnisharp-unit-test-actions)
 
 ;;; Code:
 ;;;###autoload
@@ -136,7 +136,7 @@ finished loading the solution."
 
 ;;;###autoload
 (defun omnisharp-install-server (reinstall)
-  "Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(tversion)"
+  "Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version)"
   (interactive "P")
   (omnisharp--install-server reinstall))
 
