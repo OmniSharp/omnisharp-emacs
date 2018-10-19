@@ -66,4 +66,34 @@ with the formatted result."
        (--map (omnisharp--apply-text-change-to-buffer it buffer)
               text-changes)))))
 
+
+(defun omnisharp-fix-usings ()
+  "Find usages for the symbol under point."
+  (interactive)
+  (let*((fixusings-request
+         (->> (omnisharp--get-request-object)
+              (cons `(WantsTextChanges . true))))
+        (buffer (current-buffer)))
+
+    (omnisharp--send-command-to-server-sync
+     "fixusings"
+     fixusings-request
+     (lambda (fixusings-response) (omnisharp--fixusings-worker
+                                   fixusings-response
+                                   buffer)))))
+
+(defun omnisharp--fixusings-worker (fixusings-response
+                         buffer)
+  (-if-let (error-message (cdr (assoc 'ErrorMessage fixusings-response)))
+      (omnisharp--message error-message)
+    (-let (((&alist 'AmbiguousResults quickfixes) fixusings-response))
+      (if (> (length quickfixes) 0)
+          (omnisharp--write-quickfixes-to-compilation-buffer
+           quickfixes
+           omnisharp--ambiguous-symbols-buffer-name
+           omnisharp-ambiguous-results-header)))
+    (-let (((&alist 'Changes text-changes) fixusings-response))
+      (--map (omnisharp--apply-text-change-to-buffer it buffer)
+             text-changes))))
+
 (provide 'omnisharp-format-actions)
