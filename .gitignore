@@ -7,3 +7,4 @@
 /test/MinimalProject/obj/*
 /test/MinimalProject/KeystrokeTest.cs
 *~
+*.elc

@@ -24,6 +24,7 @@
 ;;  :process           - process of the server
 ;;  :request-id        - used for and incremented on every outgoing request
 ;;  :response-handlers - alist of (request-id . response-handler)
+;;  :event-handlers    - alist of (event . event-handler)
 ;;  :started?          - t if server reported it has started OK and is ready
 ;;  :project-path      - path to server project .sln, .csproj or directory
 ;;  :project-root      - project root directory (based on project-path)
@@ -40,6 +41,7 @@
     `((:process . ,process)
       (:request-id . 1)
       (:response-handlers . nil)
+      (:event-handlers . nil)
       (:started? . nil)
       (:project-path . ,project-path)
       (:project-root . ,project-root))))
@@ -123,6 +125,19 @@ The variable ASYNC has no effect when not using http."
 (defun omnisharp--send-command-to-server-http (api-name contents response-handler &optional async)
   "Sends the given command via curl"
   (omnisharp-post-http-message api-name response-handler contents async))
+
+(defun omnisharp--register-server-event-handler
+  (event-name event-handler)
+  (-let* ((server-info omnisharp--server-info))
+    (setcdr (assoc :event-handlers server-info)
+      (-concat `((,event-name . ,event-handler))
+        (cdr (assoc :event-handlers server-info))))))
+
+(defun omnisharp--unregister-server-event-handler (event-name)
+  (-let* ((server-info omnisharp--server-info))
+    (setcdr (assoc :event-handlers server-info)
+      (--remove (equal (car it) event-name)
+        (-non-nil (cdr (assoc :event-handlers server-info)))))))
 
 (defun omnisharp--send-command-to-server-stdio (api-name contents &optional response-handler)
   "Sends the given command to the server and associates a
@@ -224,16 +239,20 @@ process buffer, and handle them as server events"
   (and (assq 'Arguments packet)
        (assq 'Command packet)))
 
-(defun omnisharp--handle-event-packet (packet)
-  (-let* ((((&alist 'Type packet-type
-                    'Event event-type) packet)))
+(defun omnisharp--handle-event-packet (packet server-info)
+  (-let* (((&alist 'Type packet-type
+                   'Event event-type) packet)
+           ((&alist :event-handlers event-handlers) server-info)
+           (handler (cdr (--first (equal (car it) event-type) event-handlers)))
+           )
     (cond ((-contains? '("ProjectAdded" "ProjectChanged") event-type)
-           (comment ignore these for now.))
-
+            (comment ignore these for now.))
+          ((when handler (apply handler (list packet))))
           ((equal "started" event-type)
            (omnisharp--log "The server has started")
            (message "The OmniSharp server is ready. Hacks and glory await!")
-           (setcdr (assoc :started? server-info) t)))))
+            (setcdr (assoc :started? server-info) t)))
+    ))
 
 (defun omnisharp--handle-server-event (packet)
   "Takes an alist representing some kind of Packet, possibly a
@@ -250,7 +269,7 @@ its type."
            (omnisharp--log-log-packet packet))
 
           ((omnisharp--event-packet? packet)
-           (omnisharp--handle-event-packet packet))
+           (omnisharp--handle-event-packet packet server-info))
 
           (t (progn
                (omnisharp--log (format "<-- Received an unknown server packet: %s"
