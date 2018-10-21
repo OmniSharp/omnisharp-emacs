@@ -171,30 +171,4 @@ name to rename to, defaulting to the current name of the symbol."
      (omnisharp--get-filename modified-file-response)
      (omnisharp--vector-to-list changes))))
 
-(defun omnisharp-rename-interactively ()
-  "Rename the current symbol to a new name. Lets the user choose what
-name to rename to, defaulting to the current name of the symbol. Any
-renames require interactive confirmation from the user."
-  (interactive)
-  (let* ((current-word (thing-at-point 'symbol))
-         (rename-to (read-string "Rename to: " current-word))
-         (delimited
-          (y-or-n-p "Only rename full words?"))
-         (all-solution-files
-          (omnisharp--get-solution-files-list-of-strings))
-         (location-before-rename
-          (omnisharp--get-request-object-for-emacs-side-use)))
-
-    (setq omnisharp--current-solution-files all-solution-files)
-    (tags-query-replace current-word
-                        rename-to
-                        delimited
-                        ;; This is expected to be a form that will be
-                        ;; evaluated to get the list of all files to
-                        ;; process.
-                        'omnisharp--current-solution-files)
-    ;; Keep point in the buffer that initialized the rename so that
-    ;; the user deos not feel disoriented
-    (omnisharp-go-to-file-line-and-column location-before-rename)))
-
 (provide 'omnisharp-current-symbol-actions)
