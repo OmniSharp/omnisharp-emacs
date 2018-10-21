@@ -295,15 +295,20 @@ changes to be applied to that buffer instead."
       (accept-process-output process 0.1)))
   request-id)
 
+(defun omnisharp-builtin-completing-read (&rest args)
+  "Default completing read. See `omnisharp-completing-read-function'"
+  ;; e.g. ivy and helm don't need a case here, because they set
+  ;; `completing-read-function' in their mode
+  (let ((completing-read-variant (cond ((bound-and-true-p ido-mode) 'ido-completing-read)
+                                       (t 'completing-read))))
+    (apply completing-read-variant args)))
+
 (defun omnisharp--completing-read (&rest args)
   "Mockable wrapper for completing-read.
 The problem with mocking completing-read directly is that
 sometimes the mocks are not removed when an error occurs. This renders
 the developer's emacs unusable."
-  (let ((completing-read-variant (if (and (boundp 'ido-mode) ido-mode)
-                                     'ido-completing-read
-                                   'completing-read)))
-    (apply completing-read-variant args)))
+    (apply omnisharp-completing-read-function args))
 
 (defun omnisharp--read-string (&rest args)
   "Mockable wrapper for read-string, see

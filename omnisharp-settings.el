@@ -201,4 +201,13 @@ boost for completions."
   :type '(choice (const :tag "Yes" t)
                  (const :tag "No" nil)))
 
+(defcustom omnisharp-completing-read-function 'omnisharp-builtin-completing-read
+  "Function to be called when requesting input from the user."
+  :group 'omnisharp
+  :type '(radio (function-item omnisharp-builtin-completing-read)
+                (function-item ido-completing-read)
+                (function-item ivy-completing-read)
+                (function-item helm--completing-read-default)
+                (function :tag "Other function")))
+
 (provide 'omnisharp-settings)
