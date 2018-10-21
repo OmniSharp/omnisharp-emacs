@@ -300,7 +300,10 @@ changes to be applied to that buffer instead."
 The problem with mocking completing-read directly is that
 sometimes the mocks are not removed when an error occurs. This renders
 the developer's emacs unusable."
-  (apply 'completing-read args))
+  (let ((completing-read-variant (if (and (boundp 'ido-mode) ido-mode)
+                                     'ido-completing-read
+                                   'completing-read)))
+    (apply completing-read-variant args)))
 
 (defun omnisharp--read-string (&rest args)
   "Mockable wrapper for read-string, see
