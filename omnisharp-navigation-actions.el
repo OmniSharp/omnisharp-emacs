@@ -184,14 +184,6 @@ completing-read. Returns the chosen element."
    (-lambda ((&alist 'QuickFixes quickfixes))
             (omnisharp--choose-and-go-to-quickfix-ido quickfixes other-window))))
 
-(defun omnisharp--get-solution-files-list-of-strings ()
-  "Returns all files in the current solution as a list of strings."
-  (->> (omnisharp--get-solution-files-quickfix-response)
-    (assoc 'QuickFixes)
-    (cdr)
-    (omnisharp--vector-to-list)
-    (--map (omnisharp--get-filename it))))
-
 (defun omnisharp-navigate-to-solution-file-then-file-member
   (&optional other-window)
   "Navigates to a file in the solution first, then to a member in that
