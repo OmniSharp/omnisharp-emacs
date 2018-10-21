@@ -386,6 +386,25 @@ result."
      (omnisharp--create-auto-complete-request)
      (lambda (_)(omnisharp-show-last-auto-complete-result)))))
 
+(defun omnisharp--insert-result-completion-text
+    (result-completion-text completion-snippet required-namespace-import)
+  (let ((current-symbol-end-point (point))
+        (current-symbol-start-point
+         (save-excursion
+           (search-backward (omnisharp--current-word-or-empty-string)))))
+
+    (if (and completion-snippet omnisharp-company-template-use-yasnippet (boundp 'yas-minor-mode) yas-minor-mode)
+        (yas-expand-snippet
+         completion-snippet
+         current-symbol-start-point
+         current-symbol-end-point)
+      (omnisharp--replace-symbol-in-buffer-with
+       (omnisharp--current-word-or-empty-string)
+       result-completion-text))
+
+    (when required-namespace-import
+      (omnisharp--insert-namespace-import required-namespace-import))))
+
 (defun omnisharp--auto-complete-display-function-popup
   (json-result-alist)
   "Gets an association list such as this:
@@ -431,25 +450,10 @@ current buffer."
            (completion-snippet
             (get-text-property 0 'Snippet result-completion-text))
            (required-namespace-import
-            (get-text-property 0 'RequiredNamespaceImport result-completion-text))
+            (get-text-property 0 'RequiredNamespaceImport result-completion-text)))
 
-           (current-symbol-end-point (point))
-
-           (current-symbol-start-point
-            (save-excursion
-              (search-backward (omnisharp--current-word-or-empty-string)))))
-
-      (if (and completion-snippet omnisharp-company-template-use-yasnippet (boundp 'yas-minor-mode) yas-minor-mode)
-          (yas-expand-snippet
-           completion-snippet
-           current-symbol-start-point
-           current-symbol-end-point)
-        (omnisharp--replace-symbol-in-buffer-with
-         (omnisharp--current-word-or-empty-string)
-         result-completion-text))
-
-      (when required-namespace-import
-        (omnisharp--insert-namespace-import required-namespace-import)))))
+      (omnisharp--insert-result-completion-text
+       result-completion-text completion-snippet required-namespace-import))))
 
 (defun omnisharp--auto-complete-display-function-ido
   (json-result-alist)
@@ -491,16 +495,15 @@ is a more sophisticated matching framework than what popup.el offers."
            (completion-text-to-insert
             (cdr (assoc 'CompletionText
                         chosen-candidate)))
+           (completion-snippet
+            (cdr (assoc 'Snippet
+                        chosen-candidate)))
            (required-namespace-import
             (cdr (assoc 'RequiredNamespaceImport
                         chosen-candidate))))
 
-      (omnisharp--replace-symbol-in-buffer-with
-       (omnisharp--current-word-or-empty-string)
-       completion-text-to-insert)
-
-      (when required-namespace-import
-        (omnisharp--insert-namespace-import required-namespace-import)))))
+      (omnisharp--insert-result-completion-text
+       completion-text-to-insert completion-snippet required-namespace-import))))
 
 (defun omnisharp--convert-auto-complete-kind-to-popup-symbol-value (kind)
   (pcase kind
