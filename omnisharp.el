@@ -231,8 +231,7 @@ finished loading the solution."
      ["Find usages with ido" omnisharp-find-usages-with-ido]
      ["Find implementations" omnisharp-find-implementations]
      ["Find implementations with ido" omnisharp-find-implementations-with-ido]
-     ["Rename" omnisharp-rename]
-     ["Rename interactively" omnisharp-rename-interactively])
+     ["Rename" omnisharp-rename])
 
     ("Solution actions"
      ["Start syntax check" flycheck-mode]
