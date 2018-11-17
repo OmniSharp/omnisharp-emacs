@@ -58,19 +58,18 @@ to use server installed via `omnisharp-install-server`.
         (if server-installation-path
             server-installation-path
           (progn
-            (message "omnisharp: No omnisharp server could be found.")
-            (message (concat "omnisharp: Please use M-x 'omnisharp-install-server' or download server manually"
-                             " as detailed in https://github.com/OmniSharp/omnisharp-emacs/blob/master/doc/server-installation.md"))
+            (omnisharp--message "omnisharp: No omnisharp server could be found.")
+            (omnisharp--message (concat "omnisharp: Please use M-x 'omnisharp-install-server' or download server manually"
+                                        " as detailed in https://github.com/OmniSharp/omnisharp-emacs/blob/master/doc/server-installation.md"))
             nil)))))
 
 (defun omnisharp--do-server-start (path-to-project)
   (let ((server-executable-path (omnisharp--resolve-omnisharp-server-executable-path)))
-    (message (format "omnisharp: Starting OmniSharpServer using project folder/solution file: %s %s"
-                     path-to-project
-                     "(check *omnisharp-log* buffer for omnisharp server log)"))
+    (message (format "omnisharp: starting server using project folder/solution file: \"%s\""
+                     path-to-project))
 
     (omnisharp--log-reset)
-    (omnisharp--log (format "Starting OmniSharpServer using project folder/solution file: %s"
+    (omnisharp--log (format "starting server using project folder/solution path \"%s\""
                      path-to-project))
     (omnisharp--log (format "Using server binary on %s" server-executable-path))
 
@@ -97,7 +96,7 @@ to use server installed via `omnisharp-install-server`.
              (set-process-sentinel omnisharp-process
                                    (lambda (process event)
                                      (when (memq (process-status process) '(exit signal))
-                                       (message "omnisharp: OmniSharp server terminated")
+                                       (message "omnisharp: server has been terminated")
                                        (setq omnisharp--server-info nil)
                                        (if omnisharp--restart-server-on-stop
                                            (omnisharp--do-server-start omnisharp--last-project-path)))))
@@ -249,9 +248,8 @@ process buffer, and handle them as server events"
             (comment ignore these for now.))
           ((when handler (apply handler (list packet))))
           ((equal "started" event-type)
-           (omnisharp--log "The server has started")
-           (message "The OmniSharp server is ready. Hacks and glory await!")
-            (setcdr (assoc :started? server-info) t)))
+           (omnisharp--message "omnisharp: server has been started, check *omnisharp-log* for startup progress messages")
+           (setcdr (assoc :started? server-info) t)))
     ))
 
 (defun omnisharp--handle-server-event (packet)
