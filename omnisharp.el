@@ -58,6 +58,7 @@
 (require 'omnisharp-solution-actions)
 (require 'omnisharp-format-actions)
 (require 'omnisharp-server-installation)
+(require 'omnisharp-code-structure)
 (require 'omnisharp-unit-test-actions)
 
 ;;; Code:
