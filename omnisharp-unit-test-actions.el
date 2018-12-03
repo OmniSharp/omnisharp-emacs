@@ -13,6 +13,37 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+(defun omnisharp-unit-test-at-point ()
+  "Runs test case under point, if any."
+  (interactive)
+  (omnisharp--cs-element-stack-at-point
+   (lambda (stack)
+     (let* ((element-on-point (car (last stack)))
+            (test-method (omnisharp--cs-unit-test-method-p element-on-point))
+            (test-method-name (car test-method))
+            (test-method-framework (car (cdr test-method)))
+            (request-message (and test-method
+                                  (-concat
+                                   (omnisharp--get-request-object)
+                                   `((TestFrameworkName . ,test-method-framework)
+                                     (MethodNames . ,(list test-method-name)))))))
+       (if request-message
+           (progn
+             (omnisharp--unit-test-reset-test-results-buffer t)
+             (omnisharp--register-server-event-handler "TestMessage" 'omnisharp--handle-test-message-event)
+             (omnisharp--send-command-to-server "/v2/runtestsinclass"
+                                                request-message
+                                                (lambda (resp)
+                                                  (omnisharp--unregister-server-event-handler "TestMessage")
+                                                  (-let (((&alist 'Results results
+                                                                  'Pass passed) resp))
+                                                    (omnisharp--unit-test-emit-results passed results))
+                                                  ))
+             )
+         )))))
+
+
 (defun omnisharp-unit-test-buffer ()
   "Runs all test cases defined in the current buffer."
   (interactive)
