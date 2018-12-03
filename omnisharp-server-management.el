@@ -134,7 +134,7 @@ sending."
   ;; send request
   ;; store response handler associated with the request id
   (if (equal nil omnisharp--server-info)
-      (message (concat "omnisharp: OmniSharp server not running. "
+      (message (concat "omnisharp: server is not running. "
                        "Start it with `omnisharp-start-omnisharp-server' first"))
     (if (not (s-starts-with? "/" api-name))
         (setq api-name (concat "/" api-name)))
