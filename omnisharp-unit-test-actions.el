@@ -31,18 +31,15 @@
        (if request-message
            (progn
              (omnisharp--unit-test-reset-test-results-buffer t)
-             (omnisharp--register-server-event-handler "TestMessage" 'omnisharp--handle-test-message-event)
              (omnisharp--send-command-to-server "/v2/runtestsinclass"
                                                 request-message
                                                 (lambda (resp)
-                                                  (omnisharp--unregister-server-event-handler "TestMessage")
                                                   (-let (((&alist 'Results results
                                                                   'Pass passed) resp))
                                                     (omnisharp--unit-test-emit-results passed results))
                                                   ))
              )
          )))))
-
 
 (defun omnisharp-unit-test-buffer ()
   "Runs all test cases defined in the current buffer."
@@ -73,11 +70,9 @@
                                      )
                       ))
               (omnisharp--unit-test-reset-test-results-buffer t)
-              (omnisharp--register-server-event-handler "TestMessage" 'omnisharp--handle-test-message-event)
               (omnisharp--send-command-to-server "/v2/runtestsinclass"
                 request-message
                 (lambda (resp)
-                  (omnisharp--unregister-server-event-handler "TestMessage")
                   (-let (((&alist 'Results results
                                   'Pass passed) resp))
                     (omnisharp--unit-test-emit-results passed results))
