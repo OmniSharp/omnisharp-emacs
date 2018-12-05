@@ -160,14 +160,13 @@ the OmniSharp server understands."
 
 (defun omnisharp--log (single-or-multiline-log-string)
   "Writes message to the log."
-  (shut-up
-    (let* ((log-buffer (get-buffer-create "*omnisharp-log*")))
-      (save-window-excursion
-        (with-current-buffer log-buffer
-          (goto-char (point-max))
-          (insert (format-time-string "[%H:%M:%S] "))
-          (insert single-or-multiline-log-string)
-          (insert "\n"))))))
+  (let ((log-buffer (get-buffer-create "*omnisharp-log*")))
+    (save-window-excursion
+      (with-current-buffer log-buffer
+        (goto-char (point-max))
+        (insert (format-time-string "[%H:%M:%S] "))
+        (insert single-or-multiline-log-string)
+        (insert "\n")))))
 
 (defun omnisharp--json-read-from-string (json-string
                                          &optional error-message)
