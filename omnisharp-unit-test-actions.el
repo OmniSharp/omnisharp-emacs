@@ -39,6 +39,12 @@
                                        test-methods)))
        (omnisharp--unit-test-start test-method-framework test-method-names)))))
 
+(defun omnisharp-unit-test-last ()
+  "Re-runs the last unit test run (if any)."
+  (interactive)
+  (let ((last-unit-test (cdr (assoc :last-unit-test omnisharp--server-info))))
+    (apply 'omnisharp--unit-test-start (or last-unit-test (list nil nil)))))
+
 (defun omnisharp--unit-test-start (test-method-framework test-method-names)
   "Runs tests specified by test method name"
   (if (and test-method-framework test-method-names)
@@ -46,6 +52,8 @@
                               (omnisharp--get-request-object)
                               `((TestFrameworkName . ,test-method-framework)
                                 (MethodNames . ,test-method-names)))))
+        (setcdr (assoc :last-unit-test omnisharp--server-info)
+                (list test-method-framework test-method-names))
         (omnisharp--unit-test-reset-test-results-buffer t)
         (omnisharp--send-command-to-server
          "/v2/runtestsinclass"

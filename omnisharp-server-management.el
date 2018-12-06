@@ -27,6 +27,7 @@
 ;;  :started?          - t if server reported it has started OK and is ready
 ;;  :project-path      - path to server project .sln, .csproj or directory
 ;;  :project-root      - project root directory (based on project-path)
+;;  :last-unit-test    - a tuple of (test-framework (test-method-names ..))
 (defvar omnisharp--server-info nil)
 
 (defvar omnisharp--last-project-path nil)
@@ -42,7 +43,8 @@
       (:response-handlers . nil)
       (:started? . nil)
       (:project-path . ,project-path)
-      (:project-root . ,project-root))))
+      (:project-root . ,project-root)
+      (:last-unit-test . nil))))
 
 (defun omnisharp--resolve-omnisharp-server-executable-path ()
     "Attempts to resolve a path to local executable for the omnisharp-roslyn server.
