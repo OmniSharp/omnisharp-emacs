@@ -5,7 +5,7 @@
 ;; Version: 4.2
 ;; License: GNU General Public License version 3, or (at your option) any later version
 ;; Url: https://github.com/Omnisharp/omnisharp-emacs
-;; Package-Requires: ((emacs "24.4") (flycheck "30") (dash "2.12.0") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.10.0") (shut-up "0.3.2") (f "0.19.0"))
+;; Package-Requires: ((emacs "24.4") (flycheck "30") (dash "2.12.0") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.10.0") (f "0.19.0"))
 ;; Keywords: languages csharp c# IDE auto-complete intellisense
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -44,7 +44,6 @@
 (require 'etags)
 (require 'flycheck)
 (require 's)
-(require 'shut-up)
 (require 'f)
 
 (require 'omnisharp-settings)
@@ -59,6 +58,7 @@
 (require 'omnisharp-solution-actions)
 (require 'omnisharp-format-actions)
 (require 'omnisharp-server-installation)
+(require 'omnisharp-code-structure)
 (require 'omnisharp-unit-test-actions)
 
 ;;; Code:

@@ -9,7 +9,6 @@
 
 (require 'f)
 (require 's)
-(require 'shut-up)
 
 ;;; Work around for emacs bug#18845
 (when (and (= emacs-major-version 24) (>= emacs-minor-version 4))

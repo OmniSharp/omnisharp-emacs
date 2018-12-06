@@ -13,46 +13,54 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+(defun omnisharp-unit-test-at-point ()
+  "Runs test case under point, if any."
+  (interactive)
+  (omnisharp--cs-element-stack-at-point
+   (lambda (stack)
+     (let* ((element-on-point (car (last stack)))
+            (test-method (omnisharp--cs-unit-test-method-p element-on-point))
+            (test-method-name (car test-method))
+            (test-method-framework (car (cdr test-method))))
+       (omnisharp--unit-test-start test-method-framework (list test-method-name))))))
+
 (defun omnisharp-unit-test-buffer ()
   "Runs all test cases defined in the current buffer."
   (interactive)
-  (omnisharp--current-buffer-project
-    (lambda (project-framework)
-      (omnisharp--current-file-members-as-tree
-        (lambda (file-members)
-          (if
-            (or
-              (equal nil file-members)
-              (equal 0 (length file-members)))
-            (omnisharp--message "omnisharp: No Test Methods to run")
-            (let* (
-                    (raw-test-type (alist-get 'Name (-first-item file-members)))
-                    (test-method-names (-map (lambda (d) (alist-get 'Data d)) file-members))
-                    (test-type (cdr (assoc raw-test-type '(
-                                                       ("XunitTestMethod" . "xunit")
-                                                       ("MSTestMethod" . "mstest")
-                                                       ("NUnitTestMethod" . "nunit")
-                                                       ))))
-                    (request-message (-concat
-                                       (omnisharp--get-request-object)
-                                       `((TestFrameworkName . ,test-type)
-                                          (TargetFrameworkVersion . ,project-framework)
-                                          (MethodNames . ,(vconcat test-method-names))
-                                          )
-                                     )
-                      ))
-              (omnisharp--unit-test-reset-test-results-buffer t)
-              (omnisharp--register-server-event-handler "TestMessage" 'omnisharp--handle-test-message-event)
-              (omnisharp--send-command-to-server "/v2/runtestsinclass"
-                request-message
-                (lambda (resp)
-                  (omnisharp--unregister-server-event-handler "TestMessage")
-                  (-let (((&alist 'Results results
-                                  'Pass passed) resp))
-                    (omnisharp--unit-test-emit-results passed results))
-                  ))
-              )
-            ))))))
+  (omnisharp--cs-inspect-buffer
+   (lambda (elements)
+     (let* ((test-methods (omnisharp--cs-filter-resursively
+                            'omnisharp--cs-unit-test-method-p
+                            elements))
+            (test-method-framework (car (cdr (omnisharp--cs-unit-test-method-p (car test-methods)))))
+            (test-method-names (mapcar (lambda (method)
+                                         (car (omnisharp--cs-unit-test-method-p method)))
+                                       test-methods)))
+       (omnisharp--unit-test-start test-method-framework test-method-names)))))
+
+(defun omnisharp-unit-test-last ()
+  "Re-runs the last unit test run (if any)."
+  (interactive)
+  (let ((last-unit-test (cdr (assoc :last-unit-test omnisharp--server-info))))
+    (apply 'omnisharp--unit-test-start (or last-unit-test (list nil nil)))))
+
+(defun omnisharp--unit-test-start (test-method-framework test-method-names)
+  "Runs tests specified by test method name"
+  (if (and test-method-framework test-method-names)
+      (let ((request-message (-concat
+                              (omnisharp--get-request-object)
+                              `((TestFrameworkName . ,test-method-framework)
+                                (MethodNames . ,test-method-names)))))
+        (setcdr (assoc :last-unit-test omnisharp--server-info)
+                (list test-method-framework test-method-names))
+        (omnisharp--unit-test-reset-test-results-buffer t)
+        (omnisharp--send-command-to-server
+         "/v2/runtestsinclass"
+         request-message
+         (-lambda ((&alist 'Results results 'Pass passed))
+           (omnisharp--unit-test-emit-results passed results))))
+    (omnisharp--message "omnisharp: No Test Methods to run")))
 
 (defun omnisharp--unit-test-emit-results (passed results)
   "Emits unit test results as returned by the server to the unit test result buffer.
@@ -131,68 +139,22 @@ event will emit any test action output to unit test output buffer."
 (defun omnisharp--unit-test-reset-test-results-buffer (present-buffer)
   "Creates new or reuses existing unit test result output buffer."
   (let ((existing-buffer (get-buffer omnisharp--unit-test-results-buffer-name))
-         (solution-root-dir (cdr (assoc :project-root omnisharp--server-info))))
+        (solution-root-dir (cdr (assoc :project-root omnisharp--server-info))))
     (if existing-buffer
-      (progn
-        (with-current-buffer existing-buffer
-          (setq buffer-read-only nil)
-          (erase-buffer)
-          (setq buffer-read-only t)
-          (setq default-directory solution-root-dir))
-        existing-buffer)
+        (progn
+          (with-current-buffer existing-buffer
+            (setq buffer-read-only nil)
+            (erase-buffer)
+            (setq buffer-read-only t)
+            (setq default-directory solution-root-dir))
+          existing-buffer)
       (let ((buffer (get-buffer-create omnisharp--unit-test-results-buffer-name)))
         (with-current-buffer buffer
           (setq default-directory solution-root-dir)
           (compilation-mode)
-          buffer)
-        )
-      )
-    )
+          buffer))))
 
   (if present-buffer
       (display-buffer omnisharp--unit-test-results-buffer-name)))
-
-(defun omnisharp--get-class-declarations-from-response (response)
-  (-filter (lambda (x)
-             (equal "ClassDeclaration" (alist-get 'Kind x)))
-           (omnisharp--vector-to-list (alist-get 'TopLevelTypeDefinitions response))))
-
-(defun omnisharp--get-test-info-for-class (classes)
-  (omnisharp--vector-to-list
-    (-mapcat
-      (lambda (x3) (omnisharp--vector-to-list (alist-get 'Features x3)))
-      (-filter 'omnisharp--is-test-method?
-        (-mapcat
-          (lambda (x1) (omnisharp--vector-to-list (alist-get 'ChildNodes x1)))
-          classes)
-        )))
-  )
-
-(defun omnisharp--is-test-method? (node)
-  (and (equal "MethodDeclaration" (alist-get 'Kind node))
-    (< 0 (length (alist-get 'Features node))))
-  )
-
-(defun omnisharp--current-file-members-as-tree (callback)
-  (omnisharp--send-command-to-server-sync
-    "/currentfilemembersastree"
-    (omnisharp--get-request-object)
-    (-lambda (response)
-      (funcall callback (omnisharp--get-test-info-for-class
-                          (omnisharp--get-class-declarations-from-response
-                            response))))))
-
-(defun omnisharp--current-buffer-project (callback)
-  (omnisharp--send-command-to-server
-    "/project"
-    (omnisharp--get-request-object)
-    (lambda (response)
-      (funcall callback (omnisharp--get-project-framework response)
-        ))))
-
-(defun omnisharp--get-project-framework (response)
-  (alist-get 'TargetFramework (alist-get 'MsBuildProject response))
-  )
-
 
 (provide 'omnisharp-unit-test-actions)

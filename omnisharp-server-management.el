@@ -24,10 +24,10 @@
 ;;  :process           - process of the server
 ;;  :request-id        - used for and incremented on every outgoing request
 ;;  :response-handlers - alist of (request-id . response-handler)
-;;  :event-handlers    - alist of (event . event-handler)
 ;;  :started?          - t if server reported it has started OK and is ready
 ;;  :project-path      - path to server project .sln, .csproj or directory
 ;;  :project-root      - project root directory (based on project-path)
+;;  :last-unit-test    - a tuple of (test-framework (test-method-names ..))
 (defvar omnisharp--server-info nil)
 
 (defvar omnisharp--last-project-path nil)
@@ -41,10 +41,10 @@
     `((:process . ,process)
       (:request-id . 1)
       (:response-handlers . nil)
-      (:event-handlers . nil)
       (:started? . nil)
       (:project-path . ,project-path)
-      (:project-root . ,project-root))))
+      (:project-root . ,project-root)
+      (:last-unit-test . nil))))
 
 (defun omnisharp--resolve-omnisharp-server-executable-path ()
     "Attempts to resolve a path to local executable for the omnisharp-roslyn server.
@@ -58,19 +58,18 @@ to use server installed via `omnisharp-install-server`.
         (if server-installation-path
             server-installation-path
           (progn
-            (message "omnisharp: No omnisharp server could be found.")
-            (message (concat "omnisharp: Please use M-x 'omnisharp-install-server' or download server manually"
-                             " as detailed in https://github.com/OmniSharp/omnisharp-emacs/blob/master/doc/server-installation.md"))
+            (omnisharp--message "omnisharp: No omnisharp server could be found.")
+            (omnisharp--message (concat "omnisharp: Please use M-x 'omnisharp-install-server' or download server manually"
+                                        " as detailed in https://github.com/OmniSharp/omnisharp-emacs/blob/master/doc/server-installation.md"))
             nil)))))
 
 (defun omnisharp--do-server-start (path-to-project)
   (let ((server-executable-path (omnisharp--resolve-omnisharp-server-executable-path)))
-    (message (format "omnisharp: Starting OmniSharpServer using project folder/solution file: %s %s"
-                     path-to-project
-                     "(check *omnisharp-log* buffer for omnisharp server log)"))
+    (message (format "omnisharp: starting server using project folder/solution file: \"%s\""
+                     path-to-project))
 
     (omnisharp--log-reset)
-    (omnisharp--log (format "Starting OmniSharpServer using project folder/solution file: %s"
+    (omnisharp--log (format "starting server using project folder/solution path \"%s\""
                      path-to-project))
     (omnisharp--log (format "Using server binary on %s" server-executable-path))
 
@@ -97,7 +96,7 @@ to use server installed via `omnisharp-install-server`.
              (set-process-sentinel omnisharp-process
                                    (lambda (process event)
                                      (when (memq (process-status process) '(exit signal))
-                                       (message "omnisharp: OmniSharp server terminated")
+                                       (message "omnisharp: server has been terminated")
                                        (setq omnisharp--server-info nil)
                                        (if omnisharp--restart-server-on-stop
                                            (omnisharp--do-server-start omnisharp--last-project-path)))))
@@ -126,19 +125,6 @@ The variable ASYNC has no effect when not using http."
   "Sends the given command via curl"
   (omnisharp-post-http-message api-name response-handler contents async))
 
-(defun omnisharp--register-server-event-handler
-  (event-name event-handler)
-  (-let* ((server-info omnisharp--server-info))
-    (setcdr (assoc :event-handlers server-info)
-      (-concat `((,event-name . ,event-handler))
-        (cdr (assoc :event-handlers server-info))))))
-
-(defun omnisharp--unregister-server-event-handler (event-name)
-  (-let* ((server-info omnisharp--server-info))
-    (setcdr (assoc :event-handlers server-info)
-      (--remove (equal (car it) event-name)
-        (-non-nil (cdr (assoc :event-handlers server-info)))))))
-
 (defun omnisharp--send-command-to-server-stdio (api-name contents &optional response-handler)
   "Sends the given command to the server and associates a
 response-handler for it. The server will respond to this request
@@ -150,7 +136,7 @@ sending."
   ;; send request
   ;; store response handler associated with the request id
   (if (equal nil omnisharp--server-info)
-      (message (concat "omnisharp: OmniSharp server not running. "
+      (message (concat "omnisharp: server is not running. "
                        "Start it with `omnisharp-start-omnisharp-server' first"))
     (if (not (s-starts-with? "/" api-name))
         (setq api-name (concat "/" api-name)))
@@ -240,19 +226,14 @@ process buffer, and handle them as server events"
        (assq 'Command packet)))
 
 (defun omnisharp--handle-event-packet (packet server-info)
-  (-let* (((&alist 'Type packet-type
-                   'Event event-type) packet)
-           ((&alist :event-handlers event-handlers) server-info)
-           (handler (cdr (--first (equal (car it) event-type) event-handlers)))
-           )
+  (-let (((&alist 'Type packet-type 'Event event-type) packet))
     (cond ((-contains? '("ProjectAdded" "ProjectChanged") event-type)
             (comment ignore these for now.))
-          ((when handler (apply handler (list packet))))
+          ((equal "TestMessage" event-type)
+           (apply 'omnisharp--handle-test-message-event (list packet)))
           ((equal "started" event-type)
-           (omnisharp--log "The server has started")
-           (message "The OmniSharp server is ready. Hacks and glory await!")
-            (setcdr (assoc :started? server-info) t)))
-    ))
+           (omnisharp--message "omnisharp: server has been started, check *omnisharp-log* for startup progress messages")
+           (setcdr (assoc :started? server-info) t)))))
 
 (defun omnisharp--handle-server-event (packet)
   "Takes an alist representing some kind of Packet, possibly a
