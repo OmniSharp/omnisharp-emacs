@@ -178,6 +178,33 @@ assembly may not be correctly targeted for the framework you intend.
 
 See [issue #426](https://github.com/OmniSharp/omnisharp-emacs/issues/426).
 
+### Linux: reference assemblies not found
+
+If you see
+
+```
+[13:04:01] ERROR: OmniSharp.MSBuild.ProjectFile.ProjectFileInfo, The reference assemblies for framework ".NETFramework,Version=v4.5.1" were not found. To resolve this, install the SDK or Targeting Pack for this framework version or retarget your application to a version of the framework for which you have the SDK or Targeting Pack installed. Note that assemblies will be resolved from the Global Assembly Cache (GAC) and will be used in place of reference assemblies. Therefore your assembly may not be correctly targeted for the framework you intend.
+```
+
+then add the official Mono repository by following the instructions on
+https://www.mono-project.com/download/stable/ and install the package
+`mono-complete`.
+
+On Debian-based systems:
+
+    sudo apt install --no-install-recommends mono-complete
+
+On Fedora:
+
+    sudo dnf install mono-complete
+
+On CentOS:
+
+    sudo yum install mono-complete
+
+You'll need this even if you've installed the official Microsoft Linux
+packages (`dotnet` etc.).
+
 
 ### Missing .NET SDKs
 You may find that your project can not be loaded when .NET SDK is not installed 
