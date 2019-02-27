@@ -220,6 +220,7 @@ finished loading the solution."
 
     ("OmniSharp server"
      ["Start OmniSharp server" omnisharp-start-omnisharp-server]
+     ["Stop OmniSharp server" omnisharp-stop-server]
      ["Check alive status" omnisharp-check-alive-status]
      ["Check ready status" omnisharp-check-ready-status])
 
