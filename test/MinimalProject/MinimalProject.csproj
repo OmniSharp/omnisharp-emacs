@@ -1,10 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
     <AssemblyName>MinimalProject</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>MinimalProject</PackageId>
-    <RuntimeFrameworkVersion>1.1.0</RuntimeFrameworkVersion>
   </PropertyGroup>
 </Project>
