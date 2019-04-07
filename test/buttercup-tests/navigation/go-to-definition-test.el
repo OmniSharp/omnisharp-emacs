@@ -79,5 +79,5 @@
       ;; TODO: for some reason I need to set current buffer from window list
       ;;       with with-current-buffer..
       (with-current-buffer (car (mapcar #'window-buffer (window-list)))
-        (ot--i-should-be-in-buffer-name "*omnisharp-metadata:MinimalProject:System.Runtime:System.String*")
+        (ot--i-should-be-in-buffer-name "*omnisharp-metadata:MiscellaneousFiles.csproj:mscorlib:System.String*")
         (ot--point-should-be-on-a-line-containing "public sealed class String"))))
