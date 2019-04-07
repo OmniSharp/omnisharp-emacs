@@ -160,6 +160,11 @@ the OmniSharp server understands."
 
 (defun omnisharp--log (single-or-multiline-log-string)
   "Writes message to the log."
+  (when omnisharp-debug
+    (message (concat "*omnisharp-log*: "
+                     (format-time-string "[%H:%M:%S] ")
+                     single-or-multiline-log-string)))
+
   (let ((log-buffer (get-buffer-create "*omnisharp-log*")))
     (save-window-excursion
       (with-current-buffer log-buffer
