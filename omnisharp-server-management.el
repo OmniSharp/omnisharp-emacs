@@ -89,7 +89,8 @@ to use server installed via `omnisharp-install-server`.
                                       "OmniServer" ; buffer name
                                       server-executable-path
                                       "--encoding" "utf-8"
-                                      "--stdio")))
+                                      "--stdio"
+                                      (if omnisharp-debug "--verbose" ""))))
              (buffer-disable-undo (process-buffer omnisharp-process))
              (set-process-filter omnisharp-process 'omnisharp--handle-server-message)
              (set-process-sentinel omnisharp-process
