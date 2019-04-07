@@ -19,20 +19,16 @@
 
 Will query user for a path to project/solution file to start the server with."
   (let ((server-executable-path (omnisharp--resolve-omnisharp-server-executable-path))
-        (project-file-candidates (omnisharp--resolve-sln-candidates)))
+        (project-root (omnisharp--project-root)))
     (if server-executable-path
         (if (and (not no-autodetect)
-                 project-file-candidates)
-            (omnisharp--do-server-start (completing-read "Omnisharp - Start Server"
-                                                         project-file-candidates
-                                                         nil
-                                                         t))
-          (let ((path-to-project (read-file-name
-                                  "Start OmniSharp for project folder or solution file: ")))
-            (if (file-exists-p path-to-project)
-                (omnisharp--do-server-start path-to-project)
-              (error (format "Path does not lead to a valid project directory or solution file path: %s"
-                             path-to-project))))))))
+                 project-root
+                 (file-directory-p project-root))
+            (omnisharp--do-server-start project-root)
+          (let ((project-root (read-directory-name "Project root to use with OmniSharp: ")))
+            (if (file-directory-p project-root)
+                (omnisharp--do-server-start project-root)
+              (error (format "Path does not lead to a directory: %s" project-root))))))))
 
 (defun omnisharp--stop-server ()
   "Actual implementation for autoloaded omnisharp-stop-server"
