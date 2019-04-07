@@ -28,7 +28,7 @@
     ;; open error list and verify its contents
     (flycheck-list-errors)
 
-    (ot--switch-to-the-window-in-the-buffer "*Flycheck errors* for buffer FlycheckTest.cs")
+    (ot--switch-to-the-window-in-the-buffer "*Flycheck errors*")
     (ot--point-should-be-on-a-line-containing
      (concat "The type or namespace name 'DoesNotExist' could not be found"
              " (are you missing a using directive or an assembly reference?)"))

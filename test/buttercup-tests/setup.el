@@ -92,6 +92,10 @@ request id."
   (beginning-of-buffer)
   (search-forward "$")
   (delete-backward-char 1)
+  (message (concat "ot--buffer-contents-and-point-at-$: (thing-at-point 'word) is: "
+                   (thing-at-point 'word)))
+  (message (concat "ot--buffer-contents-and-point-at-$: (thing-at-point 'line) is: "
+                   (thing-at-point 'line)))
   ;; will block
   (omnisharp--update-buffer)
   (when (fboundp 'evil-insert)

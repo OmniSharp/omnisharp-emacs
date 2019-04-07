@@ -1,5 +1,10 @@
-using System;
-namespace minimal
-{
-    public class MyClass {}
+namespace MyNamespace {
+    public class Class321
+    {
+        public void Whatever()
+        {
+            IPAddress.Parse();
+            Gu$id.NewGuid();
+        }
+    }
 }

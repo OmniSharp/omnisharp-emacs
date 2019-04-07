@@ -4,18 +4,23 @@
 ;; each one in a sensible manner.
 (describe "Fix code issue"
   (before-each (ot--open-the-minimal-project-source-file "MyClass.cs"))
-  (it "can act on a simple part of the buffer (using System;)"
+  (it "can act on a simple part of the buffer (using System.Net;)"
     (ot--buffer-contents-and-point-at-$
-     "public class Class1"
+     "namespace MyNamespace"
      "{"
-     "    public void Whatever()"
+     "    public class MyClass"
      "    {"
-     "        Gu$id.NewGuid();"
+     "        public void Whatever()"
+     "        {"
+     "            IPAddress.Par$se(\"1.2.3.4\");"
+     "        }"
      "    }"
      "}")
-    (ot--answer-omnisharp--completing-read-with (lambda (choices) "using System;"))
+    (ot--answer-omnisharp--completing-read-with (lambda (choices)
+                                                  (message (concat "the choices are: " (json-encode choices)))
+                                                  "using System.Net;"))
     (omnisharp--wait-until-request-completed (omnisharp-run-code-action-refactoring))
-    (ot--buffer-should-contain "using System;"))
+    (ot--buffer-should-contain "using System.Net;"))
 
   (it "can operate on the current region (Extract method)"
     (ot--buffer-contents-and-region
