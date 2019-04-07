@@ -341,31 +341,8 @@ was found. Uses projectile for the job."
   ;; use project root as a candidate (if we have projectile available)
   (if (require 'projectile nil 'noerror)
       (condition-case nil
-          (let ((project-root (projectile-project-root)))
-            (if (not (string= project-root default-directory))
-                project-root))
+          (projectile-project-root)
         (error nil))))
-
-(defun omnisharp--resolve-sln-candidates ()
-  "Resolves a list of .sln file candidates and directories to be used
-for starting a server based on the current buffer."
-  (let ((dir (file-name-directory (or buffer-file-name "")))
-        (candidates nil)
-        (project-root (omnisharp--project-root)))
-    (while (and dir (not (f-root-p dir)))
-      (if (not (file-remote-p dir))
-          (setq candidates (append candidates
-                                   (f-files dir (lambda (filename)
-                                                  (string-match-p "\\.sln$" filename))))))
-      (setq dir (f-parent dir)))
-
-    (setq candidates (reverse candidates))
-
-    ;; use project root as a candidate (if we have projectile available)
-    (if project-root
-        (setq candidates (append candidates (list project-root))))
-
-    candidates))
 
 (defun omnisharp--buffer-contains-metadata()
   "Returns t if buffer is omnisharp metadata buffer."

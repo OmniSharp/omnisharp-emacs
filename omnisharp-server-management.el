@@ -63,20 +63,18 @@ to use server installed via `omnisharp-install-server`.
                                         " as detailed in https://github.com/OmniSharp/omnisharp-emacs/blob/master/doc/server-installation.md"))
             nil)))))
 
-(defun omnisharp--do-server-start (path-to-project)
+(defun omnisharp--do-server-start (project-root)
   (let ((server-executable-path (omnisharp--resolve-omnisharp-server-executable-path)))
-    (message (format "omnisharp: starting server using project folder/solution file: \"%s\""
-                     path-to-project))
+    (message (format "omnisharp: starting server on project root: \"%s\"" project-root))
 
     (omnisharp--log-reset)
-    (omnisharp--log (format "starting server using project folder/solution path \"%s\""
-                     path-to-project))
+    (omnisharp--log (format "starting server on project root \"%s\"" project-root))
     (omnisharp--log (format "Using server binary on %s" server-executable-path))
 
     ;; Save all csharp buffers to ensure the server is in sync"
     (save-some-buffers t (lambda () (string-equal (file-name-extension (buffer-file-name)) "cs")))
 
-    (setq omnisharp--last-project-path path-to-project)
+    (setq omnisharp--last-project-path project-root)
 
     ;; this can be set by omnisharp-reload-solution to t
     (setq omnisharp--restart-server-on-stop nil)
@@ -85,12 +83,13 @@ to use server installed via `omnisharp-install-server`.
           (make-omnisharp--server-info
            ;; use a pipe for the connection instead of a pty
            (let* ((process-connection-type nil)
+                  (default-directory (omnisharp--path-to-server (expand-file-name project-root)))
                   (omnisharp-process (start-process
-                            "OmniServer" ; process name
-                            "OmniServer" ; buffer name
-                            server-executable-path
-                            "--encoding" "utf-8"
-                            "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))))
+                                      "OmniServer" ; process name
+                                      "OmniServer" ; buffer name
+                                      server-executable-path
+                                      "--encoding" "utf-8"
+                                      "--stdio")))
              (buffer-disable-undo (process-buffer omnisharp-process))
              (set-process-filter omnisharp-process 'omnisharp--handle-server-message)
              (set-process-sentinel omnisharp-process
@@ -101,7 +100,7 @@ to use server installed via `omnisharp-install-server`.
                                        (if omnisharp--restart-server-on-stop
                                            (omnisharp--do-server-start omnisharp--last-project-path)))))
              omnisharp-process)
-           path-to-project))))
+           project-root))))
 
 (defun omnisharp--clear-response-handlers ()
   "For development time cleaning up impossible states of response
@@ -356,26 +355,18 @@ and attempts to start it if it is not."
 
   (unless (or (omnisharp--buffer-contains-metadata)
               (not (buffer-file-name)))
-    (let* ((filename (buffer-file-name))
+    (let* ((project-root (omnisharp--project-root))
            (server-project-root (if omnisharp--server-info (cdr (assoc :project-root omnisharp--server-info)) nil))
+           (filename (buffer-file-name))
            (filename-in-scope (and server-project-root
                                    (f-same-p (f-common-parent (list filename server-project-root))
-                                             server-project-root)))
-           (project-path-candidates (omnisharp--resolve-sln-candidates))
-           (project-path-candidates-sln (-filter (lambda (filename) (string= (f-ext filename) "sln"))
-                                                 project-path-candidates))
-           (project-path (cond ((= (length project-path-candidates) 1) (car project-path-candidates))
-                               ((= (length project-path-candidates-sln) 1) (car project-path-candidates-sln)))))
-      (cond ((and (not server-project-root) project-path)
-             (omnisharp--do-server-start project-path))
+                                             server-project-root))))
+      (cond ((and (not server-project-root) project-root)
+             (omnisharp--do-server-start project-root))
 
-            ((and (not server-project-root) (not (= (length project-path-candidates) 1)))
-             (message (concat "omnisharp: no unambigious project path could be found"
-                              " to start OmniSharp server for this buffer automatically"))
-             (unless (= (length project-path-candidates) 0)
-               (message (concat "omnisharp: project path candidates are: "
-                                (s-join ", " project-path-candidates)))
-               (message "omnisharp: start the server manually with M-x omnisharp-start-omnisharp-server")))
+            ((and (not server-project-root) (not project-root))
+             (message (concat "omnisharp: no project root could be found to start omnisharp server for this buffer automatically"))
+             (message "omnisharp: start the server manually with M-x omnisharp-start-omnisharp-server or make sure project root is discoverable by projectile"))
 
             ((and server-project-root (not filename-in-scope))
              (message (format (concat "omnisharp: buffer will not be managed by omnisharp: "
