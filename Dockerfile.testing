@@ -1,10 +1,14 @@
-FROM microsoft/dotnet:2.2-sdk
+FROM microsoft/dotnet:2.1-sdk
 
 WORKDIR /usr/src
 
-# Install dependencies
+# We need mono for now as it provides msbuild-16x which is used by omnisharp-roslyn on linux for our test project
 RUN apt-get update \
-    && apt-get install -y git emacs24-nox wget curl make \
+    && apt-get install -y apt-transport-https dirmngr gnupg ca-certificates \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
+    && (echo "deb https://download.mono-project.com/repo/debian stable-stretch main" | tee /etc/apt/sources.list.d/mono-official-stable.list) \
+    && apt-get update \
+    && apt-get install -y git emacs24-nox wget curl make mono-devel \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Cask
@@ -13,7 +17,7 @@ ENV PATH /root/.cask/bin:$PATH
 
 # Install sample project's dependencies
 COPY test/MinimalProject test/MinimalProject
-RUN (cd ./test/MinimalProject && dotnet restore)
+RUN (cd ./test/MinimalProject && dotnet build)
 
 # Install omnisharp and it's dependency packages via Cask
 COPY Cask Cask

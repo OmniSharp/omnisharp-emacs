@@ -1,10 +1,12 @@
-namespace MyNamespace {
-    public class Class321
+using System;
+
+namespace minimal
+{
+    public class MyClass
     {
-        public void Whatever()
+        public static void Main(string[] args)
         {
-            IPAddress.Parse();
-            Gu$id.NewGuid();
+            Console.WriteLine("hello, world");
         }
     }
 }
