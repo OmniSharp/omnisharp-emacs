@@ -1,19 +1,5 @@
 #!/bin/bash
 
-echo "'dotnet --version' reports:" $(dotnet --version)
-
-if [[ $(dotnet --version) != "2.1"* ]]; then
-    echo "Must install the .NET CLI 2.1.* http://dotnet.github.io/"
-    exit 1
-fi
-
-if [[ ! -r test/MinimalProject/project.lock.json ]]; then
-    echo "Restoring MinimalProject packages"
-    pushd test/MinimalProject
-    dotnet restore
-    popd
-fi
-
 TERM=dumb SHELL=sh cask exec emacs \
     -Q \
     -batch \

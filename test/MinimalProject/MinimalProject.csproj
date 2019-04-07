@@ -1,8 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
-    <AssemblyName>MinimalProject</AssemblyName>
-    <OutputType>Exe</OutputType>
-    <PackageId>MinimalProject</PackageId>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 </Project>
