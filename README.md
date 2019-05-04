@@ -227,6 +227,22 @@ To fix this, on Linux, you may need to install the `msbuild-stable` package.
 This issue and a fix has been reported on [issue #430](https://github.com/OmniSharp/omnisharp-emacs/issues/430).
 
 
+### Server opened in a different program (e.g. wine), instead of mono.
+On Linux, it's possible for the plugin to open the server binary, OmniSharp.exe, in a different program than mono, due to [binary format rules](https://en.wikipedia.org/wiki/Binfmt_misc). OmniSharp.exe needs to be passed to mono, but a binfmt rule might override that. 
+
+In the case of wine being used to run OmniSharp.exe, the plugin might trigger a wine desktop to appear, if the prefix is set to emulate one. Additionally, the plugin will issue several errors like this: 
+```
+omnisharp--handle-server-message error: (wrong-type-argument listp 0). See the OmniServer process buffer for detailed server output.
+```
+
+Different distros may manage binfmt a bit differently. To fix this, either consult distro specific documentation and find how to remove the offending rule or set `omnisharp-server-executable-path` to a shell script that explictly calls mono:
+```sh
+#!/bin/sh
+exec mono "[path to omnisharp]/OmniSharp.exe" "$@"
+```
+
+This issue and workarounds for the Arch+Wine case have been reported on [issue #477](https://github.com/OmniSharp/omnisharp-emacs/issues/477).  
+
 ## Contributing
 
 ### How to run tests
