@@ -52,7 +52,7 @@
       (let ((powershell-version (substring
                                  (shell-command-to-string "powershell -command \"(Get-Host).Version.Major\"")
                                  0 -1)))
-        (If (>= (string-to-number powershell-version) 5)
+        (if (>= (string-to-number powershell-version) 5)
             (call-process "powershell"
                           nil
                           nil
