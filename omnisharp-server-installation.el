@@ -76,7 +76,9 @@ Note that due to a bug in emacs on Windows we currently use the x86/32bit versio
 See https://github.com/OmniSharp/omnisharp-emacs/issues/315"
   (cond ((eq system-type 'windows-nt) "omnisharp-win-x86.zip")
         ((eq system-type 'darwin) "omnisharp-osx.tar.gz")
-        ((eq system-type 'gnu/linux) "omnisharp-linux-x64.tar.gz")
+        ((and (eq system-type 'gnu/linux)
+	      (or (eq (string-match "^x86_64" system-configuration) 0)
+	      (eq (string-match "^i[3-6]86" system-configuration) 0))) "omnisharp-linux-x64.tar.gz")
         (t "omnisharp-mono.tar.gz")))
 
 (defun omnisharp--install-server (reinstall &rest silent-installation)
