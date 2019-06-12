@@ -83,7 +83,7 @@ to use server installed via `omnisharp-install-server`.
           (make-omnisharp--server-info
            ;; use a pipe for the connection instead of a pty
            (let* ((process-connection-type nil)
-                  (default-directory (omnisharp--path-to-server (expand-file-name project-root)))
+                  (default-directory (expand-file-name project-root))
                   (omnisharp-process (start-process
                                       "OmniServer" ; process name
                                       "OmniServer" ; buffer name
