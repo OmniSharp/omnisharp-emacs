@@ -91,6 +91,7 @@ to use server installed via `omnisharp-install-server`.
                                       "--encoding" "utf-8"
                                       "--stdio")))
              (buffer-disable-undo (process-buffer omnisharp-process))
+             (set-process-query-on-exit-flag omnisharp-process nil)
              (set-process-filter omnisharp-process 'omnisharp--handle-server-message)
              (set-process-sentinel omnisharp-process
                                    (lambda (process event)
