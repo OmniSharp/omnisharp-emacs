@@ -72,7 +72,7 @@ to use server installed via `omnisharp-install-server`.
     (omnisharp--log (format "Using server binary on %s" server-executable-path))
 
     ;; Save all csharp buffers to ensure the server is in sync"
-    (save-some-buffers t (lambda () (string-equal (file-name-extension (buffer-file-name)) "cs")))
+    (save-some-buffers t (lambda () (and (buffer-file-name) (string-equal (file-name-extension (buffer-file-name)) "cs"))))
 
     (setq omnisharp--last-project-path project-root)
 
