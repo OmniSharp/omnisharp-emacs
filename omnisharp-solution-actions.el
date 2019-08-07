@@ -94,17 +94,18 @@ refactoring they want to run. Then runs the action."
                 (if (<= (length action-names) 0)
                     (message "No refactorings available at this position.")
 
-                  (let* ((chosen-action-name (omnisharp--completing-read
-                                              "Run code action: "
-                                              action-names))
-                         (chosen-action
-                          (--first (equal (cdr (assoc 'Name it))
-                                          chosen-action-name)
-                                   code-actions)))
+                  (with-local-quit
+                    (let* ((chosen-action-name (omnisharp--completing-read
+                                                "Run code action: "
+                                                action-names))
+                           (chosen-action
+                            (--first (equal (cdr (assoc 'Name it))
+                                            chosen-action-name)
+                                     code-actions)))
 
-                    (omnisharp-run-code-action-refactoring-worker
-                     (cdr (assoc 'Identifier chosen-action))
-                     code-actions-request))))))))
+                      (omnisharp-run-code-action-refactoring-worker
+                       (cdr (assoc 'Identifier chosen-action))
+                       code-actions-request)))))))))
 
 (defun omnisharp-run-code-action-refactoring-worker (chosen-action-identifier
                                                      code-actions-request)
