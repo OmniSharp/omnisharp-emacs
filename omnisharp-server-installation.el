@@ -13,6 +13,8 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+(require 'gnutls)
+
 (defun omnisharp--server-installation-dir ()
   "Returns installation directory for automatic server installation."
   (f-join omnisharp-cache-directory "server" (concat "v" omnisharp-expected-server-version)))
@@ -39,7 +41,14 @@
 
   (unless (f-exists-p filename)
     (message (format "omnisharp: downloading server binary from \"%s\"..." url))
-    (url-copy-file url filename t))
+    (let ((gnutls-algorithm-priority
+	   (if (and (not gnutls-algorithm-priority)
+		    (boundp 'libgnutls-version)
+		    (>= libgnutls-version 30603)
+		    (version<= emacs-version "26.2"))
+	       "NORMAL:-VERS-TLS1.3"
+	     gnutls-algorithm-priority)))
+      (url-copy-file url filename t)))
 
   (let ((target-dir (f-dirname filename)))
     (message (format "omnisharp: extracting \"%s\" into \"%s\""
