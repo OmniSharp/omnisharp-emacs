@@ -97,6 +97,9 @@ mode to work you will also need this in your `init.el`:
 (add-hook 'csharp-mode-hook #'company-mode)
 ```
 
+Also, for company completion to work  you need to install `company` from 
+[melpa](https://melpa.org/#/company). 
+
 ### Flycheck
 `omnisharp-emacs` supports [Flycheck](https://github.com/flycheck/flycheck)
 and it can be enabled automatically by hooking up `flycheck-mode` to be enabled
