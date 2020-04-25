@@ -337,12 +337,19 @@ the developer's emacs unusable."
 
 (defun omnisharp--project-root ()
   "Tries to resolve project root for current buffer. nil if no project root directory
-was found. Uses projectile for the job."
+was found. Uses projectile for the job, falling back to project.el."
   ;; use project root as a candidate (if we have projectile available)
-  (if (require 'projectile nil 'noerror)
-      (condition-case nil
-          (projectile-project-root)
-        (error nil))))
+  (cond ((require 'projectile nil 'noerror)
+         (condition-case nil
+             (projectile-project-root)
+           (error nil)))
+        ;; otherwise fall back to `project', introduced in Emacs 25.1 core
+        ((require 'project nil 'noerror)
+         (condition-case nil
+             (let ((proj (cdr (project-current))))
+               (when proj
+                 (expand-file-name proj)))
+           (error nil)))))
 
 (defun omnisharp--buffer-contains-metadata()
   "Returns t if buffer is omnisharp metadata buffer."
