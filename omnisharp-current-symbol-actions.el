@@ -25,7 +25,7 @@ to insert the result in code, for example."
 argument, add the displayed result to the kill ring. This can be used
 to insert the result in code, for example."
   (interactive "P")
-  (omnisharp-current-type-information-worker 'Documentation))
+  (omnisharp-current-type-information-worker 'Documentation add-to-kill-ring))
 
 (defun omnisharp-current-type-information-worker (type-property-name
                                                   &optional add-to-kill-ring)
