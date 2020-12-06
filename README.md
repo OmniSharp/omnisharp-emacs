@@ -1,3 +1,15 @@
+# Depreciation notice
+
+`omnisharp-emacs` is being depreciated in favor of LSP-flavoured clients and is
+not being actively developed. There are a couple of LSP clients that you can use
+in emacs that communicate over LSP with `omnisharp-roslyn` server:
+ - [lsp-mode](https://github.com/emacs-lsp/lsp-mode) and
+ - [eglot](https://github.com/joaotavora/eglot).
+ 
+Some of the features of omnisharp-emacs have not been ported to LSP yet, however:
+ - assembly introspection (ability to jump to a definition imported from a .dll);
+ - unit test runner integration. 
+
 # omnisharp-emacs
 <a href="//travis-ci.org/OmniSharp/omnisharp-emacs">
     <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
