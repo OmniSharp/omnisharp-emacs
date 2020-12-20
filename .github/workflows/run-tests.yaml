@@ -8,7 +8,19 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  run-melpa-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: docker-compose build
+      run: docker-compose build
+
+    - name: docker-compose run --rm melpa-tests
+      run: docker-compose run --rm melpa-tests
+
+  run-regular-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,5 +35,5 @@ jobs:
     - name: docker-compose build
       run: docker-compose build
 
-    - name: docker-compose run --rm tests
-      run: docker-compose run --rm tests
+    - name: docker-compose run --rm regular-tests
+      run: docker-compose run --rm regular-tests

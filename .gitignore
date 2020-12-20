@@ -8,3 +8,4 @@
 /test/MinimalProject/KeystrokeTest.cs
 *~
 *.elc
+.DS_Store
