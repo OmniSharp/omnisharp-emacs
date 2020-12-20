@@ -1,0 +1,21 @@
+name: Run tests
+
+on:
+  push:
+    branches: [ master ]
+
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: docker-compose build
+      run: docker-compose build
+
+    - name: docker-compose run --rm tests
+      run: docker-compose run --rm tests
