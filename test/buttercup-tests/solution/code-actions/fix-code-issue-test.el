@@ -30,7 +30,7 @@
 
     (ot--answer-omnisharp--completing-read-with
      (lambda (choices)
-       (--first (s-contains? "Extract Method" it)
+       (--first (s-contains? "Extract method" it)
                 choices)))
 
     (omnisharp--wait-until-request-completed (omnisharp-run-code-action-refactoring))

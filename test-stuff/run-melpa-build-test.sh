@@ -11,38 +11,13 @@ if [ -d melpa ]; then
     rm -rf melpa
 fi
 
-git clone https://github.com/milkypostman/melpa
+git clone https://github.com/melpa/melpa
 
 # Custom recipe that uses the melpa-testing branch instead of the
 # usual develop, to showcase a minimal broken setup.
 recipeFile=./test-stuff/melpa-testing.recipe
-git checkout -- $recipeFile
 
-if [ $TRAVIS_BRANCH ]; then
-    echo "Running build for travis branch: $TRAVIS_BRANCH"
-    sed --in-place 's/:branch "develop"/:branch "'$TRAVIS_BRANCH'"/' $recipeFile
-else
-    gitCurrentBranch="$(git rev-parse --abbrev-ref HEAD)"
-    echo "Running build for non-travis branch:" $gitCurrentBranch
-    sed --in-place 's/:branch "develop"/:branch "'$gitCurrentBranch'"/' $recipeFile
-fi
-
-if [ $TRAVIS_REPO_SLUG ]; then
-    # Custom recipe that uses forked repository instead of the
-    # omnisharp official repository.
-    echo "Running build for travis repository: $TRAVIS_REPO_SLUG"
-    sed --in-place 's/:repo "OmniSharp\/omnisharp-emacs"/:repo "'${TRAVIS_REPO_SLUG/\//\\/}'"/' $recipeFile
-else
-    # Custom recipe that uses local repository instead of the
-    # omnisharp official repository.
-    echo "Running build for local repository"
-    sed --in-place 's/:repo "OmniSharp\/omnisharp-emacs"/:url "file:\/\/\/usr\/src\/"/' $recipeFile
-    sed --in-place 's/:fetcher github/:fetcher git/' $recipeFile
-fi
-
-echo ""
 cat $recipeFile
-
 cp $recipeFile ./melpa/recipes/omnisharp
 
 cd melpa

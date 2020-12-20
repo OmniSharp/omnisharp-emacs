@@ -1,15 +1,18 @@
 version: '3.3'
 services:
-  tests:
+  regular-tests:
     build:
       context: .
       dockerfile: Dockerfile.testing
     image: omnisharp-testing
-    environment:
-      - TRAVIS
-      - TRAVIS_BRANCH
-      - TRAVIS_REPO_SLUG
     volumes:
       - '.:/tmp/src'
-      - './test-cache/emacs-d-cache:/root/.emacs.d/.cache'
-    command: bash -c "cp /tmp/src/*.el /usr/src/ && cp /tmp/src/test/*.el /usr/src/test/ && cp -r /tmp/src/test/buttercup-tests /usr/src/test/ && ./test-stuff/run-all-tests.sh"
+    command: bash -c "cp /tmp/src/*.el /usr/src/ && cp /tmp/src/test/*.el /usr/src/test/ && cp -r /tmp/src/test/buttercup-tests /usr/src/test/ && ./test-stuff/run-tests.sh && ./test-stuff/run-integration-tests.sh"
+  melpa-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.testing
+    image: omnisharp-testing
+    volumes:
+      - '.:/tmp/src'
+    command: bash -c "cp /tmp/src/*.el /usr/src/ && cp /tmp/src/test/*.el /usr/src/test/ && ./test-stuff/run-melpa-build-test.sh"
