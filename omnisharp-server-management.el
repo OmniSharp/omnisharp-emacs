@@ -191,7 +191,8 @@ process buffer, and handle them as server events"
                              "to view recent messages from the server. "
                              "Set `omnisharp-debug' to t and inspect the "
                              "*omnisharp-debug* buffer for this error specifically."))
-             (json-messages (--map (omnisharp--json-read-from-string it error-message)
+             (json-messages (-map (lambda (json-string)
+                                    (omnisharp--json-read-from-string json-string error-message))
                                    messages-from-server)))
         ;; should use -each here since it's for side effects only, but
         ;; it can't work with vectors. -map can, so use that instead.
