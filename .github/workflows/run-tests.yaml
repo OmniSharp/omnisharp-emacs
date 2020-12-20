@@ -14,6 +14,12 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
+    - name: omnisharp server cache dir
+      uses: actions/cache@v2
+      with:
+        path: ~/.emacs.d/.cache/omnisharp/server/
+        key: ${{ runner.os }}-emacs-d-cache-omnisharp-server
+
     - name: docker-compose build
       run: docker-compose build
 

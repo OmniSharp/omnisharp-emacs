@@ -18,4 +18,5 @@ fi
 mkdir -p test-cache/emacs-d-cache
 
 docker-compose build
-docker-compose run --rm tests
+docker-compose run --rm tests && "echo Tests ran OK" || echo "Tests FAILED!"
+
