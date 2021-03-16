@@ -6,9 +6,8 @@ in emacs that communicate over LSP with `omnisharp-roslyn` server:
  - [lsp-mode](https://github.com/emacs-lsp/lsp-mode) and
  - [eglot](https://github.com/joaotavora/eglot).
  
-Some of the features of omnisharp-emacs have not been ported to LSP yet, however:
- - assembly introspection (ability to jump to a definition imported from a .dll);
- - unit test runner integration. 
+Some of the features of omnisharp-emacs have not been ported to LSP yet, however, like:
+ - assembly introspection (ability to jump to a definition imported from a .dll). 
 
 # omnisharp-emacs
 <a href="//travis-ci.org/OmniSharp/omnisharp-emacs">
