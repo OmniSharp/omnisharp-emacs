@@ -13,6 +13,8 @@ Some of the features of omnisharp-emacs have not been ported to LSP yet, however
 <a href="//travis-ci.org/OmniSharp/omnisharp-emacs">
     <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
 </a>
+[![MELPA](https://melpa.org/packages/omnisharp-badge.svg)](https://melpa.org/#/omnisharp)
+[![MELPA Stable](https://stable.melpa.org/packages/omnisharp-badge.svg)](https://stable.melpa.org/#/omnisharp)
 
 omnisharp-emacs is a port of the awesome [omnisharp-roslyn][] server to the
 Emacs text editor. It provides IDE-like features for editing files in
