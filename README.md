@@ -10,9 +10,7 @@ Some of the features of omnisharp-emacs have not been ported to LSP yet, however
  - assembly introspection (ability to jump to a definition imported from a .dll). 
 
 # omnisharp-emacs
-<a href="//travis-ci.org/OmniSharp/omnisharp-emacs">
-    <img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" />
-</a>
+<a href="//travis-ci.org/OmniSharp/omnisharp-emacs"><img src="https://travis-ci.org/OmniSharp/omnisharp-emacs.svg?branch=master" /></a>
 [![MELPA](https://melpa.org/packages/omnisharp-badge.svg)](https://melpa.org/#/omnisharp)
 [![MELPA Stable](https://stable.melpa.org/packages/omnisharp-badge.svg)](https://stable.melpa.org/#/omnisharp)
 
