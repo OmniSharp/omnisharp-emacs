@@ -349,7 +349,7 @@ have not been returned before."
             ;; debugging, as they can slow emacs down when they pile
             ;; up
             (when (not omnisharp-debug) (erase-buffer))
-            (-map trim-bom (--filter (not (s-blank? it)) text))))))))
+            (-map trim-bom (-filter (lambda (s)(not (s-blank? s))) text))))))))
 
 (defun omnisharp--attempt-to-start-server-for-buffer ()
   "Checks if the server for the project of the buffer is running
