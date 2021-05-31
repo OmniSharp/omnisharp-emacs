@@ -4,7 +4,7 @@ WORKDIR /usr/src
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y git emacs25-nox curl make \
+    && apt-get install -y git emacs26-nox curl make \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Cask
