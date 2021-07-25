@@ -14,7 +14,7 @@ RUN dotnet --version
 # Install omnisharp and it's dependency packages via Cask
 COPY Cask Cask
 COPY omnisharp*.el ./
-RUN cask install
+RUN cask install || true
 
 # run cask build to check if the thing compiles to byte code
 RUN ! (cask build 2>&1 | tee /dev/stderr | grep -iq "^.*\\.el:.*:Error:")
