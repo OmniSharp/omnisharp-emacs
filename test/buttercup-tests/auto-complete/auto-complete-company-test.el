@@ -69,4 +69,4 @@
      (ot--type "new object()")
      (ot--press-key "TAB"))
 
-    (ot--buffer-should-contain "object.Equals(this, new object())")))
+    (ot--buffer-should-contain "object.Equals(t, object objB)")))

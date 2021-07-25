@@ -28,6 +28,9 @@
 ;;  :project-path      - path to server project .sln, .csproj or directory
 ;;  :project-root      - project root directory (based on project-path)
 ;;  :last-unit-test    - a tuple of (test-framework (test-method-names ..))
+
+(require 'dash)
+
 (defvar omnisharp--server-info nil)
 
 (defvar omnisharp--last-project-path nil)

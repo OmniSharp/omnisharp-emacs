@@ -14,6 +14,8 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+(require 'dash)
+
 (defun omnisharp--start-omnisharp-server (no-autodetect)
   "Actual implementation for autoloaded omnisharp-start-omnisharp-server.
 

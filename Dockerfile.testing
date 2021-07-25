@@ -1,20 +1,20 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.1
+FROM silex/emacs:27-ci-cask
 
 WORKDIR /usr/src
 
 # Install dependencies
 RUN apt-get update \
-    && apt-get install -y git emacs25-nox curl make \
+    && apt-get install -y libicu63 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Cask
-RUN curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python
-ENV PATH /root/.cask/bin:$PATH
+RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin -v 2.1.816
+ENV PATH /root/.dotnet:$PATH
+RUN dotnet --version
 
 # Install omnisharp and it's dependency packages via Cask
 COPY Cask Cask
 COPY omnisharp*.el ./
-RUN cask install
+RUN cask install || true
 
 # run cask build to check if the thing compiles to byte code
 RUN ! (cask build 2>&1 | tee /dev/stderr | grep -iq "^.*\\.el:.*:Error:")

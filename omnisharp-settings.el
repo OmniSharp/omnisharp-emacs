@@ -15,6 +15,8 @@
 
 ;; this file contains settings that are used throughout the project
 
+(require 'dash)
+
 (defgroup omnisharp ()
   "Omnisharp-emacs is a port of the awesome OmniSharp server to
 the Emacs text editor. It provides IDE-like features for editing
@@ -91,7 +93,7 @@ Otherwise omnisharp request the user to do M-x `omnisharp-install-server` and th
 executable will be used instead."
   :type '(choice (const :tag "Not Set" nil) string))
 
-(defcustom omnisharp-expected-server-version "1.37.5"
+(defcustom omnisharp-expected-server-version "1.37.13"
   "Version of the omnisharp-roslyn server that this omnisharp-emacs package
 is built for. Also used to select version for automatic server installation."
   :group 'omnisharp
