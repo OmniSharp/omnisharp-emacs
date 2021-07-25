@@ -13,6 +13,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+(require 'dash)
 
 (defun omnisharp-unit-test-at-point ()
   "Runs test case under point, if any."

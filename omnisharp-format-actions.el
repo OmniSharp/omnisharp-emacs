@@ -13,6 +13,8 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+(require 'dash)
+
 (defun omnisharp-code-format-entire-file ()
   "Format the code in the current file. Replaces the file contents
 with the formatted result."

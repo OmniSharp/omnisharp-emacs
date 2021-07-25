@@ -15,6 +15,8 @@
 
 ;; this file contains settings that are used throughout the project
 
+(require 'dash)
+
 (defgroup omnisharp ()
   "Omnisharp-emacs is a port of the awesome OmniSharp server to
 the Emacs text editor. It provides IDE-like features for editing

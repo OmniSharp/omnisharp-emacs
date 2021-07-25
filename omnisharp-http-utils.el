@@ -13,6 +13,8 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+(require 'dash)
+
 (defun omnisharp--get-host ()
   "Makes sure omnisharp-host is ended by / "
   (if (string= (substring omnisharp-host -1 ) "/")

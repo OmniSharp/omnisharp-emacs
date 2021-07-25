@@ -13,6 +13,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+(require 'dash)
 
 (defun omnisharp--prepare-solution-errors-buffer ()
   "Makes a new *omnisharp-solution-errors* buffer or creates a new one

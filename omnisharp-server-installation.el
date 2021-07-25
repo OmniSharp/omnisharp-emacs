@@ -14,6 +14,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (require 'gnutls)
+(require 'dash)
 
 (defun omnisharp--server-installation-dir ()
   "Returns installation directory for automatic server installation."

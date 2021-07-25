@@ -14,6 +14,8 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+(require 'dash)
+
 (defun omnisharp-go-to-definition (&optional other-window)
   "Jump to the definition of the symbol under point. With prefix
 argument, use another window."

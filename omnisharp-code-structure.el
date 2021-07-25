@@ -13,6 +13,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+(require 'dash)
 
 (defun omnisharp--cs-inspect-buffer (callback)
   "Calls into the /v2/codestructure endpoint to retrieve code structure for
