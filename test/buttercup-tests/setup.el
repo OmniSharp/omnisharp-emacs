@@ -49,8 +49,8 @@
   (let ((expected (s-join "\n" expected))
         (actual (s-replace (string ?\C-m) (string ?\C-j)
                            (substring-no-properties (buffer-string))))
-        (message "Expected '%s' to be part of '%s', but was not."))
-    (cl-assert (s-contains? expected actual) nil (format message expected actual))))
+        (message "Expected '%s' to be part of '%s', but was not. Actual contents are: '%s'"))
+    (cl-assert (s-contains? expected actual) nil (format message expected actual (substring-no-properties (buffer-string))))))
 
 (defun ot--evaluate (command-to-execute)
   (eval (read command-to-execute)))
